@@ -1,29 +1,28 @@
-
 #define SEQUENCER_MIN_BPM  50
 #define SEQUENCER_MAX_BPM  177
 
-// Ui config
-#define LOCK_POT_SENSTIVITY 3
+typedef enum {
+  GENERIC_POT_1,
+  GENERIC_POT_2,
+  GENERIC_POT_3,
+  GENERIC_POT_4  
+} POT_HARDWARE_INTERFACE;
 
-// hardware setup to fit different kinda of setups and arduino models
-#define OCTAVE_POT_PIN            A3
-#define NOTE_POT_PIN              A2
-#define STEP_LENGTH_POT_PIN       A1
-#define TEMPO_POT_PIN             A0
+typedef enum {
+  GENERIC_BUTTON_1,
+  GENERIC_BUTTON_2,
+  GENERIC_BUTTON_3,
+  GENERIC_BUTTON_4,
+  GENERIC_BUTTON_5,
+  GENERIC_BUTTON_6
+} BUTTON_HARDWARE_INTERFACE;
 
-#define PREVIOUS_STEP_BUTTON_PIN  2
-#define NEXT_STEP_BUTTON_PIN      3
-#define REST_BUTTON_PIN           4
-#define GLIDE_BUTTON_PIN          5
-#define ACCENT_BUTTON_PIN         6
-#define PLAY_STOP_BUTTON_PIN      7
-
-#define PREVIOUS_STEP_LED_PIN     8
-#define NEXT_STEP_LED_PIN         9
-#define REST_LED_PIN              10
-#define GLIDE_LED_PIN             11
-#define ACCENT_LED_PIN            12
-#define PLAY_STOP_LED_PIN         13
+#define GENERIC_LED_1     8
+#define GENERIC_LED_2     9
+#define GENERIC_LED_3     10
+#define GENERIC_LED_4     11
+#define GENERIC_LED_5     12
+#define GENERIC_LED_6     13
 
 // User Interface data
 uint16_t _step_edit = 0;
@@ -35,46 +34,33 @@ uint8_t _bpm_blink_timer = 1;
 void configureInterface()
 {
   // Buttons config
-  // use internal pullup for buttons
-  pinMode(PREVIOUS_STEP_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(NEXT_STEP_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(REST_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(GLIDE_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(ACCENT_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(PLAY_STOP_BUTTON_PIN, INPUT_PULLUP);
+  connectButton(GENERIC_BUTTON_1, 2);
+  connectButton(GENERIC_BUTTON_2, 3);
+  connectButton(GENERIC_BUTTON_3, 4);
+  connectButton(GENERIC_BUTTON_4, 5);
+  connectButton(GENERIC_BUTTON_5, 6);
+  connectButton(GENERIC_BUTTON_6, 7);  
+
+  // Pots config
+  connectPot(GENERIC_POT_1, A3);
+  connectPot(GENERIC_POT_2, A2);
+  connectPot(GENERIC_POT_3, A1);
+  connectPot(GENERIC_POT_4, A0);
 
   // Leds config
-  pinMode(PREVIOUS_STEP_LED_PIN, OUTPUT);
-  pinMode(NEXT_STEP_LED_PIN, OUTPUT);
-  pinMode(REST_LED_PIN, OUTPUT);
-  pinMode(GLIDE_LED_PIN, OUTPUT);
-  pinMode(ACCENT_LED_PIN, OUTPUT);
-  pinMode(PLAY_STOP_LED_PIN, OUTPUT);
+  pinMode(GENERIC_LED_1, OUTPUT);
+  pinMode(GENERIC_LED_2, OUTPUT);
+  pinMode(GENERIC_LED_3, OUTPUT);
+  pinMode(GENERIC_LED_4, OUTPUT);
+  pinMode(GENERIC_LED_5, OUTPUT);
+  pinMode(GENERIC_LED_6, OUTPUT);
 
-  digitalWrite(PREVIOUS_STEP_LED_PIN, LOW);
-  digitalWrite(NEXT_STEP_LED_PIN, LOW);
-  digitalWrite(REST_LED_PIN, LOW);
-  digitalWrite(GLIDE_LED_PIN, LOW);
-  digitalWrite(ACCENT_LED_PIN, LOW);
-  digitalWrite(PLAY_STOP_LED_PIN, LOW);  
-
-  // getting first value state
-  pressed(PREVIOUS_STEP_BUTTON_PIN);
-  pressed(NEXT_STEP_BUTTON_PIN);
-  pressed(REST_BUTTON_PIN);
-  pressed(GLIDE_BUTTON_PIN);
-  pressed(ACCENT_BUTTON_PIN);
-  pressed(PLAY_STOP_BUTTON_PIN);
-
-  // getting first values
-  getPotChanges(OCTAVE_POT_PIN, 0, 10);
-  getPotChanges(NOTE_POT_PIN, 0, 11);
-  getPotChanges(STEP_LENGTH_POT_PIN, 1, STEP_MAX_SIZE);
-  getPotChanges(TEMPO_POT_PIN, SEQUENCER_MIN_BPM, SEQUENCER_MAX_BPM);
-  
-  lockPotsState(true);
-
-  //acidRandomize();
+  digitalWrite(GENERIC_LED_1, LOW);
+  digitalWrite(GENERIC_LED_2, LOW);
+  digitalWrite(GENERIC_LED_3, LOW);
+  digitalWrite(GENERIC_LED_4, LOW);
+  digitalWrite(GENERIC_LED_5, LOW);
+  digitalWrite(GENERIC_LED_6, LOW);  
 }
 
 void processInterface()
@@ -89,11 +75,11 @@ void tempoInterface(uint32_t * tick)
   // BPM led indicator
   if ( !(*tick % (96)) || (*tick == 0) ) {  // first compass step will flash longer
     _bpm_blink_timer = 8;
-    digitalWrite(PLAY_STOP_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_6 , HIGH);
   } else if ( !(*tick % (24)) ) {   // each quarter led on
-    digitalWrite(PLAY_STOP_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_6 , HIGH);
   } else if ( !(*tick % _bpm_blink_timer) ) { // get led off
-    digitalWrite(PLAY_STOP_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_6 , LOW);
     _bpm_blink_timer = 1;
   }
 }
@@ -122,12 +108,14 @@ void processPots()
   static int8_t octave, note, step_note;
   static int16_t tempo, step_length;
 
-  octave = getPotChanges(OCTAVE_POT_PIN, 0, 10);
+  // GENERIC_POT_1: Note Octave Selector
+  octave = getPotChanges(GENERIC_POT_1, 0, 10);
   if ( octave != -1 ) {  
     _last_octave = octave;
   }
 
-  note = getPotChanges(NOTE_POT_PIN, 0, 11);
+  // GENERIC_POT_2: Note Selector (generic C to B, no octave)
+  note = getPotChanges(GENERIC_POT_2, 0, 11);
   if ( note != -1 ) { 
     _last_note = note;
   }
@@ -140,7 +128,8 @@ void processPots()
     }
   }
 
-  step_length = getPotChanges(STEP_LENGTH_POT_PIN, 1, STEP_MAX_SIZE);
+  // GENERIC_POT_3: Sequencer step length
+  step_length = getPotChanges(GENERIC_POT_3, 1, STEP_MAX_SIZE);
   if ( step_length != -1 ) {  
     ATOMIC(_step_length = step_length);
     if ( _step_edit >= _step_length ) {
@@ -148,16 +137,17 @@ void processPots()
     }
   }
 
-  tempo = getPotChanges(TEMPO_POT_PIN, SEQUENCER_MIN_BPM, SEQUENCER_MAX_BPM);
+  // GENERIC_POT_4: Sequencer BPM Tempo from SEQUENCER_MIN_BPM to SEQUENCER_MAX_BPM
+  tempo = getPotChanges(GENERIC_POT_4, SEQUENCER_MIN_BPM, SEQUENCER_MAX_BPM);
   if ( tempo != -1 ) {   
-    //uClock.setTempo(tempo);
+    uClock.setTempo(tempo);
   }
 }
-  
+
 void processButtons()
 {
   // play/stop
-  if ( pressed(PLAY_STOP_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_6) ) {
     if ( _playing == false ) {
       // Starts the clock, tick-tac-tick-tac...
       uClock.start();
@@ -168,13 +158,13 @@ void processButtons()
   }
 
   // ramdom test
-  //if ( pressed(PREVIOUS_STEP_BUTTON_PIN) && pressed(NEXT_STEP_BUTTON_PIN) ) {
+  //if ( pressed(GENERIC_BUTTON_1) && pressed(GENERIC_BUTTON_2) ) {
     //acidRandomize();
     //return;
   //}
 
   // previous step edit
-  if ( pressed(PREVIOUS_STEP_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_1) ) {
     if ( _step_edit != 0 ) {
       // add a lock here for octave and note to not mess with edit mode when moving steps around 
       lockPotsState(true);   
@@ -188,7 +178,7 @@ void processButtons()
   }
 
   // next step edit
-  if ( pressed(NEXT_STEP_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_2) ) {
     if ( _step_edit < _step_length-1 ) {
       // add a lock here for octave and note to not mess with edit mode when moving steps around
       lockPotsState(true);     
@@ -200,7 +190,7 @@ void processButtons()
   }
 
   // step rest
-  if ( pressed(REST_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_3) ) {
     ATOMIC(_sequencer[_step_edit].rest = !_sequencer[_step_edit].rest);
     if ( _playing == false && _sequencer[_step_edit].rest == false ) {
       sendPreviewNote(_step_edit);
@@ -208,12 +198,12 @@ void processButtons()
   }
 
   // step glide
-  if ( pressed(GLIDE_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_4) ) {
     ATOMIC(_sequencer[_step_edit].glide = !_sequencer[_step_edit].glide);
   }
 
   // step accent
-  if ( pressed(ACCENT_BUTTON_PIN) ) {
+  if ( pressed(GENERIC_BUTTON_5) ) {
     ATOMIC(_sequencer[_step_edit].accent = !_sequencer[_step_edit].accent);
     if ( _playing == false && _sequencer[_step_edit].rest == false ) {
       sendPreviewNote(_step_edit);
@@ -225,42 +215,42 @@ void processLeds()
 {   
   // Editing First Step? 
   if ( _step_edit == 0 ) {
-    digitalWrite(PREVIOUS_STEP_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_1 , HIGH);
   } else {
-    digitalWrite(PREVIOUS_STEP_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_1 , LOW);
   }  
 
   // Editing Last Step? 
   if ( _step_edit == _step_length-1 ) {
-    digitalWrite(NEXT_STEP_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_2 , HIGH);
   } else {
-    digitalWrite(NEXT_STEP_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_2 , LOW);
   }  
   
   // Rest 
   if ( _sequencer[_step_edit].rest == true ) {
-    digitalWrite(REST_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_3 , HIGH);
   } else {
-    digitalWrite(REST_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_3 , LOW);
   }
 
   // Glide 
   if ( _sequencer[_step_edit].glide == true ) {
-    digitalWrite(GLIDE_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_4 , HIGH);
   } else {
-    digitalWrite(GLIDE_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_4 , LOW);
   }  
 
   // Accent 
   if ( _sequencer[_step_edit].accent == true ) {
-    digitalWrite(ACCENT_LED_PIN , HIGH);
+    digitalWrite(GENERIC_LED_5 , HIGH);
   } else {
-    digitalWrite(ACCENT_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_5 , LOW);
   } 
 
   // shut down play led if we are stoped
   if ( _playing == false ) {
-    digitalWrite(PLAY_STOP_LED_PIN , LOW);
+    digitalWrite(GENERIC_LED_6 , LOW);
   }
 }
 

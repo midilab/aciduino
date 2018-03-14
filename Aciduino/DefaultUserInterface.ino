@@ -1,5 +1,27 @@
-#define SEQUENCER_MIN_BPM  50
-#define SEQUENCER_MAX_BPM  177
+// User interface config
+#define SEQUENCER_MIN_BPM     50
+#define SEQUENCER_MAX_BPM     177
+
+// Hardware pin configuration(double check your schematic before configure those pins)
+// Pots
+#define GENERIC_POT_1_PIN     A3
+#define GENERIC_POT_2_PIN     A2
+#define GENERIC_POT_3_PIN     A1
+#define GENERIC_POT_4_PIN     A0
+// Buttons
+#define GENERIC_BUTTON_1_PIN  2
+#define GENERIC_BUTTON_2_PIN  3
+#define GENERIC_BUTTON_3_PIN  4
+#define GENERIC_BUTTON_4_PIN  5
+#define GENERIC_BUTTON_5_PIN  6
+#define GENERIC_BUTTON_6_PIN  7
+// Leds
+#define GENERIC_LED_1         8
+#define GENERIC_LED_2         9
+#define GENERIC_LED_3         10
+#define GENERIC_LED_4         11
+#define GENERIC_LED_5         12
+#define GENERIC_LED_6         13
 
 typedef enum {
   GENERIC_POT_1,
@@ -17,13 +39,6 @@ typedef enum {
   GENERIC_BUTTON_6
 } BUTTON_HARDWARE_INTERFACE;
 
-#define GENERIC_LED_1     8
-#define GENERIC_LED_2     9
-#define GENERIC_LED_3     10
-#define GENERIC_LED_4     11
-#define GENERIC_LED_5     12
-#define GENERIC_LED_6     13
-
 // User Interface data
 uint16_t _step_edit = 0;
 uint8_t _last_octave = 3;
@@ -34,18 +49,18 @@ uint8_t _bpm_blink_timer = 1;
 void configureInterface()
 {
   // Buttons config
-  connectButton(GENERIC_BUTTON_1, 2);
-  connectButton(GENERIC_BUTTON_2, 3);
-  connectButton(GENERIC_BUTTON_3, 4);
-  connectButton(GENERIC_BUTTON_4, 5);
-  connectButton(GENERIC_BUTTON_5, 6);
-  connectButton(GENERIC_BUTTON_6, 7);  
+  connectButton(GENERIC_BUTTON_1, GENERIC_BUTTON_1_PIN);
+  connectButton(GENERIC_BUTTON_2, GENERIC_BUTTON_2_PIN);
+  connectButton(GENERIC_BUTTON_3, GENERIC_BUTTON_3_PIN);
+  connectButton(GENERIC_BUTTON_4, GENERIC_BUTTON_4_PIN);
+  connectButton(GENERIC_BUTTON_5, GENERIC_BUTTON_5_PIN);
+  connectButton(GENERIC_BUTTON_6, GENERIC_BUTTON_6_PIN);  
 
   // Pots config
-  connectPot(GENERIC_POT_1, A3);
-  connectPot(GENERIC_POT_2, A2);
-  connectPot(GENERIC_POT_3, A1);
-  connectPot(GENERIC_POT_4, A0);
+  connectPot(GENERIC_POT_1, GENERIC_POT_1_PIN);
+  connectPot(GENERIC_POT_2, GENERIC_POT_2_PIN);
+  connectPot(GENERIC_POT_3, GENERIC_POT_3_PIN);
+  connectPot(GENERIC_POT_4, GENERIC_POT_4_PIN);
 
   // Leds config
   pinMode(GENERIC_LED_1, OUTPUT);
@@ -54,7 +69,6 @@ void configureInterface()
   pinMode(GENERIC_LED_4, OUTPUT);
   pinMode(GENERIC_LED_5, OUTPUT);
   pinMode(GENERIC_LED_6, OUTPUT);
-
   digitalWrite(GENERIC_LED_1, LOW);
   digitalWrite(GENERIC_LED_2, LOW);
   digitalWrite(GENERIC_LED_3, LOW);

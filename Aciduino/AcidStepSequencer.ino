@@ -1,7 +1,6 @@
 // Acid StepSequencer, a Roland TB303 step sequencer engine clone
 // author: midilab contact@midilab.co
 // under MIT license
-#include "Arduino.h"
 #include <uClock.h>
 
 // Sequencer config
@@ -9,11 +8,6 @@
 #define NOTE_LENGTH        4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY      90
 #define ACCENT_VELOCITY    127
-
-// MIDI modes
-#define MIDI_CHANNEL      0 // 0 = channel 1
-#define MIDI_MODE
-//#define SERIAL_MODE
 
 // do not edit from here!
 #define NOTE_STACK_SIZE    3
@@ -44,6 +38,7 @@ typedef struct
 SEQUENCER_STEP_DATA _sequencer[STEP_MAX_SIZE];
 STACK_NOTE_DATA _note_stack[NOTE_STACK_SIZE];
 uint16_t _step_length = STEP_MAX_SIZE;
+uint8_t _midi_channel = 0; // default channel 1
 
 // make sure all above sequencer data are modified atomicly only
 // eg. ATOMIC(_sequencer[0].accent = true); ATOMIC(_step_length = 7);
@@ -54,10 +49,13 @@ uint8_t _tmpSREG;
 bool _playing = false;
 uint16_t _step = 0;
 
+// Sequencer API declaration
+//void initAcidStepSequencer(uint8_t mode, uint8_t channel);
+
 void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2)
 { 
   // send midi message
-  command = command | (uint8_t)MIDI_CHANNEL;
+  command = command | (uint8_t)_midi_channel;
   Serial.write(command);
   Serial.write(byte1);
   Serial.write(byte2);
@@ -141,17 +139,18 @@ void onClockStop()
   _playing = false;
 }
 
-void setup() 
+void initAcidStepSequencer(uint8_t mode, uint8_t channel)
 {
   // Initialize serial communication
-#ifdef MIDI_MODE
-  // the default MIDI serial speed communication at 31250 bits per second
-  Serial.begin(31250); 
-#endif
-#ifdef SERIAL_MODE
-  // for usage with a PC with a serial to MIDI bridge
-  Serial.begin(115200);
-#endif
+  if ( mode == 0 ) {
+    // the default MIDI serial speed communication at 31250 bits per second
+    Serial.begin(31250); 
+  } else if ( mode == 1 ) {
+    // for usage with a PC with a serial to MIDI bridge
+    Serial.begin(115200);
+  }
+
+  _midi_channel = channel-1;
 
   // Inits the clock
   uClock.init();
@@ -182,13 +181,5 @@ void setup()
     _note_stack[i].note = 0;
     _note_stack[i].length = -1;
   }
-
-  // pins, buttons, leds and pots config
-  configureInterface();
 }
 
-// User interaction goes here
-void loop() 
-{
-  processInterface();
-}

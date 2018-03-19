@@ -82,7 +82,6 @@ void ClockOut16PPQN(uint32_t * tick)
         length = NOTE_LENGTH + (i * 6);
         break;
       } else if ( _sequencer[step].rest == false ) {
-        length = NOTE_LENGTH;
         break;
       }
     }

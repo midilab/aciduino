@@ -1,7 +1,7 @@
 // Acid StepSequencer, a Roland TB303 step sequencer engine clone
 // author: midilab contact@midilab.co
 // under MIT license
-#include <uClock.h>
+#include "uClock.h"
 
 // Sequencer config
 #define STEP_MAX_SIZE      16

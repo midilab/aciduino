@@ -32,9 +32,9 @@ Buttons6: Play/Stop
 
 # Dependencies
 
-This clone depends on uClock library to generate sequencer BPM clock. Download it and install before compile this project.
+This clone is based on uClock library to generate sequencer BPM clock. The library is now part of project to get DIYers a easy compile time.
 
-https://github.com/midilab/uClock
+You can check more info for this library on: https://github.com/midilab/uClock
 
 # Soon 
 

@@ -2,6 +2,17 @@
 
 Cheap Roland TB303 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost. 
 
+# Features
+
+## 303 Step Sequencer clone
+2 Tracks of famous Roland TB303 sequencer. Programming using rest, glide and accent on each step. The addition of step length per track you can choose from 1 step to 16 steps of pattern length to make some unsual sequences.
+
+## Generative Engine
+Generate automatic harmonized acid lines by pressing a single button and twist some harmonic parameter knobs. Just pick up a harmonic mode(scale), the low and high notes to fit the sequence and you have infinite sequences by pressing random it button!
+
+## Midi Controller
+Controls your synthetizer acid midi parameters per track up to 6 parameters.
+
 # TB303 Step Sequencer engine clone
 
 With some user interface changes for cheap construction of a functional TB303 engine we present you the interface:

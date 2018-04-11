@@ -8,27 +8,29 @@ With some user interface changes for cheap construction of a functional TB303 en
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/Hardware/acid_step_sequencer-protoboard-v001.png)
 
-## Interface from left to rigth
+## User Interface
 
-POT1: Octave
+4 knobs and 6 buttons divided into 3 pages
 
-POT2: Note
+### [midi controller]
+knobs: cutoff freq./decay, resonance/accent, env mod/tunning, tempo
 
-POT3: Sequence Length
+buttons: track 1, track 2, ctrl A, ctrl B, wave form, play/stop
 
-POT4: Sequencer BPM Tempo
+### [generative]
+knobs: ramdon low note, ramdon high note, harmonic mode, tempo
 
-Button1: Prev Step
+buttons: track 1, track 2, ramdomize it, transpose -, transpose +, play/stop
 
-Button2: Next Step
+### [step edit]
+knobs: octave, note, sequence length, tempo 
 
-Button3: Rest
+buttons: prev step, next step, rest, glide, accent, play/stop
 
-Button4: Glide
+### [page select]: press button1 and button2 together
+knobs: none, none, none, tempo
 
-Button5: Accent
-
-Buttons6: Play/Stop
+buttons: track 1, track 2, [midi controller], [generative], [step edit], play/stop
 
 # Dependencies
 

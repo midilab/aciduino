@@ -4,9 +4,6 @@ knobs: none, none, none, tempo
 
 buttons: track 1, track 2, [midi controller], [generative], [step edit], play/stop
 */
-// User interface config
-#define SEQUENCER_MIN_BPM     50
-#define SEQUENCER_MAX_BPM     177
 
 uint32_t _page_blink_timer = 0; 
 uint8_t _bpm_blink_timer = 1;

@@ -11,7 +11,6 @@ buttons: track 1, track 2, ramdomize it, transpose -, transpose +, play/stop
 
 uint8_t _lower_note = 36;
 uint8_t _range_note = 34;
-uint8_t _harmonic_mode = 0;
 
 void processGenerativeButtons()
 {
@@ -29,15 +28,23 @@ void processGenerativeButtons()
   }
 
   if ( pressed(GENERIC_BUTTON_4) ) {
-    // transpose -
-    --_transpose;
-    //reHarmonize(); // force all track lines to be re-harmonize
+    // previous harmonic mode
+    if ( _selected_mode > 0 ) {
+      --_selected_mode;
+    } else if ( _selected_mode == 0 ) {
+      _harmonize = false;
+    }
   }
 
   if ( pressed(GENERIC_BUTTON_5) ) {
-    // transpose +
-    ++_transpose;
-    //reHarmonize(); // force all track lines to be re-harmonize
+    // next harmonic mode
+    if ( _selected_mode < MODES_NUMBER-1 ) {
+      if ( _harmonize == false ) {
+        _harmonize = true;
+      } else {
+        ++_selected_mode;
+      }
+    }
   }
 }
 
@@ -55,14 +62,16 @@ void processGenerativeLeds()
     digitalWrite(GENERIC_LED_3, LOW);
   }
     
-  if ( _transpose > 0 ) {
-    digitalWrite(GENERIC_LED_4, LOW);
-    digitalWrite(GENERIC_LED_5, HIGH);
-  } else if ( _transpose < 0 ) {
-    digitalWrite(GENERIC_LED_4, HIGH);
-    digitalWrite(GENERIC_LED_5, LOW);
+  if ( _harmonize == true ) {
+    if ( _selected_mode  == MODES_NUMBER-1 ) {
+      digitalWrite(GENERIC_LED_4, LOW);
+      digitalWrite(GENERIC_LED_5, HIGH);
+    } else {
+      digitalWrite(GENERIC_LED_4, LOW);
+      digitalWrite(GENERIC_LED_5, LOW);
+    }
   } else {
-    digitalWrite(GENERIC_LED_4, LOW);
+    digitalWrite(GENERIC_LED_4, HIGH);
     digitalWrite(GENERIC_LED_5, LOW);
   }
 
@@ -85,10 +94,9 @@ void processGenerativePots()
   }  
 
   // GENERIC_POT_3: Harmonic mode temperament 
-  value = getPotChanges(GENERIC_POT_3, 0, 12); // bug, if we set 13 as maximun it goes beyond to 14... 
+  value = getPotChanges(GENERIC_POT_3, 0, 24);
   if ( value != -1 ) {  
-    _selected_mode = value;
-    //reHarmonize(); // force all track lines to be re-harmonize
+    _transpose = value-12; // -12 (0) +12 
   }  
 
 }

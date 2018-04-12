@@ -26,7 +26,7 @@ uint8_t _locrian2[8] = { 0, 2, 3, 5, 6, 8, 10, 12 };
 // super Locrian (also "altered dominant scale", or "altered scale")
 uint8_t _super_locrian[8] = { 0, 1, 3, 4, 6, 8, 10, 12 };
 
-uint8_t * _mode[14] = {
+uint8_t * _mode[] = {
   // MAJOR MODES
   _ionian,
   _dorian,
@@ -44,6 +44,8 @@ uint8_t * _mode[14] = {
   _locrian2,
   _super_locrian
 };
+
+#define MODES_NUMBER (sizeof(_mode) / sizeof(uint16_t)) // its array pointer we are holding here
 
 uint8_t _selected_mode = 0;
 int8_t _transpose = 0; // zero is centered C

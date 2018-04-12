@@ -31,13 +31,13 @@ void processGenerativeButtons()
   if ( pressed(GENERIC_BUTTON_4) ) {
     // transpose -
     --_transpose;
-    reHarmonize(); // force all track lines to be re-harmonize
+    //reHarmonize(); // force all track lines to be re-harmonize
   }
 
   if ( pressed(GENERIC_BUTTON_5) ) {
     // transpose +
     ++_transpose;
-    reHarmonize(); // force all track lines to be re-harmonize
+    //reHarmonize(); // force all track lines to be re-harmonize
   }
 }
 
@@ -88,21 +88,9 @@ void processGenerativePots()
   value = getPotChanges(GENERIC_POT_3, 0, 12); // bug, if we set 13 as maximun it goes beyond to 14... 
   if ( value != -1 ) {  
     _selected_mode = value;
-    reHarmonize(); // force all track lines to be re-harmonize
+    //reHarmonize(); // force all track lines to be re-harmonize
   }  
 
-}
-
-void reHarmonize()
-{
-  uint8_t note;
-  
-  for ( uint8_t track = 0; track < TRACK_NUMBER; track++ ) {
-    for ( uint16_t i = 0; i < STEP_MAX_SIZE; i++ ) {
-      note = harmonizer(_sequencer[track].step[i].note);
-      ATOMIC(_sequencer[track].step[i].note = note);
-    }
-  }  
 }
 
 void acidRandomize() 
@@ -116,7 +104,7 @@ void acidRandomize()
       high_note = 127;
     }
 
-    note = harmonizer(random(_lower_note, high_note));
+    note = random(_lower_note, high_note);
     accent = random(0, 100);
     accent = accent < ACCENT_PROBABILITY_GENERATION ? 1 : 0;
     glide = random(0, 100);

@@ -60,16 +60,20 @@ uint8_t _tmpSREG;
 bool _playing = false;
 
 void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel, bool atomicly = false)
-{ 
+{   
   // send midi message
-  command = command | (uint8_t)channel;
+  command = command | (uint8_t)channel; 
+  
+  // if we want to use it with MIDI_CC from non timmer compare ISR code then set it to true
   if ( atomicly == true ) {
     _tmpSREG = SREG;
     cli();
   }
+ 
   Serial.write(command);
   Serial.write(byte1);
   Serial.write(byte2);
+  
   if ( atomicly == true ) {
     SREG = _tmpSREG;
   }
@@ -79,7 +83,7 @@ void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t chan
 void ClockOut16PPQN(uint32_t * tick) 
 {
   uint16_t step, length;
-  uint8_t track;
+  uint8_t track, note;
 
   for ( track = 0; track < TRACK_NUMBER; track++ ) {
 
@@ -107,10 +111,12 @@ void ClockOut16PPQN(uint32_t * tick)
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {
-          _sequencer[track].stack[i].note = _sequencer[track].step[_sequencer[track].step_location].note;
+          // enable or disable harmonizer
+          note = harmonizer(_sequencer[track].step[_sequencer[track].step_location].note);
+          _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on
-          sendMidiMessage(NOTE_ON, _sequencer[track].step[_sequencer[track].step_location].note, _sequencer[track].step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[track].channel);    
+          sendMidiMessage(NOTE_ON, note, _sequencer[track].step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[track].channel);    
           break;
         }
       }

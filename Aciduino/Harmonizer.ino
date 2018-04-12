@@ -50,11 +50,11 @@ int8_t _transpose = 0; // zero is centered C
 
 uint8_t harmonizer(uint8_t note)
 {
-  uint8_t octave, note_octave, interval;
+  uint8_t octave, interval;
 
   octave = floor(note/12);
-  note_octave = note%12;
+  interval = floor((note%12)/1.5);
   
-  return (octave*12) + _mode[_selected_mode][note_octave%8] + _transpose;
+  return (octave*12) + _mode[_selected_mode][interval] + _transpose;
 }
 

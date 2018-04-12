@@ -58,6 +58,7 @@ uint8_t _tmpSREG;
 
 // shared data to be used for user interface feedback
 bool _playing = false;
+bool _harmonize = false;
 
 void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel, bool atomicly = false)
 {   
@@ -111,8 +112,11 @@ void ClockOut16PPQN(uint32_t * tick)
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {
-          // enable or disable harmonizer
-          note = harmonizer(_sequencer[track].step[_sequencer[track].step_location].note);
+          if ( _harmonize == true ) {
+            note = harmonizer(_sequencer[track].step[_sequencer[track].step_location].note);
+          } else {
+            note = _sequencer[track].step[_sequencer[track].step_location].note;
+          }
           _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on

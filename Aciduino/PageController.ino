@@ -31,16 +31,6 @@ void processControllerButtons()
   }
 
   if ( pressed(GENERIC_BUTTON_3) ) {
-    lockPotsState(true);
-    _selected_ctrl = 0;
-  }
-
-  if ( pressed(GENERIC_BUTTON_4) ) {
-    lockPotsState(true);
-    _selected_ctrl = 1;
-  }
-
-  if ( pressed(GENERIC_BUTTON_5) ) {
     _selected_waveform[_selected_track] = !_selected_waveform[_selected_track];
     // send wave form cc change
     if ( _selected_waveform[_selected_track] == 0 ) {
@@ -49,6 +39,17 @@ void processControllerButtons()
       sendMidiMessage(MIDI_CC, MIDI_CTRL_WAVE, 127, _sequencer[_selected_track].channel, true); 
     }
   }
+  
+  if ( pressed(GENERIC_BUTTON_4) ) {
+    lockPotsState(true);
+    _selected_ctrl = 0;
+  }
+
+  if ( pressed(GENERIC_BUTTON_5) ) {
+    lockPotsState(true);
+    _selected_ctrl = 1;
+  }
+
 }
 
 void processControllerLeds()
@@ -60,16 +61,17 @@ void processControllerLeds()
     digitalWrite(GENERIC_LED_1, LOW);
     digitalWrite(GENERIC_LED_2, HIGH);
   } 
-    
+
+  digitalWrite(GENERIC_LED_3, _selected_waveform[_selected_track]);
+  
   if ( _selected_ctrl == 0 ) {
-    digitalWrite(GENERIC_LED_3, HIGH);
-    digitalWrite(GENERIC_LED_4, LOW);
-  } else if ( _selected_ctrl == 1 ) {
-    digitalWrite(GENERIC_LED_3, LOW);
     digitalWrite(GENERIC_LED_4, HIGH);
+    digitalWrite(GENERIC_LED_5, LOW);
+  } else if ( _selected_ctrl == 1 ) {
+    digitalWrite(GENERIC_LED_4, LOW);
+    digitalWrite(GENERIC_LED_5, HIGH);
   } 
 
-  digitalWrite(GENERIC_LED_5, _selected_waveform[_selected_track]);
 }
 
 void processControllerPots()

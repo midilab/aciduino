@@ -15,7 +15,11 @@ void sendPreviewNote(uint16_t step)
   uint8_t note;
 
   // enable or disable harmonizer
-  note = harmonizer(_sequencer[_selected_track].step[step].note);
+  if ( _harmonize == true ) {
+    note = harmonizer(_sequencer[_selected_track].step[step].note);
+  } else {
+    note = _sequencer[_selected_track].step[step].note;
+  }
   sendMidiMessage(NOTE_ON, note, _sequencer[_selected_track].step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel);
 
   // avoid delay() call because of uClock timmer1 usage

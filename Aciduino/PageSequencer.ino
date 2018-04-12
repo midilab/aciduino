@@ -47,8 +47,9 @@ void processSequencerPots()
 
   // changes on octave or note pot?
   if ( octave != -1 || note != -1 ) {
-    ATOMIC(_sequencer[_selected_track].step[_step_edit].note = (_last_octave * 8) + _last_note);
-    //ATOMIC(_sequencer[_selected_track].step[_step_edit].note = harmonizer((_last_octave * 8) + _last_note));
+    //ATOMIC(_sequencer[_selected_track].step[_step_edit].note = (_last_octave * 8) + _last_note);
+    note = harmonizer((_last_octave * 8) + _last_note);
+    ATOMIC(_sequencer[_selected_track].step[_step_edit].note = note);
     if ( _playing == false && _sequencer[_selected_track].step[_step_edit].rest == false ) {
       sendPreviewNote(_step_edit);
     }

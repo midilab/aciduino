@@ -4,7 +4,11 @@ knobs: ramdon low note, ramdon high note, harmonic mode, tempo
 
 buttons: track 1, track 2, ramdomize it, transpose -, transpose +, play/stop
 */
-int8_t _transpose = 0; // zero is centered C
+
+#define ACCENT_PROBABILITY_GENERATION   50
+#define GLIDE_PROBABILITY_GENERATION    30
+#define REST_PROBABILITY_GENERATION     10
+
 uint8_t _lower_note = 36;
 uint8_t _range_note = 34;
 uint8_t _harmonic_mode = 0;
@@ -27,11 +31,13 @@ void processGenerativeButtons()
   if ( pressed(GENERIC_BUTTON_4) ) {
     // transpose -
     --_transpose;
+    reHarmonize(); // force all track lines to be re-harmonize
   }
 
   if ( pressed(GENERIC_BUTTON_5) ) {
     // transpose +
     ++_transpose;
+    reHarmonize(); // force all track lines to be re-harmonize
   }
 }
 
@@ -77,21 +83,50 @@ void processGenerativePots()
   if ( value != -1 ) {  
     _range_note = value;
   }  
+
+  // GENERIC_POT_3: Harmonic mode temperament 
+  value = getPotChanges(GENERIC_POT_3, 0, 12); // bug, if we set 13 as maximun it goes beyond to 14... 
+  if ( value != -1 ) {  
+    _selected_mode = value;
+    reHarmonize(); // force all track lines to be re-harmonize
+  }  
+
+}
+
+void reHarmonize()
+{
+  uint8_t note;
+  
+  for ( uint8_t track = 0; track < TRACK_NUMBER; track++ ) {
+    for ( uint16_t i = 0; i < STEP_MAX_SIZE; i++ ) {
+      note = harmonizer(_sequencer[track].step[i].note);
+      ATOMIC(_sequencer[track].step[i].note = note);
+    }
+  }  
 }
 
 void acidRandomize() 
 {
-  uint8_t high_note;
+  uint8_t note, high_note, accent, glide, rest;
+  
   // ramdom it all
   for ( uint16_t i = 0; i < STEP_MAX_SIZE; i++ ) {
-    //ATOMIC(_sequencer[_selected_track].step[i].note = random(36, 70)); // octave 2 to 4. octave 3 to 5 (40 - 83)
     high_note = _lower_note+_range_note;
     if ( high_note > 127 ) {
       high_note = 127;
     }
-    ATOMIC(_sequencer[_selected_track].step[i].note = harmonizer(random(_lower_note, high_note)));
-    ATOMIC(_sequencer[_selected_track].step[i].accent = random(0, 2));
-    ATOMIC(_sequencer[_selected_track].step[i].glide = random(0, 2));
-    ATOMIC(_sequencer[_selected_track].step[i].rest = random(0, 1));
+
+    note = harmonizer(random(_lower_note, high_note));
+    accent = random(0, 100);
+    accent = accent < ACCENT_PROBABILITY_GENERATION ? 1 : 0;
+    glide = random(0, 100);
+    glide = glide < GLIDE_PROBABILITY_GENERATION ? 1 : 0;
+    rest = random(0, 100);
+    rest = rest < REST_PROBABILITY_GENERATION ? 1 : 0;
+    
+    ATOMIC(_sequencer[_selected_track].step[i].note = note);
+    ATOMIC(_sequencer[_selected_track].step[i].accent = accent);
+    ATOMIC(_sequencer[_selected_track].step[i].glide = glide);
+    ATOMIC(_sequencer[_selected_track].step[i].rest = rest);
   }
 }

@@ -1,6 +1,10 @@
 # Aciduino
 
-Cheap Roland TB303 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost. 
+Cheap Roland TB303 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost.
+
+With some user interface changes for cheap construction of a functional TB303 engine we present you the interface:
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/Hardware/acid_step_sequencer-protoboard-v002.png)
 
 # Features
 
@@ -13,32 +17,26 @@ Generate automatic harmonized acid lines by pressing a single button and twist s
 ## Midi Controller
 Controls your synthetizer acid midi parameters per track up to 6 parameters.
 
-# TB303 Step Sequencer engine clone
-
-With some user interface changes for cheap construction of a functional TB303 engine we present you the interface:
-
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/Hardware/acid_step_sequencer-protoboard-v001.png)
-
-## User Interface
+# User Interface
 
 4 knobs and 6 buttons divided into 3 pages
 
-### [midi controller]
+## [midi controller]
 knobs: cutoff freq./decay, resonance/accent, env mod/tunning, tempo
 
 buttons: track 1, track 2, wave form, ctrl A, ctrl B, play/stop
 
-### [generative]
+## [generative]
 knobs: ramdon low note, ramdon high note, transpose, tempo
 
 buttons: track 1, track 2, ramdomize it, harmonic mode -, harmonic mode +, play/stop
 
-### [step edit]
+## [step edit]
 knobs: octave, note, sequence length, tempo 
 
 buttons: prev step, next step, rest, glide, accent, play/stop
 
-### [page select]: press button1 and button2 together
+## [page select]: press button1 and button2 together
 knobs: none, none, none, tempo
 
 buttons: track 1, track 2, [midi controller], [generative], [step edit], play/stop

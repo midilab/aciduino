@@ -5,10 +5,6 @@ knobs: ramdon low note, ramdon high note, harmonic mode, tempo
 buttons: track 1, track 2, ramdomize it, transpose -, transpose +, play/stop
 */
 
-#define ACCENT_PROBABILITY_GENERATION   50
-#define GLIDE_PROBABILITY_GENERATION    30
-#define REST_PROBABILITY_GENERATION     10
-
 uint8_t _lower_note = 36;
 uint8_t _range_note = 34;
 

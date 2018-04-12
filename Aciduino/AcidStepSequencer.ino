@@ -3,14 +3,6 @@
 // under MIT license
 #include "uClock.h"
 
-// Sequencer config
-#define TRACK_NUMBER       2
-#define STEP_MAX_SIZE      16
-#define NOTE_LENGTH        4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
-#define NOTE_VELOCITY      90
-#define ACCENT_VELOCITY    127
-
-// do not edit from here!
 #define NOTE_STACK_SIZE    3
 
 // MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
@@ -183,6 +175,13 @@ void onClockStop()
   }
   
   _playing = false;
+}
+
+void setTrackChannel(uint8_t track, uint8_t channel) 
+{
+  --track;
+  --channel;
+  _sequencer[track].channel = channel;
 }
 
 void initAcidStepSequencer(uint8_t mode)

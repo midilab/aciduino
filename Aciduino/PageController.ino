@@ -6,15 +6,6 @@ buttons: track 1, track 2, ctrl A, ctrl B, wave form, play/stop
 */
 // TODO: implement pickup by value for controllers
 
-// MIDI CC definitions
-#define MIDI_CTRL_TUNNING     79
-#define MIDI_CTRL_CUTOFF      80
-#define MIDI_CTRL_RESONANCE   81
-#define MIDI_CTRL_ENVMOD      82
-#define MIDI_CTRL_DECAY       83
-#define MIDI_CTRL_ACCENT      84
-#define MIDI_CTRL_WAVE        85 
-
 uint8_t _selected_ctrl = 0;
 uint8_t _selected_waveform[2] = { 0 };
 

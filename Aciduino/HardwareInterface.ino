@@ -1,7 +1,3 @@
-// Hardware config
-#define POT_NUMBER    4
-#define BUTTON_NUMBER 6
-
 // pot data
 typedef struct
 {

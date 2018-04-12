@@ -19,6 +19,7 @@
 #define MIDI_STOP  0xFC
 #define NOTE_ON    0x90
 #define NOTE_OFF   0x80
+#define MIDI_CC    0xB0
 
 // Sequencer data
 typedef struct
@@ -58,13 +59,20 @@ uint8_t _tmpSREG;
 // shared data to be used for user interface feedback
 bool _playing = false;
 
-void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel)
+void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel, bool atomicly = false)
 { 
   // send midi message
   command = command | (uint8_t)channel;
+  if ( atomicly == true ) {
+    _tmpSREG = SREG;
+    cli();
+  }
   Serial.write(command);
   Serial.write(byte1);
   Serial.write(byte2);
+  if ( atomicly == true ) {
+    SREG = _tmpSREG;
+  }
 }
 
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.

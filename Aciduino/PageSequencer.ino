@@ -12,8 +12,11 @@ uint8_t _last_note = 0;
 void sendPreviewNote(uint16_t step)
 {
   unsigned long milliTime, preMilliTime;
-  
-  sendMidiMessage(NOTE_ON, _sequencer[_selected_track].step[step].note, _sequencer[_selected_track].step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel);
+  uint8_t note;
+
+  // enable or disable harmonizer
+  note = harmonizer(_sequencer[_selected_track].step[step].note);
+  sendMidiMessage(NOTE_ON, note, _sequencer[_selected_track].step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel);
 
   // avoid delay() call because of uClock timmer1 usage
   //delay(200);
@@ -25,7 +28,7 @@ void sendPreviewNote(uint16_t step)
     }
   }
   
-  sendMidiMessage(NOTE_OFF, _sequencer[_selected_track].step[step].note, 0, _sequencer[_selected_track].channel);
+  sendMidiMessage(NOTE_OFF, note, 0, _sequencer[_selected_track].channel);
 }
 
 void processSequencerPots()
@@ -48,7 +51,7 @@ void processSequencerPots()
   // changes on octave or note pot?
   if ( octave != -1 || note != -1 ) {
     //ATOMIC(_sequencer[_selected_track].step[_step_edit].note = (_last_octave * 8) + _last_note);
-    note = harmonizer((_last_octave * 8) + _last_note);
+    note = (_last_octave * 8) + _last_note;
     ATOMIC(_sequencer[_selected_track].step[_step_edit].note = note);
     if ( _playing == false && _sequencer[_selected_track].step[_step_edit].rest == false ) {
       sendPreviewNote(_step_edit);

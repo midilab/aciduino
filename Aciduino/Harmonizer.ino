@@ -47,6 +47,7 @@ uint8_t * _mode[] = {
 
 #define MODES_NUMBER (sizeof(_mode) / sizeof(uint16_t)) // its array pointer we are holding here
 
+// since harmonizer is called from an ISR interrupt we need to change those variables above only atomicly!
 uint8_t _selected_mode = 0;
 int8_t _transpose = 0; // zero is centered C
 

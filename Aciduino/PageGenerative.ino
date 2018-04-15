@@ -26,9 +26,9 @@ void processGenerativeButtons()
   if ( pressed(GENERIC_BUTTON_4) ) {
     // previous harmonic mode
     if ( _selected_mode > 0 ) {
-      --_selected_mode;
+      ATOMIC(--_selected_mode);
     } else if ( _selected_mode == 0 ) {
-      _harmonize = false;
+      ATOMIC(_harmonize = false);
     }
   }
 
@@ -36,9 +36,9 @@ void processGenerativeButtons()
     // next harmonic mode
     if ( _selected_mode < MODES_NUMBER-1 ) {
       if ( _harmonize == false ) {
-        _harmonize = true;
+        ATOMIC(_harmonize = true);
       } else {
-        ++_selected_mode;
+        ATOMIC(++_selected_mode);
       }
     }
   }
@@ -92,7 +92,8 @@ void processGenerativePots()
   // GENERIC_POT_3: Harmonic mode temperament 
   value = getPotChanges(GENERIC_POT_3, 0, 24);
   if ( value != -1 ) {  
-    _transpose = value-12; // -12 (0) +12 
+    // -12 (0) +12 
+    ATOMIC(_transpose = value-12); 
   }  
 
 }
@@ -109,12 +110,9 @@ void acidRandomize()
     }
 
     note = random(_lower_note, high_note);
-    accent = random(0, 100);
-    accent = accent < ACCENT_PROBABILITY_GENERATION ? 1 : 0;
-    glide = random(0, 100);
-    glide = glide < GLIDE_PROBABILITY_GENERATION ? 1 : 0;
-    rest = random(0, 100);
-    rest = rest < REST_PROBABILITY_GENERATION ? 1 : 0;
+    accent = random(0, 100) < ACCENT_PROBABILITY_GENERATION ? 1 : 0;
+    glide = random(0, 100) < GLIDE_PROBABILITY_GENERATION ? 1 : 0;
+    rest = random(0, 100) < REST_PROBABILITY_GENERATION ? 1 : 0;
     
     ATOMIC(_sequencer[_selected_track].step[i].note = note);
     ATOMIC(_sequencer[_selected_track].step[i].accent = accent);

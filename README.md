@@ -73,12 +73,12 @@ Octave and note knobs lets you select the note for the selected step.
 
 Sequence lenth knob lets you choose from 1 step to 16 steps or lenth for your sequence.
 
+# Configure for personal needs
+
+Use config.h to hack your environment as you wish.
+
 # Dependencies
 
 This clone is based on uClock library to generate sequencer BPM clock. The library is now part of project to get DIYers a easy compile time.
 
 You can check more info for this library on: https://github.com/midilab/uClock
-
-# Soon 
-
-More documentation to come along with videos and usage examples. Get back soon!

@@ -17,6 +17,9 @@ Generate automatic harmonized acid lines by pressing a single button and twist s
 ## Midi Controller
 Controls your synthetizer acid midi parameters per track up to 6 parameters.
 
+## Midi Clock
+Tight and solid MIDI clock to drive your gears clock needs.
+
 # User Interface
 
 4 knobs and 6 buttons divided into 3 pages

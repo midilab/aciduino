@@ -100,5 +100,6 @@ You can check more info for this library on: https://github.com/midilab/uClock
 
 Add more two 220ohms resistors to you boom list and choose one of thoses above methods as main midi conection.
 
-a. 1x 5 pins DIN female connector (standard MIDI connector) + wiring to protoboard - you need solder skills here.
-b. 1x midi cable. Cut it in  a half and connect it directly to protoboard - its a good idea to soldering the wire tip before make the connections.
+A) 1x 5 pins DIN female connector (standard MIDI connector) + wiring to protoboard - you need solder skills here.
+
+B) 1x midi cable. Cut it in  a half and connect it directly to protoboard - its a good idea to soldering the wire tip before make the connections.

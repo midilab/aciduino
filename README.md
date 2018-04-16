@@ -24,7 +24,7 @@ Tight and solid MIDI clock to drive your gears clock needs.
 
 4 knobs and 6 buttons divided into 3 pages
 
-Turn your aciduino on and you get the page select, the page leds will be blinking indicating that you are on page select mode.
+When turning your aciduino on you have the page select, the page leds will be blinking indicating that you are on page select mode.
 
 ## [page select]: press button1 and button2 together
 knobs: none, none, none, tempo
@@ -42,7 +42,7 @@ buttons: track 1, track 2, wave form, ctrl A, ctrl B, play/stop
 
 The commands will be sent to the selected track only.
 
-Use track 1 and track 2 buttons to select the track to be use. The slected track is the one with led on.
+Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
 
 ctrl A and ctrl B change between knobs midi data to be sent. The selected ctrl is the one with led on.
 
@@ -51,7 +51,7 @@ knobs: ramdom low note, ramdom range note, transpose, tempo
 
 buttons: track 1, track 2, ramdomize it, harmonic mode -, harmonic mode +, play/stop
 
-Use track 1 and track 2 buttons to select the track to be use. The slected track is the one with led on.
+Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
 
 Press randomize to get a fresh new sequence on selected track.
 
@@ -85,3 +85,20 @@ Use config.h to hack your environment as you wish.
 This clone is based on uClock library to generate sequencer BPM clock. The library is now part of project to get DIYers a easy compile time.
 
 You can check more info for this library on: https://github.com/midilab/uClock
+
+# BOM List
+
+1. 1x arduino nano
+2. 1x solderless breadboard protoboard 830 tie points 2 busess
+3. 1x solderless breadboard jumper cable wire kit box
+4. 6x 220ohms resistors
+5. 6x 6mm taticle switch
+6. 6x 3mm diffused leds
+7. 6x 10k linear potentiometers
+
+## MIDI connection?
+
+Add more two 220ohms resistors to you boom list and choose one of thoses above methods as main midi conection.
+
+a. 1x 5 pins DIN female connector (standard MIDI connector) + wiring to protoboard - you need solder skills here.
+b. 1x midi cable. Cut it in  a half and connect it directly to protoboard - its a good idea to soldering the wire tip before make the connections.

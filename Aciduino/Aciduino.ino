@@ -3,10 +3,14 @@
 // under MIT license
 #include <Arduino.h>
 
+#include "config.h"
+
 void setup() 
 {
   // AcidStepSequencer Interface
-  initAcidStepSequencer(0, 1); // initing acid step sequencer in MIDI mode for channel 1
+  initAcidStepSequencer(MIDI_MODE);
+  setTrackChannel(1, TRACK1_CHANNEL);
+  setTrackChannel(2, TRACK2_CHANNEL);
 
   // pins, buttons, leds and pots config
   configureInterface();

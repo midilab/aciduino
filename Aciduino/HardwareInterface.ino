@@ -1,7 +1,3 @@
-// Hardware config
-#define POT_NUMBER    4
-#define BUTTON_NUMBER 6
-
 // pot data
 typedef struct
 {
@@ -52,6 +48,39 @@ bool pressed(uint8_t button_id)
   
   // using internal pullup pressed button goes LOW
   if ( value != _button[button_id].state && value == LOW ) {
+    _button[button_id].state = value; 
+    return true;    
+  } else {
+    _button[button_id].state = value; 
+    return false;
+  }
+}
+
+bool doublePressed(uint8_t button1_id, uint8_t button2_id)
+{
+  bool value1, value2;
+  
+  value1 = digitalRead(_button[button1_id].pin);
+  value2 = digitalRead(_button[button2_id].pin);
+  
+  // using internal pullup pressed button goes LOW
+  if ( value1 == LOW && value2 == LOW ) {
+    _button[button1_id].state = LOW; 
+    _button[button2_id].state = LOW;
+    return true;    
+  } else {
+    return false;
+  }
+}
+
+bool released(uint8_t button_id)
+{
+  bool value;
+  
+  value = digitalRead(_button[button_id].pin);
+  
+  // using internal pullup released button goes HIGH
+  if ( value != _button[button_id].state && value == HIGH ) {
     _button[button_id].state = value; 
     return true;    
   } else {

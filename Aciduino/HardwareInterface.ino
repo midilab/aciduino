@@ -92,7 +92,7 @@ bool released(uint8_t button_id)
 int16_t getPotChanges(uint8_t pot_id, uint16_t min_value, uint16_t max_value)
 {
   uint16_t value, value_ranged, last_value_ranged;
-  uint8_t pot_sensitivity = 1;
+  uint8_t pot_sensitivity = POT_SENSITIVITY;
 
   // get absolute value
   value = analogRead(_pot[pot_id].pin);

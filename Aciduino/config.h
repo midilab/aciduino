@@ -51,7 +51,9 @@
 #define POT_NUMBER    4
 #define BUTTON_NUMBER 6
 
-// Hardware pin configuration(double check your schematic before configure those pins)
+// Hardware config
+#define POT_SENSITIVITY       2
+// Pin configuration(double check your schematic before configure those pins)
 // Pots
 #define GENERIC_POT_1_PIN     A3
 #define GENERIC_POT_2_PIN     A2

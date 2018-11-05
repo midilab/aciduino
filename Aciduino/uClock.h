@@ -33,16 +33,29 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
+#define PHASE_FACTOR 16
+
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24L)
 
 namespace umodular { namespace clock {
 
+enum {
+	PAUSED = 0,
+	STARTING,
+	STARTED
+} state;
+
+enum {
+	INTERNAL_CLOCK = 0,
+	EXTERNAL_CLOCK
+} mode;
+		
 class uClockClass {
 
-	public:
-
+	private:
+			
 		void (*onClock96PPQNCallback)(uint32_t * tick);
 		void (*onClock32PPQNCallback)(uint32_t * tick);
 		void (*onClock16PPQNCallback)(uint32_t * tick);
@@ -62,18 +75,12 @@ class uClockClass {
 		uint16_t pll_x;
 		uint16_t tempo;
 		uint32_t start_timer;
+		uint8_t mode;
+	
+	public:
 
-		enum {
-			PAUSED = 0,
-			STARTING,
-			STARTED
-		} state;
-
-		enum {
-			INTERNAL_CLOCK = 0,
-			EXTERNAL_CLOCK
-		} mode;
-
+		uint8_t state;
+		
 		uClockClass();
 
 		void setClock96PPQNOutput(void (*callback)(uint32_t * tick)) {
@@ -107,11 +114,12 @@ class uClockClass {
 		void setTempo(uint16_t tempo);
 		uint16_t getTempo();
 
-		// External timming control
+		// external timming control
 		void setMode(uint8_t tempo_mode);
 		uint8_t getMode();
 		void clockMe();
 		
+		// todo!
 		void shuffle();
 		void tap();
 		
@@ -130,8 +138,8 @@ class uClockClass {
 extern umodular::clock::uClockClass uClock;
 
 extern "C" {
-extern volatile uint16_t _clock;
-extern volatile uint32_t _timer;
+	extern volatile uint16_t _clock;
+	extern volatile uint32_t _timer;
 }
 
 #endif /* __U_CLOCK_H__ */

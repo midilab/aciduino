@@ -31,10 +31,25 @@
 
 namespace umodular { namespace clock {
 
+static inline uint32_t phase_mult(uint32_t val) 
+{
+	return (val * PHASE_FACTOR) >> 8;
+}
+
+static inline uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) 
+{
+	if (new_clock >= old_clock) {
+		return new_clock - old_clock;
+	} else {
+		return new_clock + (65535 - old_clock);
+	}
+}
+
 uClockClass::uClockClass()
 {
 	init();
 	mode = INTERNAL_CLOCK;
+	state = PAUSED;
 	setTempo(120);
 	
 	onClock96PPQNCallback = NULL;
@@ -71,21 +86,6 @@ void uClockClass::init()
 	SREG = tmpSREG;
 }
 
-uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) 
-{
-	if (new_clock >= old_clock) {
-		return new_clock - old_clock;
-	} else {
-		return new_clock + (65535 - old_clock);
-	}
-}
-
-#define PHASE_FACTOR 16
-static uint32_t phase_mult(uint32_t val) 
-{
-	return (val * PHASE_FACTOR) >> 8;
-}
-
 void uClockClass::start() 
 {
 	start_timer = millis();
@@ -93,7 +93,7 @@ void uClockClass::start()
 	if (onClockStartCallback) {
 		onClockStartCallback();
 	}	
-		
+	
 	if (mode == INTERNAL_CLOCK) {
 		state = STARTED;
 		mod6_counter = 0;
@@ -148,11 +148,11 @@ void uClockClass::setTempo(uint16_t _tempo)
 		return;
 	}
 	
-	if ( tempo == _tempo ) {
+	if (tempo == _tempo) {
 		return;
 	}
 	
-	if ( _tempo > 300 || _tempo == 0 ) {
+	if (_tempo > 300 || _tempo == 0) {
 		return;
 	}
 	
@@ -180,8 +180,8 @@ void uClockClass::setMode(uint8_t tempo_mode)
 
 void uClockClass::clockMe() 
 {
-	if (uClock.mode == uClock.EXTERNAL_CLOCK) {
-	  uClock.handleClock();
+	if (mode == EXTERNAL_CLOCK) {
+		handleClock();
 	}
 }
 
@@ -337,7 +337,7 @@ uint32_t uClockClass::getNowTimer()
 uint32_t uClockClass::getPlayTime()
 {
 	return start_timer;
-}	
+}
 	
 } } // end namespace umodular::clock
 
@@ -354,7 +354,7 @@ ISR(TIMER1_OVF_vect)
 	// global timer counter
 	_timer = millis();
 	
-	if (uClock.state == uClock.STARTED) {
+	if (uClock.state == umodular::clock::STARTED) {
 		_clock++;
 		uClock.handleTimerInt();
 	}

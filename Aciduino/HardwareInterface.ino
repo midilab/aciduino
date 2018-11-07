@@ -114,6 +114,9 @@ int16_t getPotChanges(uint8_t pot_id, uint16_t min_value, uint16_t max_value)
     if ( _pot[pot_id].lock == true ) {
       _pot[pot_id].lock = false;
     }
+    if ( value_ranged > max_value ) {
+      value_ranged = max_value;
+    }
     return value_ranged;    
   } else {
     return -1;

@@ -1,8 +1,8 @@
 /*
 [page select]: press button1 and button2 together
-knobs: none, none, none, tempo
+knobs: none, none, none, none
 
-buttons: track 1, track 2, [midi controller], [generative], [step edit], play/stop
+buttons: track 1, track 2, [live mode], [generative], [step edit], play/stop
 */
 
 uint32_t _page_blink_timer = 0; 
@@ -59,12 +59,6 @@ void processInterface()
   // shut down play led if we are stoped
   if ( _playing == false ) {
     digitalWrite(GENERIC_LED_6 , LOW);
-  }
-
-  // GENERIC_POT_4: Sequencer BPM Tempo from SEQUENCER_MIN_BPM to SEQUENCER_MAX_BPM
-  tempo = getPotChanges(GENERIC_POT_4, SEQUENCER_MIN_BPM, SEQUENCER_MAX_BPM);
-  if ( tempo != -1 ) {   
-    uClock.setTempo(tempo);
   }
 
   // page select request

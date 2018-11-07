@@ -98,13 +98,15 @@ int16_t getPotChanges(uint8_t pot_id, uint16_t min_value, uint16_t max_value)
   value = analogRead(_pot[pot_id].pin);
     
   // range that value and our last_value
-  value_ranged = (value / (1024 / ((max_value - min_value) + 1))) + min_value;
-  last_value_ranged = (_pot[pot_id].state / (1024 / ((max_value - min_value) + 1))) + min_value; 
+  value_ranged = (value / (ADC_RESOLUTION / ((max_value - min_value) + 1))) + min_value;
+  last_value_ranged = (_pot[pot_id].state / (ADC_RESOLUTION / ((max_value - min_value) + 1))) + min_value; 
 
   // a lock system to not mess with some data(pots are terrible for some kinda of user interface data controls, but lets keep it low cost!)
   if ( _pot[pot_id].lock == true ) {
-    // user needs to move 1/4 of total range to get pot unlocked
-    pot_sensitivity = abs(max_value - min_value)/4;
+    // user needs to move 1/8 of total adc range to get pot unlocked
+    if ( abs(value - _pot[pot_id].state) < (ADC_RESOLUTION/8) ) {
+      return -1;
+    }
   }
   
   if ( abs(value_ranged - last_value_ranged) >= pot_sensitivity ) {

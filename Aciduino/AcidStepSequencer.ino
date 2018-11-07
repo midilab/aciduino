@@ -25,21 +25,22 @@ typedef struct
 typedef struct
 {
   uint8_t note;
-  int8_t length;
+  int16_t length;
 } STACK_NOTE_DATA;
 
-// Sequencer data
+// sequencer data
 typedef struct
 {
   SEQUENCER_STEP_DATA step[STEP_MAX_SIZE];
-  STACK_NOTE_DATA stack[NOTE_STACK_SIZE];
-  uint16_t step_length;
-  uint16_t step_location;
+  int8_t step_init_point;
+  uint8_t step_length; // pattern data to be saved until here!
+  uint8_t step_location;
   uint8_t channel;
+  STACK_NOTE_DATA stack[NOTE_STACK_SIZE];
 } SEQUENCER_TRACK_DATA;
 
-// main sequencer data
-SEQUENCER_TRACK_DATA _sequencer[TRACK_NUMBER];
+// main sequencer data is constantly change inside uClock 16PPQN and 96PPQN ISR callbacks, so volatile him!
+SEQUENCER_TRACK_DATA volatile _sequencer[TRACK_NUMBER];
 
 uint8_t _selected_track = 0;
 
@@ -48,9 +49,13 @@ uint8_t _selected_track = 0;
 uint8_t _tmpSREG;
 #define ATOMIC(X) _tmpSREG = SREG; cli(); X; SREG = _tmpSREG;
 
-// shared data to be used for user interface feedback
+// shared data to be used for user interface interaction and feedback
 bool _playing = false;
 bool _harmonize = false;
+uint16_t _step_edit = 0;
+uint8_t _last_octave = 3;
+uint8_t _last_note = 0;
+int8_t _transpose = 0; // zero is centered C
 
 void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel, bool atomicly = false)
 {   
@@ -75,22 +80,23 @@ void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t chan
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
 void ClockOut16PPQN(uint32_t * tick) 
 {
-  uint16_t step, length;
-  uint8_t track, note;
+  uint8_t step;
+  uint16_t length;
+  int8_t note;
 
-  for ( track = 0; track < TRACK_NUMBER; track++ ) {
+  for ( uint8_t track = 0; track < TRACK_NUMBER; track++ ) {
 
     length = NOTE_LENGTH;
     
     // get actual step location.
-    _sequencer[track].step_location = *tick % _sequencer[track].step_length;
+    _sequencer[track].step_location = uint32_t(*tick + _sequencer[track].step_init_point) % _sequencer[track].step_length;
     
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].step[_sequencer[track].step_location].rest == false ) {
   
       // check for glide event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
-      for ( uint16_t i = 1; i < _sequencer[track].step_length; i++  ) {
+      for ( uint8_t i = 1; i < _sequencer[track].step_length; i++  ) {
         ++step;
         step = step % _sequencer[track].step_length;
         if ( _sequencer[track].step[step].glide == true && _sequencer[track].step[step].rest == false ) {
@@ -109,6 +115,11 @@ void ClockOut16PPQN(uint32_t * tick)
           } else {
             note = _sequencer[track].step[_sequencer[track].step_location].note;
           }
+          note += _transpose;
+          // in case transpose push note away from the lower or higher midi note range barrier do not play it
+          if ( note < 0 || note > 127 ) {
+            break;
+          }
           _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on
@@ -121,6 +132,27 @@ void ClockOut16PPQN(uint32_t * tick)
     
   } 
   
+}
+
+void clearStackNote(int8_t track = -1)
+{
+  if ( track <= -1 ) {
+    // clear all tracks stack note
+    for ( uint8_t i = 0; i < TRACK_NUMBER; i++ ) {
+      // clear and send any note off 
+      for ( uint8_t j = 0; j < NOTE_STACK_SIZE; j++ ) {
+        sendMidiMessage(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel);
+        _sequencer[i].stack[j].length = -1;
+      } 
+    }
+  } else {
+    // clear and send any note off 
+    for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
+      sendMidiMessage(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel);
+      _sequencer[track].stack[i].length = -1;
+    }     
+  }
+
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
@@ -160,20 +192,11 @@ void onClockStart()
 // The callback function wich will be called when clock stops by using Clock.stop() method.
 void onClockStop() 
 {
-  uint8_t track;
-  
   Serial.write(MIDI_STOP);
 
-  for ( track = 0; track < TRACK_NUMBER; track++ ) {
-
-    // send all note off on sequencer stop
-    for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
-      sendMidiMessage(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel);
-      _sequencer[track].stack[i].length = -1;
-    }
-
-  }
-  
+  // clear all tracks stack note
+  clearStackNote();
+    
   _playing = false;
 }
 
@@ -181,7 +204,7 @@ void setTrackChannel(uint8_t track, uint8_t channel)
 {
   --track;
   --channel;
-  _sequencer[track].channel = channel;
+  ATOMIC(_sequencer[track].channel = channel);
 }
 
 void initAcidStepSequencer(uint8_t mode)
@@ -217,6 +240,7 @@ void initAcidStepSequencer(uint8_t mode)
   for ( track = 0; track < TRACK_NUMBER; track++ ) {
 
     _sequencer[track].channel = track;
+    _sequencer[track].step_init_point = 0;
     _sequencer[track].step_length = STEP_MAX_SIZE;
     _sequencer[track].step_location = 0;
 

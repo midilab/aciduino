@@ -38,6 +38,12 @@ void configureInterface()
   digitalWrite(GENERIC_LED_4, LOW);
   digitalWrite(GENERIC_LED_5, LOW);
   digitalWrite(GENERIC_LED_6, LOW);  
+
+  // first read to fill our registers
+  getPotChanges(GENERIC_POT_1, 0, ADC_RESOLUTION);
+  getPotChanges(GENERIC_POT_2, 0, ADC_RESOLUTION);
+  getPotChanges(GENERIC_POT_3, 0, ADC_RESOLUTION);
+  getPotChanges(GENERIC_POT_4, 0, ADC_RESOLUTION);
 }
 
 void processInterface()

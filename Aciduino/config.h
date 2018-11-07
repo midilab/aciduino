@@ -2,11 +2,14 @@
 #define __CONFIG_H__
 
 //
-// MIDI Mode
+// MIDI Config
 //
 // MIDI_STANDARD(0) for 31250 standard compilant MIDI devices(use with MIDI 5 pin connector)
 // MIDI_SERIAL(1) for 115200 compilant with serial devices(use with PC and a serial-to-midi converter)
 #define MIDI_MODE       0
+// MIDI Channel
+#define TRACK1_CHANNEL      1
+#define TRACK2_CHANNEL      2
 
 //
 // MIDI Controller config
@@ -41,10 +44,6 @@
 #define NOTE_VELOCITY      90
 #define ACCENT_VELOCITY    127
 
-// MIDI Channels for tracks
-#define TRACK1_CHANNEL      1
-#define TRACK2_CHANNEL      2
-
 //
 // Hardware config
 //
@@ -52,6 +51,7 @@
 #define BUTTON_NUMBER 6
 
 // Hardware config
+#define ADC_RESOLUTION        1024
 #define POT_SENSITIVITY       2
 // Pin configuration(double check your schematic before configure those pins)
 // Pots

@@ -2,49 +2,50 @@
 [midi controller]
 knobs: cutoff freq./decay, resonance/accent, env mod/tunning, tempo
 
-buttons: track 1, track 2, ctrl A, ctrl B, wave form, play/stop
+buttons: track 1, track 2, ctrl A/ctrl B, tempo -, tempo +, play/stop
 */
 // TODO: implement pickup by value for controllers
 
 uint8_t _selected_ctrl = 0;
-uint8_t _selected_waveform[2] = { 0 };
 
 void processControllerButtons()
 {
+  // select track 1
   if ( released(GENERIC_BUTTON_1) ) {
     lockPotsState(true);
     _selected_track = 0;
   }
 
+  // select track 2
   if ( released(GENERIC_BUTTON_2) ) {
     lockPotsState(true);
     _selected_track = 1;
   }
 
+  // toogle between ctrl A and ctrl B setup for potentiometers
   if ( pressed(GENERIC_BUTTON_3) ) {
-    _selected_waveform[_selected_track] = !_selected_waveform[_selected_track];
-    // send wave form cc change
-    if ( _selected_waveform[_selected_track] == 0 ) {
-      sendMidiMessage(MIDI_CC, MIDI_CTRL_WAVE, 0, _sequencer[_selected_track].channel, true); 
-    } else if ( _selected_waveform[_selected_track] == 1 ) {
-      sendMidiMessage(MIDI_CC, MIDI_CTRL_WAVE, 127, _sequencer[_selected_track].channel, true); 
-    }
-  }
-  
-  if ( pressed(GENERIC_BUTTON_4) ) {
     lockPotsState(true);
-    _selected_ctrl = 0;
+    _selected_ctrl = !_selected_ctrl;
   }
 
+  // decrement 1 bpm from tempo
+  if ( pressed(GENERIC_BUTTON_4) ) {
+    uClock.setTempo(uClock.getTempo()-1);
+  }
+
+  // increment 1 bpm from tempo
   if ( pressed(GENERIC_BUTTON_5) ) {
-    lockPotsState(true);
-    _selected_ctrl = 1;
+    uClock.setTempo(uClock.getTempo()+1);
   }
 
 }
 
 void processControllerLeds()
 {
+
+  digitalWrite(GENERIC_LED_4, LOW);
+  digitalWrite(GENERIC_LED_5, LOW); 
+    
   if ( _selected_track == 0 ) {
     digitalWrite(GENERIC_LED_1, HIGH);
     digitalWrite(GENERIC_LED_2, LOW);
@@ -52,15 +53,11 @@ void processControllerLeds()
     digitalWrite(GENERIC_LED_1, LOW);
     digitalWrite(GENERIC_LED_2, HIGH);
   } 
-
-  digitalWrite(GENERIC_LED_3, _selected_waveform[_selected_track]);
   
   if ( _selected_ctrl == 0 ) {
-    digitalWrite(GENERIC_LED_4, HIGH);
-    digitalWrite(GENERIC_LED_5, LOW);
+    digitalWrite(GENERIC_LED_3, LOW);
   } else if ( _selected_ctrl == 1 ) {
-    digitalWrite(GENERIC_LED_4, LOW);
-    digitalWrite(GENERIC_LED_5, HIGH);
+    digitalWrite(GENERIC_LED_3, HIGH);
   } 
 
 }
@@ -94,16 +91,36 @@ void processControllerPots()
     sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);      
   }  
 
-  // GENERIC_POT_3: env mod/tunning
+  // GENERIC_POT_3: env mod/wave
   value = getPotChanges(GENERIC_POT_3, 0, 127);
   if ( value != -1 ) {  
     // send cc
     if ( _selected_ctrl == 0 ) {
       ctrl = MIDI_CTRL_ENVMOD;
     } else if ( _selected_ctrl == 1 ) {
-      ctrl = MIDI_CTRL_TUNNING;
+      ctrl = MIDI_CTRL_WAVE;
     }
     sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);     
-  }      
+  }    
+
+  // GENERIC_POT_4: sequencer step length/global harmonic mode transpose 
+  if ( _selected_ctrl == 0 ) {
+    value = getPotChanges(GENERIC_POT_4, 1, STEP_MAX_SIZE);
+    if ( value != -1 ) {  
+      clearStackNote(_selected_track);
+      ATOMIC(_sequencer[_selected_track].step_length = value);
+      if ( _step_edit >= _sequencer[_selected_track].step_length ) {
+        _step_edit = _sequencer[_selected_track].step_length-1;
+      }      
+    }
+  } else if ( _selected_ctrl == 1 ) {
+    value = getPotChanges(GENERIC_POT_4, 0, 24);
+    if ( value != -1 ) {  
+      clearStackNote();
+      // -12 (0) +12 
+      ATOMIC(_transpose = value-12); 
+    }  
+  }
+   
 }
 

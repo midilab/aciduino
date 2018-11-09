@@ -7,6 +7,11 @@ buttons: previous pattern, next pattern, ctrl A/ctrl B, tempo -, tempo +, play/s
 // TODO: implement pickup by value for controllers
 
 uint8_t _selected_ctrl = 0;
+// used for led visual feedback on buttons hold action
+bool _pattern_saved = false;
+bool _pattern_cleared = false;
+uint32_t _page_live_blink_timer = 0; 
+uint32_t _feedback_blink_timer = 0; 
 
 void processControllerButtons()
 {
@@ -47,11 +52,15 @@ void processControllerButtons()
   // save pattern
   if ( holded(GENERIC_BUTTON_1, 2) ) {
     savePattern(_selected_pattern);
+    _pattern_saved = true;
+    _feedback_blink_timer = millis();
   }
 
   // reset and delete pattern
   if ( holded(GENERIC_BUTTON_2, 2) ) {
     resetPattern(_selected_pattern); 
+    _pattern_cleared = true;
+    _feedback_blink_timer = millis();
   }
 
   // toogle between ctrl A and ctrl B setup for potentiometers
@@ -74,25 +83,31 @@ void processControllerButtons()
 
 void processControllerLeds()
 {
-  /*  
-  if ( _selected_track == 0 ) {
-    digitalWrite(GENERIC_LED_1, HIGH);
-    digitalWrite(GENERIC_LED_2, LOW);
-  } else if ( _selected_track == 1 ) {
-    digitalWrite(GENERIC_LED_1, LOW);
-    digitalWrite(GENERIC_LED_2, HIGH);
-  } 
-  */
+  static bool blink_state = true;
+  
+  // blink interface here for button 3 to 5
+  if ( millis() - _page_live_blink_timer >= 150 ) {
+    blink_state = !blink_state;
+    _page_live_blink_timer = millis();
+  }
 
-  // first pattern? 
-  if ( _selected_pattern == 0 ) {
+  if ( _pattern_saved == true ) {
+    digitalWrite(GENERIC_LED_1 , blink_state);
+    if ( millis() - _feedback_blink_timer >= 600 ) {
+      _pattern_saved = false;
+    }
+  } else if ( _selected_pattern == 0 ) { // first pattern? 
     digitalWrite(GENERIC_LED_1 , HIGH);
   } else {
     digitalWrite(GENERIC_LED_1 , LOW);
   }  
 
-  // last pattern? 
-  if ( _selected_pattern == PATTERN_NUMBER-1 ) {
+  if ( _pattern_cleared == true ) {
+    digitalWrite(GENERIC_LED_2, blink_state);
+    if ( millis() - _feedback_blink_timer >= 600 ) {
+      _pattern_cleared = false;
+    }
+  } else if ( _selected_pattern == PATTERN_NUMBER-1 ) { // last pattern? 
     digitalWrite(GENERIC_LED_2 , HIGH);
   } else {
     digitalWrite(GENERIC_LED_2 , LOW);

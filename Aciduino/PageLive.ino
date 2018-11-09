@@ -2,7 +2,7 @@
 [midi controller]
 knobs: cutoff freq./decay, resonance/accent, env mod/tunning, tempo
 
-buttons: track 1, track 2, ctrl A/ctrl B, tempo -, tempo +, play/stop
+buttons: previous pattern, next pattern, ctrl A/ctrl B, tempo -, tempo +, play/stop
 */
 // TODO: implement pickup by value for controllers
 
@@ -10,6 +10,7 @@ uint8_t _selected_ctrl = 0;
 
 void processControllerButtons()
 {
+  /*
   // select track 1
   if ( released(GENERIC_BUTTON_1) ) {
     lockPotsState(true);
@@ -20,6 +21,37 @@ void processControllerButtons()
   if ( released(GENERIC_BUTTON_2) ) {
     lockPotsState(true);
     _selected_track = 1;
+  }
+  */
+
+  // previous pattern
+  if ( released(GENERIC_BUTTON_1) ) {
+    if ( _selected_pattern != 0 ) {
+      lockPotsState(true); 
+      // auto save?  
+      //savePattern(_selected_pattern);
+      loadPattern(--_selected_pattern);    
+    }
+  }
+
+  // next pattern
+  if ( released(GENERIC_BUTTON_2) ) {
+    if ( _selected_pattern < PATTERN_NUMBER-1 ) {
+      lockPotsState(true);  
+      // auto save?
+      //savePattern(_selected_pattern);   
+      loadPattern(++_selected_pattern);
+    }
+  }
+
+  // save pattern
+  if ( holded(GENERIC_BUTTON_1, 2) ) {
+    savePattern(_selected_pattern);
+  }
+
+  // reset and delete pattern
+  if ( holded(GENERIC_BUTTON_2, 2) ) {
+    resetPattern(_selected_pattern); 
   }
 
   // toogle between ctrl A and ctrl B setup for potentiometers
@@ -42,10 +74,7 @@ void processControllerButtons()
 
 void processControllerLeds()
 {
-
-  digitalWrite(GENERIC_LED_4, LOW);
-  digitalWrite(GENERIC_LED_5, LOW); 
-    
+  /*  
   if ( _selected_track == 0 ) {
     digitalWrite(GENERIC_LED_1, HIGH);
     digitalWrite(GENERIC_LED_2, LOW);
@@ -53,6 +82,21 @@ void processControllerLeds()
     digitalWrite(GENERIC_LED_1, LOW);
     digitalWrite(GENERIC_LED_2, HIGH);
   } 
+  */
+
+  // first pattern? 
+  if ( _selected_pattern == 0 ) {
+    digitalWrite(GENERIC_LED_1 , HIGH);
+  } else {
+    digitalWrite(GENERIC_LED_1 , LOW);
+  }  
+
+  // last pattern? 
+  if ( _selected_pattern == PATTERN_NUMBER-1 ) {
+    digitalWrite(GENERIC_LED_2 , HIGH);
+  } else {
+    digitalWrite(GENERIC_LED_2 , LOW);
+  }  
   
   if ( _selected_ctrl == 0 ) {
     digitalWrite(GENERIC_LED_3, LOW);
@@ -60,6 +104,8 @@ void processControllerLeds()
     digitalWrite(GENERIC_LED_3, HIGH);
   } 
 
+  digitalWrite(GENERIC_LED_4, LOW);
+  digitalWrite(GENERIC_LED_5, LOW); 
 }
 
 void processControllerPots()
@@ -107,16 +153,16 @@ void processControllerPots()
   if ( _selected_ctrl == 0 ) {
     value = getPotChanges(GENERIC_POT_4, 1, STEP_MAX_SIZE);
     if ( value != -1 ) {  
-      clearStackNote(_selected_track);
-      ATOMIC(_sequencer[_selected_track].step_length = value);
-      if ( _step_edit >= _sequencer[_selected_track].step_length ) {
-        _step_edit = _sequencer[_selected_track].step_length-1;
+      //clearStackNote(_selected_track);
+      ATOMIC(_sequencer[_selected_track].data.step_length = value);
+      if ( _step_edit >= _sequencer[_selected_track].data.step_length ) {
+        _step_edit = _sequencer[_selected_track].data.step_length-1;
       }      
     }
   } else if ( _selected_ctrl == 1 ) {
     value = getPotChanges(GENERIC_POT_4, 0, 24);
     if ( value != -1 ) {  
-      clearStackNote();
+      //clearStackNote();
       // -12 (0) +12 
       ATOMIC(_transpose = value-12); 
     }  

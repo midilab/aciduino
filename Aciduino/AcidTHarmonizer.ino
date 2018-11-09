@@ -47,8 +47,6 @@ uint8_t * _mode[] = {
 
 #define MODES_NUMBER (sizeof(_mode) / sizeof(uint16_t)) // its array pointer we are holding here
 
-uint8_t _selected_mode = 0;
-
 uint8_t harmonizer(uint8_t note)
 {
   uint8_t octave, interval;

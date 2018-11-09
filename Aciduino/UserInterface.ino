@@ -69,6 +69,7 @@ void processInterface()
 
   // page select request
   if ( doublePressed(GENERIC_BUTTON_1, GENERIC_BUTTON_2) ) {
+    lockPotsState(true);
     _selected_page = 0;
   }
 

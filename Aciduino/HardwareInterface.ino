@@ -232,8 +232,8 @@ bool holded(uint8_t button_id, uint8_t seconds)
   // using internal pullup pressed button goes LOW
   if ( _button[button_id].hold_trigger == false && value == LOW ) {
     if ( _button[button_id].hold_seconds == 0 ) {
-      _button[button_id].hold_seconds = millis()/1000;
-    } else if ( (millis()/1000) >= _button[button_id].hold_seconds+seconds ) {
+      _button[button_id].hold_seconds = (uint8_t)(millis()/1000);
+    } else if ( abs((uint8_t)(millis()/1000) - _button[button_id].hold_seconds) >= seconds ) {
       _button[button_id].hold_trigger = true; // avoid released triger after action.
       return true;    
     }

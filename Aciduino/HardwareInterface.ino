@@ -96,6 +96,8 @@ void loadPattern(uint8_t number)
   EEPROM.get(eeprom_address, pattern_exist);
   if ( pattern_exist != 1 ) {
     resetPattern(number);
+    // save last pattern loaded
+    EEPROM.write(1023, number);    
     return;
   }
 

@@ -9,7 +9,7 @@ With some user interface changes for cheap construction of a functional TB303 en
 # Features
 
 ## 303 Step Sequencer clone
-2 Tracks of famous Roland TB303 sequencer. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
+2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
 
 ## Generative Engine
 Generate automatic harmonized acid lines by pressing a single button and twist some harmonic parameter knobs. Just pick up a harmonic mode(scale), the low and high notes to fit the sequence and you have infinite sequences by pressing random it button!
@@ -38,7 +38,9 @@ Use track 1 and track 2 buttons to select the track to be use. The selected trac
 ## [live mode]
 knobs: cutoff freq./decay, resonance/accent, env mod/wave select, sequence lentgh/global tunning
 
-buttons: track 1, track 2, ctrl A/ctrl B, tempo -, tempo +, play/stop
+buttons: prev pattern, next pattern, ctrl A/ctrl B, tempo -, tempo +, play/stop
+
+holding one of first two button for 2 seconds: save pattern, delete and reset pattern
 
 The midi cc commands will be sent to the selected track only.
 
@@ -49,7 +51,7 @@ Global tunning lets you go up or down on scale tunning, from -12 to +12 interval
 ## [generative]
 knobs: ramdom low note, ramdom range note, number of octave tones to use(from 1 to 12 or 1 to 8 if in harmonized mode), sequence probrability grid
 
-buttons: shift sequence left, shift sequence rigth, ramdomize it, harmonic mode -, harmonic mode +, play/stop
+buttons: harmonic mode -, harmonic mode +, ramdomize it, shift sequence left, shift sequence rigth, play/stop
 
 Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
 

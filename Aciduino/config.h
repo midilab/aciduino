@@ -6,7 +6,7 @@
 //
 // MIDI_STANDARD(0) for 31250 standard compilant MIDI devices(use with MIDI 5 pin connector)
 // MIDI_SERIAL(1) for 115200 compilant with serial devices(use with PC and a serial-to-midi converter)
-#define MIDI_MODE       0
+#define MIDI_MODE           0
 // MIDI Channel
 #define TRACK1_CHANNEL      1
 #define TRACK2_CHANNEL      2

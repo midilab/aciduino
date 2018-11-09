@@ -14,6 +14,9 @@ void setup()
 
   // pins, buttons, leds and pots config
   configureInterface();
+
+  // last pattern user had load before power off
+  loadLastPattern();
 }
 
 // User interaction goes here

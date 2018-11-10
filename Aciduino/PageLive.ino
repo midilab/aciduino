@@ -15,19 +15,6 @@ uint32_t _feedback_blink_timer = 0;
 
 void processControllerButtons()
 {
-  /*
-  // select track 1
-  if ( released(GENERIC_BUTTON_1) ) {
-    lockPotsState(true);
-    _selected_track = 0;
-  }
-
-  // select track 2
-  if ( released(GENERIC_BUTTON_2) ) {
-    lockPotsState(true);
-    _selected_track = 1;
-  }
-  */
 
   // previous pattern
   if ( released(GENERIC_BUTTON_1) ) {
@@ -127,6 +114,8 @@ void processControllerPots()
 {
   uint16_t value;
   uint8_t ctrl;
+
+#ifdef USE_MIDI_CTRL
   
   // GENERIC_POT_1: cutoff freq./decay
   value = getPotChanges(GENERIC_POT_1, 0, 127);
@@ -163,6 +152,8 @@ void processControllerPots()
     }
     sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);     
   }    
+
+#endif  
 
   // GENERIC_POT_4: sequencer step length/global harmonic mode transpose 
   if ( _selected_ctrl == 0 ) {

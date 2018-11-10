@@ -57,9 +57,9 @@ Just press the desired page button to navigate thru.
 
 Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
 
-interface
-knobs    ( none )    ( none )    ( none )    ( none )
-buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]
+**interface**  
+knobs    ( none )    ( none )    ( none )    ( none )  
+buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]  
 
 ## [live mode]
 
@@ -73,12 +73,13 @@ ctrl A and ctrl B change between knobs midi data to be sent or controlled. The s
 
 Global tunning lets you go up or down on scale tunning, from -12 to +12 interval.
 
-interface
-knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)
-buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]
-hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.
+**interface**  
+knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)  
+buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]  
+hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.  
 
 ## [generative]
+
 Press generate button to get a fresh new sequence on selected track, turning knobs here doesnt change the current sequence, it only sets the parameters for the next time you press generate button.
 
 harmonic scale mode -(previous) and harmonic scale mode +(next) lets you navigate thru harmonic modes(scales). Pressing harmonic mode - all the way until get led on means no harmonic context apply to sequence generation.
@@ -91,9 +92,9 @@ Ramdom range high note selects the barrier to the most high note allowed to be g
 
 Using shift buttons you can shitf all the sequence steps one step left or rigth using shift navigation buttons.
 
-interface
-knobs    (low range)  (high range)  (tones num)  (notes num)
-buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]
+**interface**  
+knobs    (low range)  (high range)  (tones num)  (notes num)  
+buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]  
 
 ## [step edit]
 Here you can program you acid lines in the same way you program a original one, but instead of keypad for notes you use 2 knobs, one for octave and other for note to get access to all midi range notes spectrum while editing step by step your sequence using rest, glide and accent.
@@ -106,9 +107,9 @@ Octave and note knobs lets you select the note for the selected step.
 
 Sequence lenth knob lets you choose from 1 step to 16 steps or lenth for your sequence.
 
-interface
-knobs     (octave)    (note)      (tunning)    (length) 
-buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]
+**interface**  
+knobs     (octave)    (note)      (tunning)    (length)  
+buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]  
 
 # Configure for personal needs
 

@@ -14,6 +14,7 @@
 //
 // MIDI Controller config
 //
+#define USE_MIDI_CTRL         true
 #define MIDI_CTRL_TUNNING     79
 #define MIDI_CTRL_CUTOFF      80
 #define MIDI_CTRL_RESONANCE   81

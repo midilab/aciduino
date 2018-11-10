@@ -9,7 +9,7 @@ With some user interface changes for cheap construction of a functional TB303 en
 # Features
 
 ## 303 Step Sequencer clone
-2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
+2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots to save your work. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
 
 ## Generative Engine
 Generate automatic harmonized acid lines by pressing a single button and twist some harmonic parameter knobs. Just pick up a harmonic mode(scale), the low and high notes to fit the sequence and you have infinite sequences by pressing random it button!
@@ -26,55 +26,85 @@ Tight and solid MIDI clock to drive your gears clock needs.
 
 When turning your aciduino on you have the page select, the page leds will be blinking indicating that you are on page select mode.
 
-## [page select]: press button1 and button2 together
-knobs: none, none, none, none
+Any time you press button 1 and button 2 together you will be drive to the page select, there you can choose the disered page and track.
 
-buttons: track 1, track 2, [live mode], [generative], [step edit], play/stop
+Use this information above as reference for aciduino interface 
+
+[page select]
+knobs    ( none )    ( none )    ( none )    ( none )
+buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]
+
+[page 1 live mode]
+knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)
+buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]
+hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.
+
+[page 2 generative mode]
+knobs    (low range)  (high range)  (tones num)  (notes num)
+buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]
+
+[page 3 step edit]
+knobs     (octave)    (note)      (tunning)    (length) 
+buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]
+
+## [page select]: press button1 and button2 together
 
 Just press the desired page button to navigate thru. 
 
 Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
 
+interface
+knobs    ( none )    ( none )    ( none )    ( none )
+buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]
+
 ## [live mode]
-knobs: cutoff freq./decay, resonance/accent, env mod/wave select, sequence lentgh/global tunning
 
-buttons: prev pattern, next pattern, ctrl A/ctrl B, tempo -, tempo +, play/stop
+The navigation buttons 1 and 2 are used to change pattern, one of the leds will turn on when you reach the navigation barrier - first patterns led 1 on, last pattern led 2 on.
 
-holding one of first two button for 2 seconds: save pattern, delete and reset pattern
+Holding button 1 or 2 for 2 seconds: save pattern, delete and reset pattern
 
 The midi cc commands will be sent to the selected track only.
 
-ctrl A and ctrl B change between knobs midi data to be sent. The selected ctrl A is the one with led off and ctrl B the led on.
+ctrl A and ctrl B change between knobs midi data to be sent or controlled. The selected ctrl A is the one with led off and ctrl B the led on.
 
 Global tunning lets you go up or down on scale tunning, from -12 to +12 interval.
 
+interface
+knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)
+buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]
+hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.
+
 ## [generative]
-knobs: ramdom low note, ramdom range note, number of octave tones to use(from 1 to 12 or 1 to 8 if in harmonized mode), sequence probrability grid
+Press generate button to get a fresh new sequence on selected track, turning knobs here doesnt change the current sequence, it only sets the parameters for the next time you press generate button.
 
-buttons: harmonic mode -, harmonic mode +, ramdomize it, shift sequence left, shift sequence rigth, play/stop
-
-Use track 1 and track 2 buttons to select the track to be use. The selected track is the one with led on.
-
-Press randomize to get a fresh new sequence on selected track.
-
-harmonic mode -(previous) and harmonic mode +(next) lets you navigate thru harmonic modes(scales). Pressing harmonic mode - all the way until get led on means no harmonic context apply to sequence generation.
+harmonic scale mode -(previous) and harmonic scale mode +(next) lets you navigate thru harmonic modes(scales). Pressing harmonic mode - all the way until get led on means no harmonic context apply to sequence generation.
 
 By default harmonize is off, just press once harmonic +(next) to get first scale on list, ionian, next again to got to dorian and so on.
 
-Ramdom low note selects the first note of sequence range notes that can be generated by probabilty. Ramdom range note defines the range of notes that can be generated starting from ramdom low note.
+Ramdom range low note selects the first note of sequence range notes that can be generated by probabilty. Ramdom range note defines the range of notes that can be generated starting from ramdom low note.
+
+Ramdom range high note selects the barrier to the most high note allowed to be generated on a sequence.
+
+Using shift buttons you can shitf all the sequence steps one step left or rigth using shift navigation buttons.
+
+interface
+knobs    (low range)  (high range)  (tones num)  (notes num)
+buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]
 
 ## [step edit]
-knobs: octave, note, global tunning, sequence length 
+Here you can program you acid lines in the same way you program a original one, but instead of keypad for notes you use 2 knobs, one for octave and other for note to get access to all midi range notes spectrum while editing step by step your sequence using rest, glide and accent.
 
-buttons: prev step, next step, rest, glide, accent, play/stop
-
-Led on for prev step button means you are have the first step selected for edit, led on for next step button means you have the last step select for edit.
+Using step navigation buttons the led on for prev step button means you are have the first step selected for edit, led on for next step button means you have the last step select for edit.
 
 The rest, glide and accent buttons are applied to selected step, led on/off are used to express the state of each parameter per step.
 
 Octave and note knobs lets you select the note for the selected step.
 
 Sequence lenth knob lets you choose from 1 step to 16 steps or lenth for your sequence.
+
+interface
+knobs     (octave)    (note)      (tunning)    (length) 
+buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]
 
 # Configure for personal needs
 

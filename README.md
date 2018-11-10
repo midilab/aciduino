@@ -30,22 +30,26 @@ Any time you press button 1 and button 2 together you will be drive to the page 
 
 Use this information above as reference for aciduino interface 
 
-[page select]
-knobs    ( none )    ( none )    ( none )    ( none )
-buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]
+**[page select]**  
+knobs    ( none )    ( none )    ( none )    ( none )  
+buttons [ track 1 ] [ track 2 ] [live mode] [generative] [step edit] [play/stop]  
 
-[page 1 live mode]
-knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)
-buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]
-hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.
 
-[page 2 generative mode]
-knobs    (low range)  (high range)  (tones num)  (notes num)
-buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]
+**[page 1 live mode]**  
+knobs    (ctrl 1 A/B)  (ctrl 2 A/B)  (ctrl 3 A/B)  (length/tunning)  
+buttons [ << pattern ] [ pattern >> ] [ ctrl A/B ] [ << tempo ] [ tempo >> ] [play/stop]  
+hold    [save pattern] [delete pattern] => hold button 1 or button 2 until led blink to complete the action.  
 
-[page 3 step edit]
-knobs     (octave)    (note)      (tunning)    (length) 
-buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]
+
+**[page 2 generative mode]**  
+knobs    (low range)  (high range)  (tones num)  (notes num)  
+buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]  
+
+
+**[page 3 step edit]**  
+knobs     (octave)    (note)      (tunning)    (length)  
+buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]  
+
 
 ## [page select]: press button1 and button2 together
 

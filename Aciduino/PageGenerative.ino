@@ -116,11 +116,11 @@ void processGenerativePots()
   }  
   
   // GENERIC_POT_4: ramdomizer signatures
-  value = getPotChanges(GENERIC_POT_4, 0, 70);
+  value = getPotChanges(GENERIC_POT_4, 0, 80);
   if ( value != -1 ) {  
     //_accent_probability = value???;
     //_glide_probability  value???;
-    _rest_probability = 70-value;
+    _rest_probability = 80-value;
   }    
 
 }

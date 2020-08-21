@@ -53,13 +53,14 @@ static inline uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock)
 
 uClockClass::uClockClass()
 {
-  // 4 is good for usb-to-midi hid
   // 11 is good for native 31250bps midi interface
+  // 4 is good for usb-to-midi hid
   drift = 11;
   pll_x = 220;
+  start_timer = 0;
+  state = PAUSED;
   mode = INTERNAL_CLOCK;
   resetCounters();
-  setTempo(120);
   
   onClock96PPQNCallback = NULL;
   onClock32PPQNCallback = NULL;
@@ -70,8 +71,7 @@ uClockClass::uClockClass()
 
 void uClockClass::init() 
 {
-  start_timer = 0;
-  state = PAUSED;
+  setTempo(120);
   //
   // Configure timers and prescale
   // Timmer1: ATMega128, ATMega328, AtMega16U4 and AtMega32U4

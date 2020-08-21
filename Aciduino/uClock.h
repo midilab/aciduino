@@ -3,7 +3,7 @@
  *  Project     BPM clock generator for Arduino
  *  @brief      A Library to implement BPM clock tick calls using hardware timer1 interruption. Tested on ATmega168/328, ATmega16u4/32u4 and ATmega2560.
  *              Derived work from mididuino MidiClock class. (c) 2008 - 2011 - Manuel Odendahl - wesen@ruinwesen.com
- *  @version    0.8.2
+ *  @version    0.8.3
  *  @author     Romulo Silva
  *  @date       08/21/2020
  *  @license    MIT - (c) 2020 - Romulo Silva - contact@midilab.co

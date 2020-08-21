@@ -228,12 +228,10 @@ void initAcidStepSequencer(uint8_t mode)
   // Initialize serial communication
   if ( mode == 0 ) {
     // the default MIDI serial speed communication at 31250 bits per second
-    Serial.begin(31250); 
-    uClock.setDrift(11);
+    Serial.begin(31250);
   } else if ( mode == 1 ) {
     // for usage with a PC with a serial to MIDI bridge
     Serial.begin(115200);
-    uClock.setDrift(4);
   }
 
   // Inits the clock

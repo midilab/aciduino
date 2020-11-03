@@ -180,7 +180,7 @@ void connectButton(uint8_t button_id, uint8_t button_pin)
   // use internal pullup for buttons
   pinMode(_button[button_id].pin, INPUT_PULLUP);
   // get first state data
-  _button[button_id].state = digitalRead(_pot[button_id].pin);
+  _button[button_id].state = digitalRead(_button[button_id].pin);
   _button[button_id].hold_seconds = 0;
   _button[button_id].hold_trigger = false;
 }

@@ -3,7 +3,7 @@
  *  Project     BPM clock generator for Arduino
  *  @brief      A Library to implement BPM clock tick calls using hardware timer1 interruption. Tested on ATmega168/328, ATmega16u4/32u4 and ATmega2560.
  *              Derived work from mididuino MidiClock class. (c) 2008 - 2011 - Manuel Odendahl - wesen@ruinwesen.com
- *  @version    0.10.0
+ *  @version    0.10.5
  *  @author     Romulo Silva
  *  @date       08/21/2020
  *  @license    MIT - (c) 2020 - Romulo Silva - contact@midilab.co
@@ -28,101 +28,55 @@
  */
 #include "uClock.h"
 
-#define ATOMIC(X) noInterrupts(); X; interrupts();
-
 // 
 // Timer setup for work clock
 //
 #if defined(TEENSYDUINO) && !defined(__AVR_ATmega32U4__)
-IntervalTimer _teensyTimer;
-void teensyInterrupt();
-void workClock(uint32_t freq_resolution)
+IntervalTimer _uclockTimer;
+void uclockISR();
+void uclockInitTimer()
 {
-	// fallback default frequency (CLOCK_250000HZ) if no requested freq available
-	uint8_t microseconds = 4;
-	const bool running = false;
-
-	switch(freq_resolution) {
-		case CLOCK_62500HZ:
-			microseconds = 16;
-			break;
-		case CLOCK_125000HZ:
-			microseconds = 8;
-			break;
-		case CLOCK_250000HZ:
-			microseconds = 4;
-			break;
-		default:
-			return;
-	}
-
-	if (running) {
-		_teensyTimer.update(microseconds);
-	} else {
-		_teensyTimer.begin(teensyInterrupt, microseconds);
-		// Set the interrupt priority level, controlling which other interrupts
-		// this timer is allowed to interrupt. Lower numbers are higher priority, 
-		// with 0 the highest and 255 the lowest. Most other interrupts default to 128. 
-		// As a general guideline, interrupt routines that run longer should be given 
-		// lower priority (higher numerical values).
-		_teensyTimer.priority(0);
-	}
-
+	_uclockTimer.begin(uclockISR, 16);
+	// Set the interrupt priority level, controlling which other interrupts
+	// this timer is allowed to interrupt. Lower numbers are higher priority, 
+	// with 0 the highest and 255 the lowest. Most other interrupts default to 128. 
+	// As a general guideline, interrupt routines that run longer should be given 
+	// lower priority (higher numerical values).
+	_uclockTimer.priority(0);
 }
 #else
-void workClock(uint32_t freq_resolution)
+void uclockInitTimer()
 {
-	// fallback default frequency (CLOCK_62500HZ) if no requested freq available
-	uint8_t comparator = 255;
-	const bool running = false;
-
-	switch(freq_resolution) {
-		case CLOCK_62500HZ:
-			comparator = 255;
-			break;
-		//case CLOCK_125000HZ:
-		//	comparator = 127;
-		//	break;
-		//case CLOCK_250000HZ:
-		//	comparator = 63;
-		//	break;
-		default:
-			return;
-	}
-
-	if (running) {
-		// update comparator speed of our internal clock system
-		OCR1A = comparator;
-		//OCR2A = comparator;
-	} else {
+	ATOMIC(
 		// Timer1
 		TCCR1A = 0;
 		TCCR1B = 0;
 		TCNT1  = 0;
 		// set the speed of our internal clock system
-		OCR1A = comparator;
+		OCR1A = 255;
 		// turn on CTC mode
 		TCCR1B |= (1 << WGM12);
 		// Set CS12, CS11 and CS10 bits for 1 prescaler
 		TCCR1B |= (0 << CS12) | (0 << CS11) | (1 << CS10);
 		// enable timer compare interrupt
 		TIMSK1 |= (1 << OCIE1A);
-
-		/*
+	)
+	/*
+	ATOMIC(
 		// Timer2
 		TCCR2A = 0;
 		TCCR2B = 0;
 		TCNT2  = 0;
 		// set the speed of our internal clock system
-		OCR2A = comparator;
+		OCR2A = 255;
 		// turn on CTC mode
 		TCCR2B |= (1 << WGM21);
 		// Set CS22, CS21 and CS20 bits for 1 prescaler
 		TCCR2B |= (0 << CS22) | (0 << CS21) | (1 << CS20);
 		// enable timer compare interrupt
 		TIMSK2 |= (1 << OCIE2A);
-		*/
-	}
+	)
+	*/
 }
 #endif
 
@@ -144,16 +98,11 @@ static inline uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock)
 
 uClockClass::uClockClass()
 {
-	// some tested values
-	// 1 is good for native 31250bps midi interface
-	// 4 is good for usb-to-midi hid on leonardo
-	// (6, 1) is good on teensy lc usb midi
-	// internal drift is used to calibrate master clock
-	internal_drift = 1;
-	// internal drift is used to calibrate slave clock
-	external_drift = 1;
-	tempo = 120;
+	// drift is used to sligth calibrate with your slave clock
+	drift = 1;
+	slave_drift = 0;
 	pll_x = 220;
+	tempo = 120;
 	start_timer = 0;
 	last_interval = 0;
 	sync_interval = 0;
@@ -161,59 +110,21 @@ uClockClass::uClockClass()
 	mode = INTERNAL_CLOCK;
 	ext_interval_acc = 0;
 	resetCounters();
-	
+
 	onClock96PPQNCallback = NULL;
 	onClock32PPQNCallback = NULL;
 	onClock16PPQNCallback = NULL;
 	onClockStartCallback = NULL;
 	onClockStopCallback = NULL;
 
-	// set initial default clock operate frequency
-	// to higher one. If you experience problems
-	// with your sequencer app process try to go lower
-	// avr at 16mhz suffers from bellow 16us clock
-	// but lets get teensy running at higher clock!
-#if defined(TEENSYDUINO) && !defined(__AVR_ATmega32U4__)
-	//freq_resolution = CLOCK_62500HZ; // 62500Hz/16us
-	//freq_resolution = CLOCK_125000HZ; // 125000Hz/8us
-	freq_resolution = CLOCK_250000HZ; // 250000Hz/4us
-#else
-	freq_resolution = CLOCK_62500HZ; // 62500Hz/16us
-	//freq_resolution = CLOCK_125000HZ; // 125000Hz/8us
-	//freq_resolution = CLOCK_250000HZ; // 250000Hz/4us
-#endif
 	// first interval calculus
 	setTempo(tempo);
 }
 
 void uClockClass::init() 
 {
-	// init work clock timer interrupt
-	workClock(freq_resolution);
-}
-
-void uClockClass::setResolution(uint32_t hertz)
-{
-	// only registred frequencies!
-	switch(hertz) {
-		case CLOCK_62500HZ:
-		case CLOCK_125000HZ:
-		case CLOCK_250000HZ:
-			break;
-		default:
-			return;
-	}
-
-	ATOMIC(
-		freq_resolution = hertz;
-		setTempo(tempo);
-		workClock(freq_resolution);
-	)
-}
-
-uint32_t uClockClass::getResolution()
-{
-	return freq_resolution;
+	// init work clock timer interrupt at 16 microseconds
+	uclockInitTimer();
 }
 
 void uClockClass::start() 
@@ -266,9 +177,9 @@ void uClockClass::setTempo(float bpm)
 	tempo = bpm;
 
 	ATOMIC(
-		interval = (freq_resolution / (tempo * 24 / 60)) - internal_drift;
-		//interval = (uint16_t)((156250.0 / tempo) - internal_drift);
-		//interval = 62500 / (tempo * 24 / 60) - internal_drift;
+		//interval = (freq_resolution / (tempo * 24 / 60)) - drift;
+		//interval = 62500 / (tempo * 24 / 60) - drift;
+		interval = (uint16_t)((156250.0 / tempo) - drift);
 	)
 }
 
@@ -285,41 +196,53 @@ float uClockClass::getTempo()
 		}
 		if (acc != 0) {
 			// get average interval, because MIDI sync world is a wild place...
-			tempo = (((float)freq_resolution/24) * 60) / (acc / acc_counter);
+			//tempo = (((float)freq_resolution/24) * 60) / (float)(acc / acc_counter);
 			// derivated one time calc value = ( freq_resolution / 24 ) * 60
-			//tempo = (float)(156250.0 / ((acc / acc_counter)));
+			tempo = (float)(156250.0 / (acc / acc_counter));
 		}
 	}
 	return tempo;
 }
 
-void uClockClass::setDrift(uint8_t internal, uint8_t external)
+void uClockClass::setDrift(uint8_t value)
 {
-	ATOMIC(
-		internal_drift = internal;
-		external_drift = external == 255 ? internal : external;
-	)
+	ATOMIC(drift = value)
 	// force set tempo to update runtime interval
 	setTempo(tempo);
 }
 
-uint8_t uClockClass::getInternalDrift()
+void uClockClass::setSlaveDrift(uint8_t value)
 {
-	return internal_drift;
+	ATOMIC(slave_drift = value)
 }
 
-uint8_t uClockClass::getExternalDrift()
+uint8_t uClockClass::getDrift()
 {
-	return external_drift;
+	return drift;
 }
 
+// each interval is 16us
+// this method is usefull for debug
 uint16_t uClockClass::getInterval()
 {
-	// since this is a debug method
-	// we are not going to stop interrupt here
-	// avoiding jitter
-	// so interval returned here are not always trust data!
 	return interval;
+}
+
+// Main poolling tick call
+uint8_t uClockClass::getTick(uint32_t * tick)
+{
+	ATOMIC(
+		uint32_t last_tick = internal_tick;
+	)
+	if (*tick != last_tick) {
+		*tick = last_tick;
+		return 1;
+	}
+	if (last_tick - *tick > 1) {
+		*tick++;
+		return 1;
+	}
+	return 0;
 }
 
 void uClockClass::setMode(uint8_t tempo_mode) 
@@ -345,11 +268,11 @@ void uClockClass::resetCounters()
 {
 	counter = 0;
 	last_clock = 0;
-	div96th_counter = 0;
+	internal_tick = 0;
+	external_tick = 0;
 	div32th_counter = 0;
 	div16th_counter = 0;
 	mod6_counter = 0;
-	indiv96th_counter = 0;
 	inmod6_counter = 0;
 	ext_interval_idx = 0;
 }
@@ -371,15 +294,13 @@ void uClockClass::handleExternalClock()
 	last_interval = clock_diff(last_clock, _clock);
 	last_clock = _clock;
 
-	indiv96th_counter++;
-	inmod6_counter++;
-
-	if (inmod6_counter == 6) {
-		inmod6_counter = 0;
-	}
+	// accumulate interval incomming ticks data for getTempo() smooth reads on slave mode
+	ext_interval_buffer[ext_interval_idx++ % EXT_INTERVAL_BUFFER_SIZE] = last_interval;	
+	
+	// slave tick me!
+	external_tick++;
 
 	switch (state) {
-
 		case PAUSED:
 			break;
 
@@ -388,14 +309,11 @@ void uClockClass::handleExternalClock()
 			break;
 
 		case STARTED:
-			if (indiv96th_counter == 2) {
-				interval = last_interval + external_drift;
+			if (external_tick == 1) {
+				interval = last_interval;
 			} else {
-				interval = ((((uint32_t)interval * (uint32_t)pll_x) + (uint32_t)(256 - pll_x) * (uint32_t)last_interval) >> 8) + external_drift;
+				interval = (((uint32_t)interval * (uint32_t)pll_x) + (uint32_t)(256 - pll_x) * (uint32_t)last_interval) >> 8;
 			}
-			// accumulate interval incomming ticks data(for a better getTempo stability over bad clocks)
-			ext_interval_buffer[ext_interval_idx] = interval;
-			ext_interval_idx = ++ext_interval_idx % EXT_INTERVAL_BUFFER_SIZE;
 			break;
 	}
 }
@@ -403,17 +321,19 @@ void uClockClass::handleExternalClock()
 void uClockClass::handleTimerInt()  
 {
 	if (counter == 0) {
-		
+		// update internal clock base counter
 		counter = interval;
 
+		// need a callback?
+		// please, use the polling method with getTick() instead...
 		if (onClock96PPQNCallback) {
-			onClock96PPQNCallback(&div96th_counter);
+			onClock96PPQNCallback(&internal_tick);
 		}
-		
+
 		if (mod6_counter == 0) {
 			if (onClock32PPQNCallback) {
 				onClock32PPQNCallback(&div32th_counter);
-			}			
+			}
 			if (onClock16PPQNCallback) {
 				onClock16PPQNCallback(&div16th_counter);
 			}
@@ -427,17 +347,17 @@ void uClockClass::handleTimerInt()
 			}
 			div32th_counter++;
 		}
-		
-		div96th_counter++;
+
+		// tick me!
+		internal_tick++;
 		mod6_counter++;
-	
+
 		if (mode == EXTERNAL_CLOCK) {
 			sync_interval = clock_diff(last_clock, _clock);
-			if ((div96th_counter < indiv96th_counter) || (div96th_counter > (indiv96th_counter + 1))) {
-				div96th_counter = indiv96th_counter;
-				mod6_counter = inmod6_counter;
+			if ((internal_tick < external_tick) || (internal_tick > (external_tick + 1))) {
+				internal_tick = external_tick;
 			}
-			if (div96th_counter <= indiv96th_counter) {
+			if (internal_tick <= external_tick) {
 				counter -= phase_mult(sync_interval);
 			} else {
 				if (counter > sync_interval) {
@@ -449,11 +369,10 @@ void uClockClass::handleTimerInt()
 		if (mod6_counter == 6) {
 			mod6_counter = 0;
 		}
-		
+
 	} else {
 		counter--;
 	}
-
 }
 
 // elapsed time support
@@ -511,9 +430,10 @@ volatile uint32_t _timer = 0;
 // Clocked at: 62.5kHz/16usec
 //
 #if defined(TEENSYDUINO) && !defined(__AVR_ATmega32U4__)
-void teensyInterrupt() 
+void uclockISR() 
 #else
 ISR(TIMER1_COMPA_vect) 
+//ISR(TIMER2_COMPA_vect) 
 #endif
 {
 	// global timer counter

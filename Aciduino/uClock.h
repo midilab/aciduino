@@ -3,7 +3,7 @@
  *  Project     BPM clock generator for Arduino
  *  @brief      A Library to implement BPM clock tick calls using hardware timer1 interruption. Tested on ATmega168/328, ATmega16u4/32u4 and ATmega2560.
  *              Derived work from mididuino MidiClock class. (c) 2008 - 2011 - Manuel Odendahl - wesen@ruinwesen.com
- *  @version    0.10.0
+ *  @version    0.10.5
  *  @author     Romulo Silva
  *  @date       08/21/2020
  *  @license    MIT - (c) 2020 - Romulo Silva - contact@midilab.co
@@ -33,6 +33,8 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
+namespace umodular { namespace clock {
+
 #define PHASE_FACTOR 16
 
 #define EXT_INTERVAL_BUFFER_SIZE 24
@@ -41,42 +43,35 @@
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24L)
 
-#define CLOCK_62500HZ 	62500	// 16 microseconds
-#define CLOCK_125000HZ	125000	// 8 microseconds
-#define CLOCK_250000HZ	250000	// 4 microseconds
-
 #define MIN_BPM	1
 #define MAX_BPM	300
 
-namespace umodular { namespace clock {
+#define ATOMIC(X) noInterrupts(); X; interrupts();
 
 class uClockClass {
 
 	private:
-			
+		
 		void (*onClock96PPQNCallback)(uint32_t * tick);
 		void (*onClock32PPQNCallback)(uint32_t * tick);
 		void (*onClock16PPQNCallback)(uint32_t * tick);
 		void (*onClockStartCallback)();
 		void (*onClockStopCallback)();
 
-		// expressed in Hertz
-		uint32_t freq_resolution;
-
-		volatile uint8_t inmod6_counter;
-		volatile uint32_t indiv96th_counter;
+		volatile uint32_t internal_tick;
+		volatile uint32_t external_tick;
 		volatile uint16_t interval;
 		volatile uint16_t last_clock;
-
-		uint32_t div96th_counter;
+		volatile uint8_t inmod6_counter;
 		uint32_t div32th_counter;
 		uint32_t div16th_counter;
 		uint8_t mod6_counter;
 		uint16_t counter;
-
 		uint16_t pll_x;
-		uint8_t internal_drift;
-		uint8_t external_drift;
+
+		uint32_t last_tick;
+		uint8_t drift;
+		uint8_t slave_drift;
 		float tempo;
 		uint32_t start_timer;
 		uint8_t mode;
@@ -108,7 +103,7 @@ class uClockClass {
 		void setClock96PPQNOutput(void (*callback)(uint32_t * tick)) {
 			onClock96PPQNCallback = callback;
 		}
-
+		
 		void setClock32PPQNOutput(void (*callback)(uint32_t * tick)) {
 			onClock32PPQNCallback = callback;
 		}
@@ -136,12 +131,11 @@ class uClockClass {
 		void pause();
 		void setTempo(float bpm);
 		float getTempo();
-		void setDrift(uint8_t internal, uint8_t external = 255);
-		uint8_t getInternalDrift();
-		uint8_t getExternalDrift();
-		void setResolution(uint32_t hertz);
-		uint32_t getResolution();
+		void setDrift(uint8_t value);
+		uint8_t getDrift();
+		void setSlaveDrift(uint8_t value);
 		uint16_t getInterval();
+		uint8_t getTick(uint32_t *_tick);
 
 		// external timming control
 		void setMode(uint8_t tempo_mode);

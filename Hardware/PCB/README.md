@@ -17,8 +17,10 @@ Please refer to midilab page for more details and code.
 * MIDI Connector[like this](http://modularanalog.com/?product=midi-jack-5-pin-din-pcb-mount)
 
 ！！ Note ！！
-- I'm currently checking if it works or not! It may be fixed soon after this.
-- I haven't actually built it yet, but it's a simple circuit and I think it will work.
+- We built one that we ordered from a PCB manufacturing company in China. It is working well.
+- A hole is provided to connect a 9V battery box.
+- It also works with power supplied from the Arduino's USB port.
+- DEMO with Polysix[instagram](https://www.instagram.com/p/CSWGL_yHfrG7zG0O_XNwEk8BFOTMAqSpZ7osfM0/)
 
 
 [LINK]  

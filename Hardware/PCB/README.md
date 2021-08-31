@@ -3,9 +3,9 @@ I have created a PCB that can build an aciduino by midilab as a bare board devic
 It would be easy to build with less number parts!
 Please refer to midilab page for more details and code.
 
-<img src="https://github.com/ijnekenamay/ACIDUINO_PCB/raw/main/image1.JPG" width="500">
-<img src="https://github.com/ijnekenamay/ACIDUINO_PCB/raw/main/image4.JPG" width="500">
-<img src="https://github.com/ijnekenamay/ACIDUINO_PCB/raw/main/image5.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/tree/master/Hardware/PCB/image1.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/tree/master/Hardware/PCB/image4.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/tree/master/Hardware/PCB/image5.JPG" width="500">
 
 # BOM List
 

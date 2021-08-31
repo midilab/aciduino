@@ -1,7 +1,7 @@
 # ACIDUINO PCB
 I have created a PCB that can build an aciduino by midilab as a bare board device.
 It would be easy to build with less number parts!
-Please refer to midilab page for more details and code.
+Please refer to the folder hierarchy above for the code.
 
 <img src="https://github.com/midilab/aciduino/raw/master/Hardware/PCB/image1.JPG" width="500">
 <img src="https://github.com/midilab/aciduino/raw/master/Hardware/PCB/image4.JPG" width="500">
@@ -21,7 +21,3 @@ Please refer to midilab page for more details and code.
 - A hole is provided to connect a 9V battery box.
 - It also works with power supplied from the Arduino's USB port.
 - DEMO with Polysix[instagram](https://www.instagram.com/p/CSWGL_yHfrG7zG0O_XNwEk8BFOTMAqSpZ7osfM0/)
-
-
-[LINK]  
-[midilab｜ aciduino](https://github.com/midilab/aciduino)

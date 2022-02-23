@@ -5,6 +5,7 @@ Please refer to the folder hierarchy above for the code.
 (Be sure to use the latest firmware!)
 
 ↓↓↓Completed build image↓↓↓
+
 <img src="https://github.com/midilab/aciduino/raw/master/Hardware/PCB/mk2_image5.JPG" width="500">
 
 

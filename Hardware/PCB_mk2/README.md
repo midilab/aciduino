@@ -1,5 +1,5 @@
 # ACIDUINO PCB MK2
-###<span style="color: red; ">ACIDUINO has been upgraded to MK2 with MIDIinput!</span>
+### <span style="color: red; ">ACIDUINO has been upgraded to MK2 with MIDIinput!</span>
 I have created a PCB that can build an aciduino by midilab as a bare board device.
 It would be easy to build with less number parts!
 Please refer to the folder hierarchy above for the code.

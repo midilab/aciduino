@@ -8,7 +8,7 @@ With some user interface changes for cheap construction of a functional TB303 en
 
 ### <span style="color: red; ">So you want a aciduino PCB?</span>
   
-[ijnekenamay](https://github.com/ijnekenamay) has created one for us, you can download the files and send it to a fab house, or asking him to sell one for you.  
+[ijnekenamay](https://github.com/ijnekenamay) has created one for us, you can [download the files](https://github.com/midilab/aciduino/tree/master/Hardware/ijnekenamay-PCB) and send it to a fab house, or asking him to sell one for you.  
   
 ![Image of aciduino on protoboard](https://github.com/midilab/aciduino/raw/master/Hardware/ijnekenamay-PCB/mk2_image5.JPG)
 

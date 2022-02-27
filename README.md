@@ -18,7 +18,7 @@ Generate automatic harmonized acid lines by pressing a single button and twist s
 Controls your synthetizer acid midi parameters per track up to 6 parameters.
 
 ## Midi Clock
-Tight and solid MIDI clock to drive your gears clock needs.
+Tight and solid MIDI clock to drive your gears clock needs or receive midi sync signal.
 
 # User Interface
 
@@ -27,7 +27,9 @@ Tight and solid MIDI clock to drive your gears clock needs.
 When turning your aciduino on you have the page select, the page leds will be blinking indicating that you are on page select mode.
 
 Any time you press button 1 and button 2 together you will be drive to the page select, there you can choose the disered page and track.
-
+  
+You can put you aciduino into slave mode to be in sync with a master clock source by press and hold the play/stop button until his led is ON. To get back to master mode  press and hols again until the led is OFF. 
+  
 Use this information above as reference for aciduino interface 
 
 **[page select]**  
@@ -137,7 +139,9 @@ Add more two 220ohms resistors to you boom list and choose one of thoses above m
 
 * 1x 5 pins DIN female connector (standard MIDI connector) + sto protoboard - you need solder skills here.
 * 1x midi cable. Cut it in  a half and connect it directly to protoboard - its a good idea to soldering the wire tip before make the connections.
-
+  
+You can also use a MIDI input board to sync the aciduino with a master clock source if needed. Search over the internet for a MIDI input schematic if you want to build it yourself for aciduino.  
+  
 ## USB Connection?
 
 * Open config.h and set MIDI_MODE to 1. 

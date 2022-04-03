@@ -126,7 +126,7 @@ void processControllerPots()
     } else if ( _selected_ctrl == 1 ) {
       ctrl = MIDI_CTRL_DECAY;
     }
-    sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);    
+    ATOMIC(sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel))
   }  
 
   // GENERIC_POT_2: resonance/accent
@@ -138,7 +138,7 @@ void processControllerPots()
     } else if ( _selected_ctrl == 1 ) {
       ctrl = MIDI_CTRL_ACCENT;
     }
-    sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);      
+    ATOMIC(sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel))
   }  
 
   // GENERIC_POT_3: env mod/wave
@@ -150,7 +150,7 @@ void processControllerPots()
     } else if ( _selected_ctrl == 1 ) {
       ctrl = MIDI_CTRL_WAVE;
     }
-    sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel, true);     
+    ATOMIC(sendMidiMessage(MIDI_CC, ctrl, value, _sequencer[_selected_track].channel))
   }    
 
 #endif  
@@ -175,4 +175,3 @@ void processControllerPots()
   }
    
 }
-

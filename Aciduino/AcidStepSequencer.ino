@@ -234,9 +234,6 @@ void initAcidStepSequencer(uint8_t mode)
     Serial.begin(115200);
   }
 
-  // set clock drift for aciduino
-  uClock.setDrift(11);
-
   // Inits the clock
   uClock.init();
   
@@ -279,4 +276,3 @@ void initAcidStepSequencer(uint8_t mode)
   }
   
 }
-

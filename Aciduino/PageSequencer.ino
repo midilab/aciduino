@@ -15,7 +15,7 @@ void sendPreviewNote(uint8_t step)
   } else {
     note = _sequencer[_selected_track].data.step[step].note;
   }
-  sendMidiMessage(NOTE_ON, note, _sequencer[_selected_track].data.step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel, true);
+  ATOMIC(sendMidiMessage(NOTE_ON, note, _sequencer[_selected_track].data.step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel))
 
   // avoid delay() call because of uClock timmer1 usage
   //delay(200);
@@ -27,7 +27,7 @@ void sendPreviewNote(uint8_t step)
     }
   }
   
-  sendMidiMessage(NOTE_OFF, note, 0, _sequencer[_selected_track].channel, true);
+  ATOMIC(sendMidiMessage(NOTE_OFF, note, 0, _sequencer[_selected_track].channel))
 }
 
 void processSequencerPots()

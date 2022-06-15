@@ -55,8 +55,6 @@ uint8_t _selected_pattern = 0;
 
 // make sure all above sequencer data are modified atomicly only
 // eg. ATOMIC(_sequencer[track]data.step[0].accent = 1); ATOMIC(_sequencer[track].data.step_length = 7);
-uint8_t _tmpSREG;
-#define ATOMIC(X) _tmpSREG = SREG; cli(); X; SREG = _tmpSREG;
 
 // shared data to be used for user interface interaction and feedback
 bool _playing = false;
@@ -67,24 +65,13 @@ uint8_t _last_note = 0;
 int8_t _transpose = 0; // zero is centered C
 uint8_t _selected_mode = 0;
 
-void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel, bool atomicly = false)
+void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t channel)
 {   
   // send midi message
   command = command | (uint8_t)channel; 
-  
-  // if we want to use it with MIDI_CC from non timmer compare ISR code then set it to true
-  if ( atomicly == true ) {
-    _tmpSREG = SREG;
-    cli();
-  }
- 
   Serial.write(command);
   Serial.write(byte1);
   Serial.write(byte2);
-  
-  if ( atomicly == true ) {
-    SREG = _tmpSREG;
-  }
 }
 
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
@@ -155,15 +142,19 @@ void clearStackNote(int8_t track = -1)
     for ( uint8_t i = 0; i < TRACK_NUMBER; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < NOTE_STACK_SIZE; j++ ) {
-        sendMidiMessage(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, true);
-        _sequencer[i].stack[j].length = -1;
+        ATOMIC(
+          sendMidiMessage(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel);
+          _sequencer[i].stack[j].length = -1;
+        )
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
-      sendMidiMessage(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, true);
-      _sequencer[track].stack[i].length = -1;
+      ATOMIC(
+        sendMidiMessage(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel);
+        _sequencer[track].stack[i].length = -1;
+      )
     }     
   }
 
@@ -234,9 +225,6 @@ void initAcidStepSequencer(uint8_t mode)
     Serial.begin(115200);
   }
 
-  // set clock drift for aciduino
-  uClock.setDrift(11);
-
   // Inits the clock
   uClock.init();
   
@@ -279,4 +267,3 @@ void initAcidStepSequencer(uint8_t mode)
   }
   
 }
-

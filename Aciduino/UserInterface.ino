@@ -49,7 +49,16 @@ void configureInterface()
 void processInterface()
 {
   static int16_t tempo;
-  
+
+  // set external sync on/off
+  if ( holded(GENERIC_BUTTON_6, 2) ) {
+    if ( uClock.getMode() == uClock.INTERNAL_CLOCK ) {
+      setExternalSync(true);
+    } else {
+      setExternalSync(false);
+    }
+  }
+    
   // global controllers play and tempo
   // play/stop
   if ( pressed(GENERIC_BUTTON_6) ) {
@@ -62,9 +71,14 @@ void processInterface()
     }
   }
 
-  // shut down play led if we are stoped
-  if ( _playing == false ) {
-    digitalWrite(GENERIC_LED_6 , LOW);
+  // internal/external led control
+  if ( uClock.getMode() == uClock.INTERNAL_CLOCK ) {
+    if ( _playing == false ) {
+      digitalWrite(GENERIC_LED_6 , LOW);
+    }
+  } else {
+    // external clock keeps the timer led always on
+    digitalWrite(GENERIC_LED_6 , HIGH);
   }
 
   // page select request
@@ -158,14 +172,16 @@ void processPageLeds()
       
 void tempoInterface(uint32_t * tick) 
 {
-  // BPM led indicator
-  if ( !(*tick % (96)) || (*tick == 0) ) {  // first compass step will flash longer
-    _bpm_blink_timer = 8;
-    digitalWrite(GENERIC_LED_6 , HIGH);
-  } else if ( !(*tick % (24)) ) {   // each quarter led on
-    digitalWrite(GENERIC_LED_6 , HIGH);
-  } else if ( !(*tick % _bpm_blink_timer) ) { // get led off
-    digitalWrite(GENERIC_LED_6 , LOW);
-    _bpm_blink_timer = 1;
+  if (uClock.getMode() == uClock.INTERNAL_CLOCK) { 
+    // BPM led indicator
+    if ( !(*tick % (96)) || (*tick == 0) ) {  // first compass step will flash longer
+      _bpm_blink_timer = 8;
+      digitalWrite(GENERIC_LED_6 , HIGH);
+    } else if ( !(*tick % (24)) ) {   // each quarter led on
+      digitalWrite(GENERIC_LED_6 , HIGH);
+    } else if ( !(*tick % _bpm_blink_timer) ) { // get led off
+      digitalWrite(GENERIC_LED_6 , LOW);
+      _bpm_blink_timer = 1;
+    }
   }
 }

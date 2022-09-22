@@ -1,0 +1,541 @@
+
+struct TopBar : PageComponent {
+
+    bool track_selected = true;
+    bool tempo_selected = false;
+    
+    TopBar() {
+      grid_size = 2;
+    }
+
+    void view() {
+      //set selected element
+      track_selected = selected && selected_grid == 1;
+      tempo_selected = selected && selected_grid == 2;
+      
+      // track number and name
+      //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
+      uCtrl.oled->print("T", 1, 1); 
+      uCtrl.oled->print((int16_t)(_selected_track+1), 1, 2); 
+      uCtrl.oled->display->drawBox(0, 0, 10, 8);
+      uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4, track_selected); 
+      uCtrl.oled->display->drawBox(0, 9, 128, 1);
+
+      // bpm display and setup
+      uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "M" : "S", 1, 19);    
+      uCtrl.oled->display->drawBox(88, 0, 8, 8);
+      uCtrl.oled->print(uClock.getTempo(), 1, 21, tempo_selected);
+
+      // f1 and f2
+      if (track_selected) {
+        setF1("save");
+        setF2("paste");
+      }
+      if (tempo_selected) {
+        setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "slave" : "master");
+        setF2(_playing ? "stop" : "play");
+      }
+    }
+    
+    void change(int8_t data) {
+      // incrementer, decrementer
+      if (track_selected) {
+        // change track
+        if (_selected_track == 0 && data < 0) {
+          _selected_track = AcidSequencer.getTrackNumber() - 1;
+        } else {
+          _selected_track = (_selected_track + data) % AcidSequencer.getTrackNumber();
+        }
+      } else if (tempo_selected) {
+        // inc and dec will fine update to 0.1 bpm
+        uClock.setTempo(uClock.getTempo()+(data * 0.1));
+      }
+    }
+
+    void pot(uint16_t data) {
+      // incrementer, decrementer
+      if (track_selected) {
+        // change track
+      } else if (tempo_selected) {
+        // pot will increment with 1bpm fine update 
+        // parseData(value, min, max, curr_value);
+        data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
+        uClock.setTempo(data);
+      }
+    }
+    
+    void function1() {
+        uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
+    }
+
+    void function2() {
+        if (_playing)
+          uClock.stop();
+        else
+          uClock.start();
+    }
+    /*
+    void nav(uint8_t dir) {
+      // left, rigth
+      switch (dir) {
+        case LEFT:
+        case RIGHT:
+          if (selected_grid == 1) {
+            track_selected = true;
+            tempo_selected = false;
+          } else if (selected_grid == 2) {
+            tempo_selected = true;
+            track_selected = false;
+          }
+          break;
+      }
+    }
+    */
+} topBarComponent;
+
+struct StepSequencer : PageComponent {
+
+    // step sequencer theme
+    // http://dotmatrixtool.com/#
+    // 8px by 8px, row major, little endian
+    const uint8_t STEP_ON[8] = {0x00, 0x00, 0x3c, 0x3c, 0x3c, 0x3c, 0x00, 0x00};
+    const uint8_t STEP_OFF[8] = {0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00};
+    const uint8_t STEP_SELECTED[8] = {0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xff};
+    const uint8_t STEP_TIME_SIGNATURE_MARK[8] = {0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x03};
+    uint8_t step_asset[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    uint8_t selected_locator = 0;
+    uint8_t locator_length = 0;
+    uint8_t locator_current = 0;
+    uint8_t selected_step = 0;
+    uint8_t curr_step = 0;
+    uint8_t step_size = 0;
+    
+    StepSequencer() {
+      // we want this component to be 2 lines and 2 grids navigable object
+      line_size = 2;
+      grid_size = 2;
+    }
+    
+    void view() {
+      uint8_t steps_line = line + 1;
+      uint8_t idx, step_on = 0;
+
+      curr_step = AcidSequencer.getCurrentStep(_selected_track);
+      step_size = AcidSequencer.getTrackLength(_selected_track);
+      locator_length = ceil((float)step_size/16);
+      locator_current = curr_step == 0 ? 0 : ceil((float)curr_step/16) - 1;
+      
+      // step locators
+      uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
+      for (uint8_t i=0; i < locator_length; i++) {
+        uCtrl.oled->drawBox(y+(locator_current == i ? 2 : 3), x+(bar_size*i)+2, (locator_current == i ? 3 : 1), bar_size-4, (selected_locator == i && (selected_line == 1 || selected_line == 2) && selected));
+      }
+
+      // steps
+      uint8_t first_step = (selected_line == 1 || selected_line == 2) && selected ? selected_locator*16 : locator_current*16;
+      uint8_t last_step = first_step + 16 > step_size ? step_size : first_step + 16;
+      for (uint8_t i=first_step; i < last_step; i++) {
+        step_on = AcidSequencer.stepOn(_selected_track, i);
+        idx = i % 16;
+
+        // only use this in full sized mode
+        //if (idx == 0 && i != 0) {
+        //  steps_line++;
+        //}
+    
+        // reset step asset memory 8 bytes array
+        memset(step_asset, 0x00, sizeof(step_asset));
+    
+        // step on/off?
+        if (step_on) {
+          uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_ON);
+        } else {
+          uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_OFF);
+        }
+    
+        // step time signature mark?
+        if (i % 4 == 0) {
+          uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_TIME_SIGNATURE_MARK);
+        }
+    
+        // step current?
+        if (curr_step == i && _playing) {
+          uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED);
+        }
+    
+        // step selected?
+        if (selected_step == i && selected && selected_line == 2) {
+           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED, true);
+        }
+    
+        uCtrl.oled->print(step_asset, steps_line, idx+1);
+      }
+
+      // step info
+      // 303
+      if (AcidSequencer.is303(_selected_track)) {
+        if (selected_line == 2) {
+          uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, selected_step)), line+2, 1);
+        } else{
+          if (AcidSequencer.stepOn(_selected_track, curr_step) && _playing) {
+            uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, curr_step)), line+2, 1);
+          }
+        }
+      // 808
+      } else {
+        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
+      }
+
+      // f1 and f2
+      // Selectors
+      if (selected_line == 1) {
+          setF1("copy");
+          setF2("paste");
+      // Steps
+      } else if (selected_line == 2) {
+        setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
+        // 303
+        if (AcidSequencer.is303(_selected_track)) {
+          setF2("slide", AcidSequencer.slideOn(_selected_track, selected_step));
+        // 808
+        } else {
+          setF2("roll", AcidSequencer.rollOn(_selected_track, selected_step));
+        }
+      }
+      
+    }
+
+    void nav(uint8_t dir) {
+      // up, down, left, rigth
+      switch (dir) {
+        case UP:
+
+          break;
+        case DOWN:
+          // step locator
+          if (selected_line == 1) {
+            //if (_playing) {
+            //  selected_locator = locator_current;
+            //}
+          // steps
+          } else if (selected_line == 2) {
+            if (selected_step >= step_size) {
+              selected_step = step_size-1;
+            }
+          }
+          break;
+        case LEFT:
+          // step locator
+          if (selected_line == 1) {
+            if (selected_locator == 0) {
+              selected_locator = locator_length-1;
+              selected_step = (selected_step % 16) * locator_length;
+              if (selected_step >= step_size) {
+                selected_step = step_size-1;
+              }
+            } else {
+              --selected_locator;
+              selected_step -= 16;
+            }
+          // steps
+          } else if(selected_line == 2) {
+            if (selected_step == 0) {
+              selected_step = step_size-1;
+              selected_locator = locator_length-1;
+            } else {
+              --selected_step;
+              selected_locator = selected_step / 16;
+            }
+          // ???
+          } else if(selected_line == 3) {
+            
+          }
+
+          break;
+        case RIGHT:
+          if (selected_line == 1) {
+            if (selected_locator == locator_length-1) {
+              selected_locator = 0;
+              selected_step = selected_step % 16;
+              if (selected_step >= step_size) {
+                selected_step = step_size-1;
+              }
+            } else {
+              ++selected_locator;
+              selected_step += 16;
+            }
+          } else if(selected_line == 2) {
+            if (selected_step == step_size-1) {
+              selected_step = 0;
+              selected_locator = 0;
+            } else {
+              ++selected_step;
+              selected_locator = selected_step / 16;
+            }
+          } else if(selected_line == 3) {
+            
+          }
+
+          break;
+      }
+      // keep grid nav aligned for user best ux experience
+      selected_grid = (float)((float)(selected_locator+1)/(float)locator_length) > 0.5 ? 2 : 1;
+      selected_grid = selected_step%16 >= 8 ? 2 : 1;
+    }
+    
+    void change(int8_t data) {
+      // incrementer, decrementer
+      if(selected_line == 2) {
+        AcidSequencer.rest(_selected_track, selected_step, data > 0 ? false : true);
+      }
+    }
+
+    void pot(uint16_t data) {      
+      // 303?
+      if (AcidSequencer.is303(_selected_track)) {
+        if(selected_line == 2) {
+          // select step note
+          // lets use 0-7 as off step, the rest is 0-127 midi range notes
+          data = parseData(data, 0, 135, AcidSequencer.getStepData(_selected_track, selected_step));
+          if (data < 8) {
+            AcidSequencer.rest(_selected_track, selected_step, true);
+          } else {
+            AcidSequencer.setStepData(_selected_track, selected_step, data-8);
+            AcidSequencer.rest(_selected_track, selected_step, false);
+          }
+        }
+      // 808
+      } else {
+        // select voice
+        data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
+        AcidSequencer.setTrackVoice(_selected_track, data);
+      }
+    }
+
+    void function1() {
+      if (selected_line == 2) {
+        // 303 and 808 uses the same accent button f1
+        AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
+      }
+    }
+
+    void function2() {
+      if (selected_line == 2) {
+        // 303
+        if (AcidSequencer.is303(_selected_track)) {
+          AcidSequencer.setSlide(_selected_track, selected_step, !AcidSequencer.slideOn(_selected_track, selected_step));
+        // 808
+        } else {
+          AcidSequencer.setRoll(_selected_track, selected_step, !AcidSequencer.rollOn(_selected_track, selected_step));
+        }
+      }
+    }
+    
+} stepSequencerComponent;
+
+struct TrackLength : PageComponent {
+
+    TrackLenght() {
+        
+    }
+    
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("lenght", line, col+1, selected);
+      uCtrl.oled->print((int16_t)AcidSequencer.getTrackLength(_selected_track), line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, 1, 64, AcidSequencer.getTrackLength(_selected_track));
+      AcidSequencer.setTrackLength(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 1, 64, AcidSequencer.getTrackLength(_selected_track));
+      AcidSequencer.setTrackLength(_selected_track, data);
+    }
+    
+    // F1
+    // global: selected changes the whole track length
+    // F2
+    // voice: selected changes only the voice length
+    // same for shift?
+    
+} lengthComponent;
+
+struct SequenceShift : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("shift     0", line, col+1, selected);
+    }
+
+} shiftComponent;
+
+struct SequenceVariation : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("seq.      A", line, col+1, selected);
+    }
+
+} variationComponent;
+
+// make a seq divider too!
+
+struct VoiceConfig : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("voice    C4", line, col+1, selected);
+    }
+
+} voiceConfigComponent;
+
+struct VoiceSelect : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("voice     A", line, col+1, selected);
+    }
+
+} voiceSelectComponent;
+
+struct TrackTune : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("tune      0", line, col+1, selected);
+    }
+
+} tuneComponent;
+
+struct TonesNumber : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("tones     3", line, col+1, selected);
+    }
+} tonesNumberComponent;
+
+// on 303 will behave in percetage for clasical randomier
+// and fill for euclidian one
+struct NotesFill : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("fill     16", line, col+1, selected);
+    }
+} notesFillComponent;
+
+struct LowRange : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("low     g#3", line, col+1, selected);
+    }
+} lowRangeComponent;
+
+struct HighRange : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("high    g#7", line, col+1, selected);
+    }
+} highRangeComponent;
+
+struct AccentAmount : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("accent  50%", line, col+1, selected);
+    }
+} accentAmountComponent;
+
+struct SlideAmount : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("slide   30%", line, col+1, selected);
+    }
+} slideAmountComponent;
+
+struct RollAmount : PageComponent {
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("roll     0%", line, col+1, selected);
+    }
+} rollAmountComponent;
+
+struct TrackScale : PageComponent {
+
+    TrackScale() {
+      // we want this component to be 2 grids navigable object
+      grid_size = 2;
+    }
+    
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("scale             dorian", line, col+1, selected);
+    }
+} scaleComponent;
+
+struct TrackFill : PageComponent {
+
+    TrackFill() {
+      // we want this component to be 2 grids navigable object
+      grid_size = 2;
+    }
+    
+    void view() {
+      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+      uCtrl.oled->print("fill                  19", line, col+1, selected);
+    }
+} fillComponent;
+
+
+/*
+void note_view()
+{
+  uint8_t steps_line = 3;
+  uint8_t curr_step = AcidSequencer.getCurrentStep(0);
+  uint8_t step_size = AcidSequencer.getTrackLength(0);
+  uint8_t idx = 0;
+
+  uCtrl.oled->print("  16  ", steps_line, 1, false, false); 
+  uCtrl.oled->display->drawBox(0, ((steps_line-1)*8)+1, 29, 6);  
+  uCtrl.oled->print("  32  ", steps_line, 7, false, false); 
+  uCtrl.oled->display->drawBox(30, ((steps_line-1)*8)+1, 29, 6);
+  uCtrl.oled->print("  48  ", steps_line, 13, false, false); 
+  uCtrl.oled->display->drawBox(60, ((steps_line-1)*8)+1, 29, 6);
+  uCtrl.oled->print("  64  ", steps_line, 19, false, false); 
+  uCtrl.oled->display->drawBox(90, ((steps_line-1)*8)+1, 30, 6);
+  steps_line++;
+  
+  for (uint8_t i=0; i < 16; i++) {
+    idx = i % 4;
+    if (idx == 0 && i != 0) {
+      steps_line++;
+    }
+    uCtrl.oled->print("  C3  ", steps_line, (idx*6)+1, false, false); 
+    if (curr_step == i) {
+      //uCtrl.oled->print("> C3  ", steps_line, (idx*6)+1, false, false); 
+      //uCtrl.oled->display->drawLine(0, (idx*5*6), 29, 6);  
+      uCtrl.oled->display->drawBox(idx*5*6, (steps_line-1)*8, 29, 8);  
+    }
+  } 
+
+  //uCtrl.oled->print("  16  ", steps_line+1, 9, false, false); 
+  //uCtrl.oled->display->drawBox(0, 49, 120, 6);
+
+  //uCtrl.oled->print("  16  ", steps_line+1, 3, false, false); 
+  //uCtrl.oled->display->drawBox(0, 49, 59, 6);  
+  //uCtrl.oled->print("  32  ", steps_line+1, 16, false, false); 
+  //uCtrl.oled->display->drawBox(61, 49, 59, 6);
+
+  //uCtrl.oled->print("  16  ", steps_line+1, 2, false, false); 
+  //uCtrl.oled->display->drawBox(0, 49, 39, 6);  
+  //uCtrl.oled->print("  32  ", steps_line+1, 10, false, false); 
+  //uCtrl.oled->display->drawBox(40, 49, 39, 6);
+  //uCtrl.oled->print("  48  ", steps_line+1, 18, false, false); 
+  //uCtrl.oled->display->drawBox(80, 49, 40, 6);
+  
+  
+  //uCtrl.oled->print("    ", steps_line+1, 1, false, true); 
+  //uCtrl.oled->print("    ", steps_line+1, 5, false, step_size > 16 ? true : false); 
+  //uCtrl.oled->print("    ", steps_line+1, 9, false, step_size > 32 ? true : false); 
+  //uCtrl.oled->print("    ", steps_line+1, 13, false, step_size > 48 ? true : false);   
+}
+*/

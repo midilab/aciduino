@@ -13,6 +13,7 @@
   load any engine on any track
   default: 303, 303, 808, 808
 
+  shift+knob turn = last used midi control of the channel
 */
 //
 // BPM Clock support
@@ -28,15 +29,11 @@
 #include "src/sequencer/acid_sequencer.h"
 
 // globals
-char bpm_str[8];
-float bpm = 0;
 volatile uint32_t _bpm_tick = 0;
-uint8_t clock_mode = 1;
-uint16_t interval_resolution = 0;
 uint8_t bpm_blink_timer = 1;
-uint8_t clock_state = 1;
 bool _playing = false;
 uint8_t _selected_track = 0;
+uint8_t _generative_fill = 40;
 
 // shared data to be used for user interface interaction and feedback
 uctrl::protocol::midi::MIDI_MESSAGE msg;
@@ -55,9 +52,9 @@ typedef enum {
 
 void setup() {
   // setup uctrl hardware/interface
-  uCtrlInit();
+  uCtrlSetup();
   // clock system
-  uClockInit();
+  uClockSetup();
   // the acid sequencer
   AcidSequencer.setMidiOutputCallback(midiOutHandler);
   //AcidSequencer.setCVOutputCallback();

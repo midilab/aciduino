@@ -5,7 +5,7 @@ U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
 // UART MIDI port 1
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
 
-void uCtrlInit() {
+void uCtrlSetup() {
 // process midi at 250 microseconds speed
   uCtrl.setOn250usCallback(midiHandle);
   // process sequencer at 1 milisecond speed
@@ -94,46 +94,4 @@ void uCtrlInit() {
 
   //
   uCtrl.init();
-}
-
-void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
-{
-  // menu action
-  uCtrl.oled->print(f1, 8, 1+((14-strlen(f1))/2)); 
-  uCtrl.oled->print(f2, 8, 14+((14-strlen(f2))/2)); 
-  // state variation
-  if (f1_state == 1) {
-    uCtrl.oled->display->drawBox(0, 57, 63, 7);
-  }
-  if (f2_state == 1) {
-    uCtrl.oled->display->drawBox(64, 57, 64, 7);
-  }
-  // horizontal line
-  uCtrl.oled->display->drawBox(0, 56, 128, 1);
-  // vertical separator
-  //uCtrl.oled->display->drawBox(64, 59, 1, 5);
-}
-
-// All midi interface registred thru uCtrl get incomming data thru callback
-void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
-{
-  if (uClock.getMode() == uClock.EXTERNAL_CLOCK) {
-    // external tempo control
-    switch (msg->type) {
-        case uctrl::protocol::midi::Clock:
-          uClock.clockMe();
-          return;
-        case uctrl::protocol::midi::Start:
-          uClock.start();
-          return;
-        case uctrl::protocol::midi::Stop:
-          uClock.stop();
-          return;
-    }  
-  }  
-}
-
-void midiHandle() {
-  while (uCtrl.midi->read(1)) {
-  }
 }

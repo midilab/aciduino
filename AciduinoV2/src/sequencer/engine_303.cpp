@@ -25,7 +25,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE. 
  */
- 
+
 #include "engine_303.h"
 
 void Engine303::setTrackChannel(uint8_t track, uint8_t channel)
@@ -42,6 +42,7 @@ void Engine303::init()
     _sequencer[track].data.shift = 0;
     _sequencer[track].data.step_length = STEP_MAX_SIZE_303;
     _sequencer[track].data.transpose = 0;
+    _sequencer[track].data.tune = 0;
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = false;
 
@@ -81,6 +82,7 @@ void Engine303::setSlide(uint8_t track, uint8_t step, bool state)
 
 bool Engine303::stepOn(uint8_t track, uint8_t step)
 {
+    //int8_t relative_step = uint8_t(step - _sequencer[track].data.shift) % _sequencer[track].data.step_length;
     return !_sequencer[track].data.step[step].rest;
 }
 
@@ -104,6 +106,41 @@ uint8_t Engine303::getStepData(uint8_t track, uint8_t step)
   return _sequencer[track].data.step[step].note;
 }
 
+void Engine303::setShiftPos(uint8_t track, int8_t shift)
+{
+  ATOMIC(_sequencer[track].data.shift = shift);
+}
+
+int8_t Engine303::getShiftPos(uint8_t track)
+{
+  return _sequencer[track].data.shift;
+}
+
+uint8_t Engine303::getTune(uint8_t track)
+{
+  return _sequencer[track].data.tune;
+}
+
+void Engine303::setTune(uint8_t track, uint8_t tune)
+{
+  ATOMIC(_sequencer[track].data.tune = tune)
+}
+
+uint8_t Engine303::getTemperamentId()
+{
+  return Harmonizer.getTemperamentId();
+}
+
+void Engine303::setTemperament(uint8_t temperament_id)
+{
+  ATOMIC(Harmonizer.setTemperament(temperament_id))
+}
+
+const char * Engine303::getTemperamentName(uint8_t temperament_id)
+{
+  return Harmonizer.getTemperamentName(temperament_id);
+}
+
 uint8_t Engine303::getCurrentStep(uint8_t track)
 {
     static uint8_t step;
@@ -123,28 +160,31 @@ void Engine303::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].data.step_length = length);  
 }
 
-void Engine303::acidRandomize(uint8_t track) 
+void Engine303::acidRandomize(uint8_t track, uint8_t fill) 
 {
   uint8_t note, high_note, accent, slide, rest;
-  //uint64_t euclidian;
 
   // clear track before random data or only clear stack note?
   // probably clear stack note is a better idea
-
-      /*
-		if ( track_fill <= 7 && _seq.track[track_number].pattern.type != 0 ) { // TODO: good idea to handle the euclidian track_fill 1 just in case
-			// set to zero, means auto progression handler
-			euclidian = 0ULL;
-		} else {	
-			// Calculate the euclidian
-			euclidian = _bjorklund.compute(_track_step_size, (track_fill-7));
-		}
-    */
-
-  // ramdom it all
+  uint64_t bjorklund_data = _bjorklund.compute(_sequencer[track].data.step_length, ceil(_sequencer[track].data.step_length*(float)(fill/100.0)));
+  
+  // random it all
   ATOMIC(_sequencer[track].mute = true);
   clearStackNote(track);
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_303; i++ ) {
+
+    // aciduino classic randomizer
+    if (true) {
+      _sequencer[track].data.step[i].rest = random(0, 100) < fill ? 0 : 1;
+    // bjorklund randomizer
+    } else {
+      _sequencer[track].data.step[i].rest = GET_BIT(bjorklund_data, i) ? 0 : 1;
+    }
+
+    // random other parameters?
+    if (_sequencer[track].data.step[i].rest)
+      continue;
+
     high_note = _lower_note+_range_note;
     if ( high_note > 127 ) {
       high_note = 127;
@@ -153,12 +193,10 @@ void Engine303::acidRandomize(uint8_t track)
     note = Harmonizer.getNoteByMaxNumOfTones(random(_lower_note, high_note)) + _lower_note;
     accent = random(0, 100) < _accent_probability ? 1 : 0;
     slide = random(0, 100) < _slide_probability ? 1 : 0;
-    rest = random(0, 100) < _rest_probability ? 1 : 0;
     
-    ATOMIC(_sequencer[track].data.step[i].note = note);
-    ATOMIC(_sequencer[track].data.step[i].accent = accent);
-    ATOMIC(_sequencer[track].data.step[i].slide = slide);
-    ATOMIC(_sequencer[track].data.step[i].rest = rest);
+    _sequencer[track].data.step[i].note = note;
+    _sequencer[track].data.step[i].accent = accent;
+    _sequencer[track].data.step[i].slide = slide;
   }
   ATOMIC(_sequencer[track].mute = false);
 }
@@ -179,7 +217,7 @@ void Engine303::onStepCall(uint32_t tick)
     length = NOTE_LENGTH_303;
     
     // get actual step location.
-    _sequencer[track].step_location = uint32_t(tick + _sequencer[track].data.shift) % _sequencer[track].data.step_length;
+    _sequencer[track].step_location = (tick + _sequencer[track].data.shift) % _sequencer[track].data.step_length;
     
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {
@@ -200,8 +238,8 @@ void Engine303::onStepCall(uint32_t tick)
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {
-          if ( _harmonize == 1 ) {
-            note = Harmonizer.harmonizer(_sequencer[track].data.step[_sequencer[track].step_location].note);
+          if ( _sequencer[track].data.tune > 0 ) {
+            note = Harmonizer.harmonizer(_sequencer[track].data.step[_sequencer[track].step_location].note) + (_sequencer[track].data.tune-1);
           } else {
             note = _sequencer[track].data.step[_sequencer[track].step_location].note;
           }

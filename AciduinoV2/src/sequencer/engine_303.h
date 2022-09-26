@@ -60,6 +60,7 @@ typedef struct
   SEQUENCER_STEP_DATA_303 step[STEP_MAX_SIZE_303];
   int8_t shift;
   uint8_t step_length;
+  uint8_t tune;
   int8_t transpose;
 } SEQUENCER_TRACK_DATA_303;
 // 32 bytes per 16 step + 2 bytes config = 34 bytes [STEP_MAX_SIZE_303=16]
@@ -89,9 +90,16 @@ class Engine303 : Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
+      void setShiftPos(uint8_t track, int8_t shift);
+      int8_t getShiftPos(uint8_t track);
+      uint8_t getTune(uint8_t track);
+      void setTune(uint8_t track, uint8_t tune);
       void setTrackLength(uint8_t track, uint16_t length);
       void setTrackChannel(uint8_t track, uint8_t channel);
-      void acidRandomize(uint8_t track);
+      const char * getTemperamentName(uint8_t temperament_id);
+      void setTemperament(uint8_t temperament_id);
+      uint8_t getTemperamentId();
+      void acidRandomize(uint8_t track, uint8_t fill);
 
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);
@@ -108,14 +116,16 @@ class Engine303 : Engine
     private:
 
       SEQUENCER_TRACK_303 volatile _sequencer[TRACK_NUMBER_303];
+      
+      // SNS Stuff for 64bits
+		  Bjorklund<uint64_t, 10> _bjorklund;
 
       uint8_t _lower_note = 26;
       uint8_t _range_note = 23;
       uint8_t _accent_probability = ACCENT_PROBABILITY_GENERATION_303;
       uint8_t _slide_probability = SLIDE_PROBABILITY_GENERATION_303;
-      uint8_t _rest_probability = REST_PROBABILITY_GENERATION_303;
       uint8_t _number_of_tones = 5;
-      uint8_t _harmonize = 0;
+      uint8_t _temperament = DORIAN;
 
 };
 

@@ -64,7 +64,7 @@
 typedef struct
 {
 	uint8_t temperament; // MODE temperament: eg. Major Scale(IONIAN) WWhWWWh. = B11011100 
-	const char* name;
+	const char * name;
 } HARMONY_DATA; 
 
 class HarmonizerClass
@@ -91,11 +91,15 @@ class HarmonizerClass
                     {SUPER_LOCRIAN, "super locrian"}  
                 })
             {
-
+                // temperament id 0 = IONIAN
+                setTemperament(0);
             }
 
         uint8_t getNoteByMaxNumOfTones(uint8_t note);
         uint8_t harmonizer(uint8_t note);
+        const char * getTemperamentName(uint8_t temperament_id);
+        void setTemperament(uint8_t temperament_id);
+        uint8_t getTemperamentId();
 
     private:
 
@@ -103,7 +107,8 @@ class HarmonizerClass
 
         uint8_t _allowed_tones[12] = {0};
         uint8_t _number_of_tones = 12;
-        uint8_t _scale[8];
+        uint8_t _scale[8] = {0};
+        uint8_t _temperament_id = 0;
 
         HARMONY_DATA _harmony_mode_table[14];
 

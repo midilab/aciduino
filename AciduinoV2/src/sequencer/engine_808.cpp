@@ -230,6 +230,16 @@ void Engine808::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].voice[_voice].step_length = length);  
 }
 
+void Engine808::setShiftPos(uint8_t track, int8_t shift)
+{
+  ATOMIC(_sequencer[track].voice[_voice].shift = shift);
+}
+
+int8_t Engine808::getShiftPos(uint8_t track)
+{
+  return _sequencer[track].voice[_voice].shift;
+}
+
 void Engine808::setTrackVoice(uint8_t track = 0, uint8_t voice = 0)
 {
   _voice = voice;  
@@ -240,12 +250,50 @@ uint8_t Engine808::getTrackVoice(uint8_t track = 0)
   return _voice;  
 }
 
+uint8_t Engine808::getTrackVoiceConfig(uint8_t track)
+{
+  return _sequencer[track].voice[_voice].note;
+}
+
+void Engine808::setTrackVoiceConfig(uint8_t track, uint8_t note)
+{
+  ATOMIC(_sequencer[track].voice[_voice].note = note);
+}
+
 const char * Engine808::getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0)
 {
   return (const char *)_sequencer[track].voice[voice].name;  
 }
 
-void Engine808::acidRandomize(uint8_t track) 
+void Engine808::acidRandomize(uint8_t track, uint8_t fill) 
 {
+  uint64_t accent, roll;
 
+  uint64_t bjorklund_data = _bjorklund.compute(_sequencer[track].voice[_voice].step_length, ceil(_sequencer[track].voice[_voice].step_length*(float)(fill/100.0)));
+
+  ATOMIC(_sequencer[track].mute = true)
+  //clearStackNote(track); // PS: this is global! how to not affect other tracks?
+  _sequencer[track].voice[_voice].steps = bjorklund_data;
+
+  // randomize accent and roll?
+  _sequencer[track].voice[_voice].accent = 0ULL;
+  _sequencer[track].voice[_voice].roll = 0ULL;
+  for ( uint16_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
+
+    // classic randomizer
+    //random(0, 100) < fill ? 1 : 0;
+    // we are going to randomize only parameters where step is on
+    if (GET_BIT(_sequencer[track].voice[_voice].steps, i)) {
+
+      if (random(0, 100) < _accent_probability)
+        SET_BIT(_sequencer[track].voice[_voice].accent, i);
+
+      if (random(0, 100) < _roll_probability)
+        SET_BIT(_sequencer[track].voice[_voice].roll, i);    
+      
+    }
+
+  }
+
+  ATOMIC(_sequencer[track].mute = false);
 }

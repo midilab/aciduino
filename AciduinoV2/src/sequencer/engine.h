@@ -32,6 +32,13 @@
 //#include <stdint.h>
 #include <Arduino.h>
 
+#include "bjorklund.h"
+
+// helper
+#define GET_BIT(a,n) ((a >> n)  & 0x01)  
+#define SET_BIT(a,n) (a |=  (1ULL<<n))
+#define CLR_BIT(a,n) (a &= ~(1ULL<<n))
+
 #define ATOMIC(X) noInterrupts(); X; interrupts();
 
 class Engine

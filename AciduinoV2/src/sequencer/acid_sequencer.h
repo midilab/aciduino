@@ -71,38 +71,43 @@ class AcidSequencerClass
       void onClockStop();
       void clearStackNote(int8_t track = -1);
 
-      // general interface for UI/Sequencer
+      // general interface for UI/Sequencer for 303 and 808 generic access
       void setTrackChannel(uint8_t track, uint8_t channel);
       void rest(uint8_t track, uint8_t step, bool state);
       bool stepOn(uint8_t track, uint8_t step);
-      bool accentOn(uint8_t track, uint8_t step);
-      bool slideOn(uint8_t track, uint8_t step);
-      bool rollOn(uint8_t track, uint8_t step);
-      void setAccent(uint8_t track, uint8_t step, bool state);
-      void setSlide(uint8_t track, uint8_t step, bool state);
-      void setRoll(uint8_t track, uint8_t step, bool state);
-
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
-
       uint8_t getStepData(uint8_t track, uint8_t step);
-
+      bool accentOn(uint8_t track, uint8_t step);
+      void setAccent(uint8_t track, uint8_t step, bool state);
+      void setShiftPos(uint8_t track, int8_t shift);
+      int8_t getShiftPos(uint8_t track);
       uint8_t getCurrentStep(uint8_t track);
-
       uint8_t getTrackNumber();
-
+      uint8_t getTrackLength(uint8_t track);
+      void setTrackLength(uint8_t track, uint16_t length);
+      void acidRandomize(uint8_t track, uint8_t fill);
       bool is303(uint8_t track);
 
-      uint8_t getTrackLength(uint8_t track);
-
-      void setTrackLength(uint8_t track, uint16_t length);
-
-      void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
-      uint8_t getTrackVoice(uint8_t track);
-      const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
-
-      void acidRandomize(uint8_t track);
+      // 303 specific
+      uint8_t getTune(uint8_t track);
+      void setTune(uint8_t track, uint8_t tune);
+      void setSlide(uint8_t track, uint8_t step, bool state);
+      bool slideOn(uint8_t track, uint8_t step);
+      const char * getTemperamentName(uint8_t temperament_id);
+      void setTemperament(uint8_t temperament_id);
+      uint8_t getTemperamentId();
       const char * getNoteString(uint8_t note);
 
+      // 808 specific
+      void setRoll(uint8_t track, uint8_t step, bool state);
+      bool rollOn(uint8_t track, uint8_t step);
+      void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
+      uint8_t getTrackVoice(uint8_t track);
+      void setTrackVoiceConfig(uint8_t track, uint8_t note);
+      uint8_t getTrackVoiceConfig(uint8_t track);
+      const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
+
+      // main callback outputs... CV ouput for next release please!
       void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port));
 };
 

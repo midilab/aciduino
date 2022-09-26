@@ -1,3 +1,21 @@
+// all UI components are programmed as PageComponent to be reused on different pages
+void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
+{
+  // menu action
+  uCtrl.oled->print(f1, 8, 1+((14-strlen(f1))/2)); 
+  uCtrl.oled->print(f2, 8, 14+((14-strlen(f2))/2)); 
+  // state variation
+  if (f1_state == 1) {
+    uCtrl.oled->display->drawBox(0, 57, 63, 7);
+  }
+  if (f2_state == 1) {
+    uCtrl.oled->display->drawBox(64, 57, 64, 7);
+  }
+  // horizontal line
+  uCtrl.oled->display->drawBox(0, 56, 128, 1);
+  // vertical separator
+  //uCtrl.oled->display->drawBox(64, 59, 1, 5);
+}
 
 struct TopBar : PageComponent {
 
@@ -336,10 +354,6 @@ struct StepSequencer : PageComponent {
 
 struct TrackLength : PageComponent {
 
-    TrackLenght() {
-        
-    }
-    
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("lenght", line, col+1, selected);
@@ -369,9 +383,21 @@ struct TrackLength : PageComponent {
 struct SequenceShift : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("shift     0", line, col+1, selected);
+      uCtrl.oled->print("shift", line, col+1, selected);
+      uCtrl.oled->print((int16_t)AcidSequencer.getShiftPos(_selected_track), line, col+10, selected);
     }
 
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, AcidSequencer.getTrackLength(_selected_track)*-1, AcidSequencer.getTrackLength(_selected_track), AcidSequencer.getShiftPos(_selected_track));
+      AcidSequencer.setShiftPos(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, AcidSequencer.getTrackLength(_selected_track)*-1, AcidSequencer.getTrackLength(_selected_track), AcidSequencer.getShiftPos(_selected_track));
+      AcidSequencer.setShiftPos(_selected_track, data);
+    }
 } shiftComponent;
 
 struct SequenceVariation : PageComponent {
@@ -387,23 +413,67 @@ struct SequenceVariation : PageComponent {
 struct VoiceConfig : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("voice    C4", line, col+1, selected);
+      uCtrl.oled->print("voice", line, col+1, selected);
+      //
+      uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col+7, selected);
+      uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line, col+10, selected);
     }
 
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+    }
 } voiceConfigComponent;
 
 struct VoiceSelect : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("voice     A", line, col+1, selected);
+      uCtrl.oled->print("voice", line, col+1, selected);
+      //
+      uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col+10, selected);
     }
 
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      // create a getter for track voice size
+      data = parseData(data, 0, 3, AcidSequencer.getTrackVoice(_selected_track));
+      AcidSequencer.setTrackVoice(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 3, AcidSequencer.getTrackVoice(_selected_track));
+      AcidSequencer.setTrackVoice(_selected_track, data);
+    }
 } voiceSelectComponent;
 
 struct TrackTune : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("tune      0", line, col+1, selected);
+      uCtrl.oled->print("tune", line, col+1, selected);
+      uCtrl.oled->print(AcidSequencer.getTune(_selected_track) == 0 ? "off" : AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1), line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      // off, C, C#, D, D#... B
+      // 0 = harmonizer off
+      // 1 = C..., 12 = B
+      data = parseData(data, 0, 12, AcidSequencer.getTune(_selected_track));
+      AcidSequencer.setTune(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 12, AcidSequencer.getTune(_selected_track));
+      AcidSequencer.setTune(_selected_track, data);
     }
 
 } tuneComponent;
@@ -414,15 +484,6 @@ struct TonesNumber : PageComponent {
       uCtrl.oled->print("tones     3", line, col+1, selected);
     }
 } tonesNumberComponent;
-
-// on 303 will behave in percetage for clasical randomier
-// and fill for euclidian one
-struct NotesFill : PageComponent {
-    void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("fill     16", line, col+1, selected);
-    }
-} notesFillComponent;
 
 struct LowRange : PageComponent {
     void view() {
@@ -468,8 +529,25 @@ struct TrackScale : PageComponent {
     
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("scale             dorian", line, col+1, selected);
+      uCtrl.oled->print("scale", line, col+1, selected);
+      uCtrl.oled->print(AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId()), line, col+10, selected);
     }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      // off, C, C#, D, D#... B
+      // 0 = harmonizer off
+      // 1 = C..., 12 = B
+      data = parseData(data, 0, 13, AcidSequencer.getTemperamentId());
+      AcidSequencer.setTemperament(data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 13, AcidSequencer.getTemperamentId());
+      AcidSequencer.setTemperament(data);
+    }
+
 } scaleComponent;
 
 struct TrackFill : PageComponent {
@@ -481,7 +559,20 @@ struct TrackFill : PageComponent {
     
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("fill                  19", line, col+1, selected);
+      uCtrl.oled->print("fill", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_generative_fill, line, col+20, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, 1, 100, _generative_fill);
+      _generative_fill = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 1, 100, _generative_fill);
+      _generative_fill = data;
     }
 } fillComponent;
 

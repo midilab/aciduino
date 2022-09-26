@@ -12,7 +12,7 @@ void handle_bpm_led(uint32_t tick)
   }
 }
 
-void uClockInit()
+void uClockSetup()
 {
   // Inits the clock
   uClock.init();

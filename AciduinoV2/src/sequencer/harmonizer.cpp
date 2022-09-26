@@ -28,14 +28,54 @@
 
 #include "harmonizer.h"
 
+// build scale dorian as default on init
+
+void HarmonizerClass::setTemperament(uint8_t temperament_id)
+{
+	uint8_t interval, interval_count, scale_pitch;
+  uint8_t temperament = _harmony_mode_table[temperament_id].temperament;
+
+  _temperament_id = temperament_id;
+	// newpitch start point for analisys... on I interval of temperament. aka: Tonic
+  scale_pitch = 0;
+	interval = 0;
+
+	// 8 bits scale temperament check, the last bit are discarted
+	for (interval_count = 7; interval_count > 0; interval_count--) {
+
+		// set scale pitch sequence based on interval
+		_scale[interval] = scale_pitch;	
+		
+		if ( !(temperament & (1 << interval_count)) ) { // do we have half step setup inside bitmap? means 0
+			scale_pitch += 1; // half-tone increment
+		} else {
+			scale_pitch += 2; // Whole-tone increment
+		}	
+		
+		// increment the interval
+		interval++;
+
+	}    
+}
+
+const char * HarmonizerClass::getTemperamentName(uint8_t temperament_id)
+{
+  return _harmony_mode_table[temperament_id].name;
+}
+
+uint8_t HarmonizerClass::getTemperamentId()
+{
+  return _temperament_id;
+}
+
 uint8_t HarmonizerClass::harmonizer(uint8_t note)
 {
-    uint8_t octave, interval;
+  uint8_t octave, interval;
 
-    octave = floor(note/12);
-    interval = floor((note%12)/1.5);
+  octave = floor(note/12);
+  interval = floor((note%12)/1.5);
 
-    return _scale[interval] + (octave*12);
+  return _scale[interval] + (octave*12);
 }
 
 // limit the note range within the _number_of_tones

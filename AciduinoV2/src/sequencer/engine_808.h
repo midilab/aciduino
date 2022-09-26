@@ -32,11 +32,6 @@
 #include "setup.h"
 #include "engine.h"
 
-// helper
-#define GET_BIT(a,n) ((a >> n)  & 0x01)  
-#define SET_BIT(a,n) (a |=  (1ULL<<n))
-#define CLR_BIT(a,n) (a &= ~(1ULL<<n))
-
 // For pre-processing plugins handle data
 // The event can be a hole step with linked event data or just a single event data
 typedef struct
@@ -85,11 +80,15 @@ class Engine808 : Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
+      void setShiftPos(uint8_t track, int8_t shift);
+      int8_t getShiftPos(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
       void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
       uint8_t getTrackVoice(uint8_t track = 0);
+      void setTrackVoiceConfig(uint8_t track, uint8_t note);
+      uint8_t getTrackVoiceConfig(uint8_t track);
       const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
-      void acidRandomize(uint8_t track);
+      void acidRandomize(uint8_t track, uint8_t fill);
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);
 
@@ -105,6 +104,12 @@ class Engine808 : Engine
       uint8_t _voice = 0;
 
       SEQUENCER_TRACK_808 volatile _sequencer[TRACK_NUMBER_808];
+
+      // SNS Stuff for 64bits
+		  Bjorklund<uint64_t, 10> _bjorklund;
+
+      uint8_t _accent_probability = 50;
+      uint8_t _roll_probability = 10;
 };
 
 #endif

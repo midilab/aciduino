@@ -71,96 +71,97 @@ void AcidSequencerClass::on96PPQN(uint32_t tick)
 void AcidSequencerClass::clearStackNote(int8_t track)
 {
   if (track == -1) {
-    _engine808->clearStackNote(track);
     _engine303->clearStackNote(track);
+    _engine808->clearStackNote(track);
     return;
   }
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->clearStackNote(track-TRACK_NUMBER_303);
+  
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->clearStackNote(track);
+  // 808 request?
+  else
+    _engine808->clearStackNote(track-TRACK_NUMBER_303);
 }
 
 void AcidSequencerClass::setTrackChannel(uint8_t track, uint8_t channel) 
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->setTrackChannel(track-TRACK_NUMBER_303, channel);
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->setTrackChannel(track, channel);
+  // 808 request?
+  else
+    _engine808->setTrackChannel(track-TRACK_NUMBER_303, channel);
 }
 
 void AcidSequencerClass::rest(uint8_t track, uint8_t step, bool state) 
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->rest(track-TRACK_NUMBER_303, step, state);
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->rest(track, step, state);
+  // 808 request?
+  else
+    _engine808->rest(track-TRACK_NUMBER_303, step, state);
 }
 
 void AcidSequencerClass::setAccent(uint8_t track, uint8_t step, bool state) 
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->setAccent(track-TRACK_NUMBER_303, step, state);
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->setAccent(track, step, state);
+  // 808 request?
+  else
+    _engine808->setAccent(track-TRACK_NUMBER_303, step, state);
 }
 
 void AcidSequencerClass::setSlide(uint8_t track, uint8_t step, bool state) 
 {
   // 303 request
-  if (track < TRACK_NUMBER_303)
+  if(track < TRACK_NUMBER_303)
     _engine303->setSlide(track, step, state);
 }
 
 void AcidSequencerClass::setRoll(uint8_t track, uint8_t step, bool state) 
 {
   // 808 request?
-  if (track >= TRACK_NUMBER_303)
+  if(track >= TRACK_NUMBER_303)
     _engine808->setRoll(track-TRACK_NUMBER_303, step, state);
 }
 
 bool AcidSequencerClass::stepOn(uint8_t track, uint8_t step)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return _engine808->stepOn(track-TRACK_NUMBER_303, step);
-  
   // 303 request
-  return _engine303->stepOn(track, step);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->stepOn(track, step);
+
+  // 808 request
+  return _engine808->stepOn(track-TRACK_NUMBER_303, step);
 }
 
 bool AcidSequencerClass::accentOn(uint8_t track, uint8_t step)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return _engine808->accentOn(track-TRACK_NUMBER_303, step);
-  
   // 303 request
-  return _engine303->accentOn(track, step);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->accentOn(track, step);
+
+  // 808 request
+  return _engine808->accentOn(track-TRACK_NUMBER_303, step);
 }
 
 bool AcidSequencerClass::slideOn(uint8_t track, uint8_t step)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return false;
-  
   // 303 request
-  return _engine303->slideOn(track, step);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->slideOn(track, step);
+
+  // 808 request
+  return false;
 }
 
 bool AcidSequencerClass::rollOn(uint8_t track, uint8_t step)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
+  // 808 request
+  if(track >= TRACK_NUMBER_303)
     return _engine808->rollOn(track-TRACK_NUMBER_303, step);
     
   return false;
@@ -168,32 +169,32 @@ bool AcidSequencerClass::rollOn(uint8_t track, uint8_t step)
 
 void AcidSequencerClass::setStepData(uint8_t track, uint8_t step, uint8_t data)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->setStepData(track-TRACK_NUMBER_303, step, data);
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->setStepData(track, step, data);
+  // 808 request?
+  else
+    _engine808->setStepData(track-TRACK_NUMBER_303, step, data);
 }
 
 uint8_t AcidSequencerClass::getStepData(uint8_t track, uint8_t step)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return _engine808->getStepData(track-TRACK_NUMBER_303, step);
-  
   // 303 request
-  return _engine303->getStepData(track, step);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->getStepData(track, step);
+
+  // 808 request
+  return _engine808->getStepData(track-TRACK_NUMBER_303, step);
 }
 
 uint8_t AcidSequencerClass::getCurrentStep(uint8_t track)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return _engine808->getCurrentStep(track-TRACK_NUMBER_303);
-  
   // 303 request
-  return _engine303->getCurrentStep(track);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->getCurrentStep(track);
+
+  // 808 request
+  return _engine808->getCurrentStep(track-TRACK_NUMBER_303);
 }
 
 uint8_t AcidSequencerClass::getTrackNumber()
@@ -212,22 +213,42 @@ bool AcidSequencerClass::is303(uint8_t track)
 
 uint8_t AcidSequencerClass::getTrackLength(uint8_t track)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    return _engine808->getTrackLength(track-TRACK_NUMBER_303);
-    
   // 303 request
-  return _engine303->getTrackLength(track);
+  if(track < TRACK_NUMBER_303)
+    return _engine303->getTrackLength(track);
+
+  // 808 request
+  return _engine808->getTrackLength(track-TRACK_NUMBER_303);
 }
 
 void AcidSequencerClass::setTrackLength(uint8_t track, uint16_t length)
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->setTrackLength(track-TRACK_NUMBER_303, length);
   // 303 request
-  else
+  if(track < TRACK_NUMBER_303)
     _engine303->setTrackLength(track, length);  
+  // 808 request?
+  else
+    _engine808->setTrackLength(track-TRACK_NUMBER_303, length);
+}
+
+int8_t AcidSequencerClass::getShiftPos(uint8_t track)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    return _engine303->getShiftPos(track);
+  
+  // 808 request
+  return _engine808->getShiftPos(track-TRACK_NUMBER_303);
+}
+
+void AcidSequencerClass::setShiftPos(uint8_t track, int8_t shift)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    _engine303->setShiftPos(track, shift); 
+  // 808 request?
+  else
+    _engine808->setShiftPos(track-TRACK_NUMBER_303, shift);
 }
 
 void AcidSequencerClass::setTrackVoice(uint8_t track, uint8_t voice)
@@ -240,9 +261,44 @@ uint8_t AcidSequencerClass::getTrackVoice(uint8_t track)
   return _engine808->getTrackVoice(track-TRACK_NUMBER_303);
 }
 
+uint8_t AcidSequencerClass::getTrackVoiceConfig(uint8_t track)
+{
+  return _engine808->getTrackVoiceConfig(track-TRACK_NUMBER_303);
+}
+
+void AcidSequencerClass::setTrackVoiceConfig(uint8_t track, uint8_t note)
+{
+  _engine808->setTrackVoiceConfig(track-TRACK_NUMBER_303, note);
+}
+
 const char * AcidSequencerClass::getTrackVoiceName(uint8_t track, uint8_t voice)
 {
   return _engine808->getTrackVoiceName(track-TRACK_NUMBER_303, voice);
+}
+
+uint8_t AcidSequencerClass::getTune(uint8_t track)
+{
+  return _engine303->getTune(track);
+}
+
+void AcidSequencerClass::setTune(uint8_t track, uint8_t tune)
+{
+  _engine303->setTune(track, tune);
+}
+
+uint8_t AcidSequencerClass::getTemperamentId()
+{
+  return _engine303->getTemperamentId();
+}
+
+void AcidSequencerClass::setTemperament(uint8_t temperament_id)
+{
+  _engine303->setTemperament(temperament_id);
+}
+
+const char * AcidSequencerClass::getTemperamentName(uint8_t temperament_id)
+{
+  return _engine303->getTemperamentName(temperament_id);
 }
 
 void AcidSequencerClass::setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) 
@@ -251,14 +307,14 @@ void AcidSequencerClass::setMidiOutputCallback(void (*callback)(uint8_t msg_type
   _engine808->setMidiOutputCallback(callback);
 }
 
-void AcidSequencerClass::acidRandomize(uint8_t track) 
+void AcidSequencerClass::acidRandomize(uint8_t track, uint8_t fill) 
 {
-  // 808 request?
-  if (track >= TRACK_NUMBER_303)
-    _engine808->acidRandomize(track-TRACK_NUMBER_303);
   // 303 request
+  if(track < TRACK_NUMBER_303)
+    _engine303->acidRandomize(track, fill);
+  // 808 request?
   else
-    _engine303->acidRandomize(track);
+    _engine808->acidRandomize(track-TRACK_NUMBER_303, fill);
 }
 
 const char * AcidSequencerClass::getNoteString(uint8_t note)

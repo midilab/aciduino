@@ -63,7 +63,7 @@ typedef struct
   STACK_NOTE_DATA_808 stack[VOICE_MAX_SIZE_808];
 } SEQUENCER_TRACK_808;
 
-class Engine808 : Engine
+class Engine808 : public Engine
 {
     public:
 
@@ -95,10 +95,6 @@ class Engine808 : Engine
       // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
       void onClockCall(uint32_t tick);
       void clearStackNote(int8_t track);
-
-      void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) {
-        _onMidiEventCallback = callback;
-      }
 
     private:
       uint8_t _voice = 0;

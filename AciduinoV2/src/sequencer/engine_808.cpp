@@ -44,7 +44,7 @@ void Engine808::init()
 
     // initing voice data
     for ( uint16_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _sequencer[track].voice[i].name[0] = (char)(i+97);
+      _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
       _sequencer[track].voice[i].note = 36+i; // general midi drums map #36 kick drum
@@ -107,7 +107,7 @@ void Engine808::onStepCall(uint32_t tick)
             _sequencer[track].stack[i].note = _sequencer[track].voice[voice].note;
             _sequencer[track].stack[i].length = NOTE_LENGTH_808;
             // send the drum triger
-            _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
+            _onMidiEventCallback(NoteOn, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
             break;
           }
         }
@@ -128,7 +128,7 @@ void Engine808::onClockCall(uint32_t tick)
       if ( _sequencer[track].stack[i].length != -1 ) {
         --_sequencer[track].stack[i].length;
         if ( _sequencer[track].stack[i].length == 0 ) {
-          _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+          _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
           _sequencer[track].stack[i].length = -1;
         }
       }  
@@ -144,14 +144,14 @@ void Engine808::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_808; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < VOICE_MAX_SIZE_808; j++ ) {
-        _onMidiEventCallback(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
+        _onMidiEventCallback(NoteOff, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
         _sequencer[i].stack[j].length = -1;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+      _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
       _sequencer[track].stack[i].length = -1;
     }     
   }

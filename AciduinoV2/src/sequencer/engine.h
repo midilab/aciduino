@@ -78,6 +78,9 @@ class Engine
     virtual uint8_t getTrackVoice(uint8_t track) {}
     virtual const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0) {}
 
+    void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) {
+      _onMidiEventCallback = callback;
+    }
 };
 
 #endif

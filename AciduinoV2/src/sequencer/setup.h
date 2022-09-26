@@ -41,12 +41,21 @@
 
 #define MAX_VOICE_NAME_CHARS  2
 
-// MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
-#define MIDI_CLOCK 0xF8
-#define MIDI_START 0xFA
-#define MIDI_STOP  0xFC
-#define NOTE_ON    0x90
-#define NOTE_OFF   0x80
-#define MIDI_CC    0xB0
+// based on uCtrl
+typedef enum {
+	ControlChange,
+	ProgramChange,			
+	NoteOn,
+	NoteOnHold,
+	NoteOff,
+	AfterTouchPoly,
+	AfterTouchChannel,
+	PitchBend,
+	Nrpn,
+	Sysex,
+	Clock,
+	Start,
+	Stop
+} MidiMessageType;	
 
 #endif

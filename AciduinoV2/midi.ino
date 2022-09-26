@@ -19,6 +19,7 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
 
 void midiOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
 {
+  Serial.println(channel);
   msg.type = msg_type;
   msg.data1 = byte1;
   msg.data2 = byte2;

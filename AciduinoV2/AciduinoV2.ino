@@ -29,8 +29,6 @@
 #include "src/sequencer/acid_sequencer.h"
 
 // globals
-volatile uint32_t _bpm_tick = 0;
-uint8_t bpm_blink_timer = 1;
 bool _playing = false;
 uint8_t _selected_track = 0;
 uint8_t _generative_fill = 40;

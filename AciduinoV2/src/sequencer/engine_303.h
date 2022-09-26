@@ -74,7 +74,7 @@ typedef struct
   STACK_NOTE_DATA_303 stack[NOTE_STACK_SIZE_303];  
 } SEQUENCER_TRACK_303;
 
-class Engine303 : Engine
+class Engine303 : public Engine
 {
     public:
 
@@ -108,10 +108,6 @@ class Engine303 : Engine
       void onClockCall(uint32_t tick);
 
       void clearStackNote(int8_t track);
-
-      void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) {
-        _onMidiEventCallback = callback;
-      }
 
     private:
 

@@ -1,14 +1,16 @@
+uint8_t _bpm_blink_timer = 1;
+
 void handle_bpm_led(uint32_t tick)
 {
   // BPM led indicator
   if ( !(tick % (96)) || (tick == 1) ) {  // first compass step will flash longer
-    bpm_blink_timer = 8;
+    _bpm_blink_timer = 8;
     uCtrl.dout->write(1, HIGH, 1);
   } else if ( !(tick % (24)) ) {   // each quarter led on
     uCtrl.dout->write(1, HIGH, 1);
-  } else if ( !(tick % bpm_blink_timer) ) { // get led off
+  } else if ( !(tick % _bpm_blink_timer) ) { // get led off
     uCtrl.dout->write(1, LOW, 1);
-    bpm_blink_timer = 1;
+    _bpm_blink_timer = 1;
   }
 }
 
@@ -42,6 +44,9 @@ void ClockOut16PPQN(uint32_t tick)
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
 void ClockOut96PPQN(uint32_t tick) 
 {
+  // Send MIDI_CLOCK to external gears
+  msg.type = uctrl::protocol::midi::Clock;
+  uCtrl.midi->writeAllPorts(&msg, 1);
   // sequencer tick
   AcidSequencer.on96PPQN(tick);
   // led clock monitor

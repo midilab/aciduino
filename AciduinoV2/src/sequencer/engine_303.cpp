@@ -251,7 +251,7 @@ void Engine303::onStepCall(uint32_t tick)
           _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on
-          _onMidiEventCallback(NOTE_ON, note, _sequencer[track].data.step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, _sequencer[track].channel, 0);
+          _onMidiEventCallback(NoteOn, note, _sequencer[track].data.step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, _sequencer[track].channel, 0);
           break;
         }
       }
@@ -272,7 +272,7 @@ void Engine303::onClockCall(uint32_t tick)
       if ( _sequencer[track].stack[i].length != -1 ) {
         --_sequencer[track].stack[i].length;
         if ( _sequencer[track].stack[i].length == 0 ) {
-          _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+          _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
           _sequencer[track].stack[i].length = -1;
         }
       }  
@@ -288,14 +288,14 @@ void Engine303::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_303; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < NOTE_STACK_SIZE_303; j++ ) {
-        _onMidiEventCallback(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
+        _onMidiEventCallback(NoteOff, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
         _sequencer[i].stack[j].length = -1;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
-      _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+      _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
       _sequencer[track].stack[i].length = -1;
     }     
   }

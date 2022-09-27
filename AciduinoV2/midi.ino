@@ -1,3 +1,6 @@
+// shared data to be used for user interface interaction and feedback
+uctrl::protocol::midi::MIDI_MESSAGE msg;
+
 // All midi interface registred thru uCtrl get incomming data thru callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {

@@ -1,10 +1,9 @@
 const char * f1_page = "undo";
 const char * f2_page = "generate";
 
-
 void generativeFunction1()
 {
-  // copy/paste current sequence
+  // undo new generated sequence
   
 }
 
@@ -23,39 +22,13 @@ void generative_page_create()
 {
   // lets hook the components f1 anf f2 functions for generative page only
   //
-  lengthComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  shiftComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  variationComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  tuneComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  voiceSelectComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  scaleComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  tonesNumberComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  lowRangeComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  highRangeComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  accentAmountComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  slideAmountComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  rollAmountComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  scaleComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
-  fillComponent.setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
+  uCtrl.page->setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
 }
 
 void generative_page_destroy()
 {
-  // clear our hooks
-  lengthComponent.clearFunctionHook();
-  shiftComponent.clearFunctionHook();
-  variationComponent.clearFunctionHook();
-  tuneComponent.clearFunctionHook();
-  voiceSelectComponent.clearFunctionHook();
-  scaleComponent.clearFunctionHook();
-  tonesNumberComponent.clearFunctionHook();
-  lowRangeComponent.clearFunctionHook();
-  highRangeComponent.clearFunctionHook();
-  accentAmountComponent.clearFunctionHook();
-  slideAmountComponent.clearFunctionHook();
-  rollAmountComponent.clearFunctionHook();
-  scaleComponent.clearFunctionHook();
-  fillComponent.clearFunctionHook();
+  // clear our hook
+  uCtrl.page->clearFunctionHook();
 }
 
 // called each cycle interaction of interface object for UI refresh

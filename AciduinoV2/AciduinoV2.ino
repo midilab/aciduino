@@ -33,9 +33,6 @@ bool _playing = false;
 uint8_t _selected_track = 0;
 uint8_t _generative_fill = 40;
 
-// shared data to be used for user interface interaction and feedback
-uctrl::protocol::midi::MIDI_MESSAGE msg;
-
 typedef enum {
   PREVIOUS_BUTTON = 1,
   NEXT_BUTTON,

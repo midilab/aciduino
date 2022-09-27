@@ -24,6 +24,8 @@ struct TopBar : PageComponent {
     
     TopBar() {
       grid_size = 2;
+      // not overried by hook callback of a page
+      no_hook = true;
     }
 
     void view() {

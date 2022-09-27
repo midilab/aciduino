@@ -35,8 +35,6 @@ void live_page_refresh(uint8_t subpage)
 
   if (subpage == 0) {
     // add div control? 32, 16, 8
-    //uCtrl.page->component(typeComponent, 4, 1);
-    //uCtrl.page->component(scaleComponent, 4, 2);
   } else if (subpage == 1) {
     
   }

@@ -14,6 +14,8 @@
   default: 303, 303, 808, 808
 
   shift+knob turn = last used midi control of the channel
+
+  shift+ generic1/2 changes track...
 */
 //
 // BPM Clock support
@@ -31,7 +33,15 @@
 // globals
 bool _playing = false;
 uint8_t _selected_track = 0;
-uint8_t _generative_fill = 40;
+
+// generative engine
+uint8_t _generative_fill = 10;
+uint8_t _accent_probability = 50;
+uint8_t _roll_probability = 0;
+uint8_t _slide_probability = 30;
+uint8_t _lower_note = 26;
+uint8_t _range_note = 23;
+uint8_t _number_of_tones = 5;
 
 typedef enum {
   PREVIOUS_BUTTON = 1,

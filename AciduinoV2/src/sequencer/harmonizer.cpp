@@ -78,21 +78,4 @@ uint8_t HarmonizerClass::harmonizer(uint8_t note)
   return _scale[interval] + (octave*12);
 }
 
-// limit the note range within the _number_of_tones
-// if 1 tone: get the root
-// instead of number of tones why not intervals?
-// TODO
-uint8_t HarmonizerClass::getNoteByMaxNumOfTones(uint8_t note)
-{
-  uint8_t octave, relative_note;
-
-  octave = note/12;
-  //relative_note = note%12;
-  //return _allowed_tones[relative_note] + (octave*12);
-  relative_note = floor((note%12)/1.5);
-  return _scale[relative_note] + (octave*12);
-  // TODO: we can use _bjorklund to compute the fill of 8bytes!!!! and a seed to vary it also
-  // the seed moves it from interval I(root) along to VII
-}
-
 HarmonizerClass Harmonizer;

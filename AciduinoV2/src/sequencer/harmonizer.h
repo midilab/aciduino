@@ -103,10 +103,6 @@ class HarmonizerClass
 
     private:
 
-        uint8_t _harmonic_mode = 0;
-
-        uint8_t _allowed_tones[12] = {0};
-        uint8_t _number_of_tones = 12;
         uint8_t _scale[8] = {0};
         uint8_t _temperament_id = 0;
 

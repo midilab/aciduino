@@ -32,14 +32,6 @@
 #include "setup.h"
 #include "engine.h"
 
-// For pre-processing plugins handle data
-// The event can be a hole step with linked event data or just a single event data
-typedef struct
-{
-  uint8_t note;  
-  int8_t length;       
-} STACK_NOTE_DATA_808;  
-
 typedef struct
 {
   uint64_t steps; // 8 bytes, 64 steps max
@@ -49,6 +41,7 @@ typedef struct
   uint8_t step_length;
   int8_t shift;
   char name[MAX_VOICE_NAME_CHARS];
+  int8_t stack_length; 
 } VOICE_DATA;  // 27 bytes
 
 typedef struct
@@ -60,7 +53,6 @@ typedef struct
   bool mute;
   // euclidian voices linked list, only percusion voice types will make use of more than one voice.
   VOICE_DATA voice[VOICE_MAX_SIZE_808];
-  STACK_NOTE_DATA_808 stack[VOICE_MAX_SIZE_808];
 } SEQUENCER_TRACK_808;
 
 class Engine808 : public Engine

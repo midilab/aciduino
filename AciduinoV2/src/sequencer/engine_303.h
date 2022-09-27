@@ -99,7 +99,7 @@ class Engine303 : public Engine
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
-      void acidRandomize(uint8_t track, uint8_t fill);
+      void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note);
 
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);
@@ -115,14 +115,6 @@ class Engine303 : public Engine
       
       // SNS Stuff for 64bits
 		  Bjorklund<uint64_t, 10> _bjorklund;
-
-      uint8_t _lower_note = 26;
-      uint8_t _range_note = 23;
-      uint8_t _accent_probability = ACCENT_PROBABILITY_GENERATION_303;
-      uint8_t _slide_probability = SLIDE_PROBABILITY_GENERATION_303;
-      uint8_t _number_of_tones = 5;
-      uint8_t _temperament = DORIAN;
-
 };
 
 #endif

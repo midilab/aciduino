@@ -1,3 +1,4 @@
+
 // all UI components are programmed as PageComponent to be reused on different pages
 void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
 {
@@ -204,7 +205,8 @@ struct StepSequencer : PageComponent {
         }
       // 808
       } else {
-        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
+        //uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
+        uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+2, 1);
       }
 
       // f1 and f2
@@ -328,8 +330,11 @@ struct StepSequencer : PageComponent {
       // 808
       } else {
         // select voice
-        data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
-        AcidSequencer.setTrackVoice(_selected_track, data);
+        //data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
+        //AcidSequencer.setTrackVoice(_selected_track, data);
+        // select voice note[midi] or port[cv]
+        data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+        AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       }
     }
 
@@ -412,28 +417,6 @@ struct SequenceVariation : PageComponent {
 
 // make a seq divider too!
 
-struct VoiceConfig : PageComponent {
-    void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("voice", line, col+1, selected);
-      //
-      uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col+7, selected);
-      uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line, col+10, selected);
-    }
-
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
-      //clearStackNote(_selected_track);
-      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
-    }
-    
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
-    }
-} voiceConfigComponent;
-
 struct VoiceSelect : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
@@ -483,42 +466,108 @@ struct TrackTune : PageComponent {
 struct TonesNumber : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("tones     3", line, col+1, selected);
+      uCtrl.oled->print("tones", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_number_of_tones, line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 1, 7, _number_of_tones);
+      _number_of_tones = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 1, 7, _number_of_tones);
+      _number_of_tones = data;
     }
 } tonesNumberComponent;
 
 struct LowRange : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("low     g#3", line, col+1, selected);
+      uCtrl.oled->print("low", line, col+1, selected);
+      uCtrl.oled->print(AcidSequencer.getNoteString(_lower_note), line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 127, _lower_note);
+      _lower_note = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, _lower_note);
+      _lower_note = data;
     }
 } lowRangeComponent;
 
 struct HighRange : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("high    g#7", line, col+1, selected);
+      uCtrl.oled->print("high", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_range_note, line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 127, _range_note);
+      _range_note = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, _range_note);
+      _range_note = data;
     }
 } highRangeComponent;
 
 struct AccentAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("accent  50%", line, col+1, selected);
+      uCtrl.oled->print("accent", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_accent_probability, line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 100, _accent_probability);
+      _accent_probability = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 100, _accent_probability);
+      _accent_probability = data;
     }
 } accentAmountComponent;
 
 struct SlideAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("slide   30%", line, col+1, selected);
+      uCtrl.oled->print("slide", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_slide_probability, line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 100, _slide_probability);
+      _slide_probability = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 100, _slide_probability);
+      _slide_probability = data;
     }
 } slideAmountComponent;
 
 struct RollAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("roll     0%", line, col+1, selected);
+      uCtrl.oled->print("roll", line, col+1, selected);
+      uCtrl.oled->print((int16_t)_roll_probability, line, col+10, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 100, _roll_probability);
+      _roll_probability = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 100, _roll_probability);
+      _roll_probability = data;
     }
 } rollAmountComponent;
 

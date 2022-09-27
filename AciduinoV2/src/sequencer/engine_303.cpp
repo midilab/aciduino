@@ -160,7 +160,7 @@ void Engine303::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].data.step_length = length);  
 }
 
-void Engine303::acidRandomize(uint8_t track, uint8_t fill) 
+void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note) 
 {
   uint8_t note, high_note, accent, slide, rest;
 
@@ -185,14 +185,16 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill)
     if (_sequencer[track].data.step[i].rest)
       continue;
 
-    high_note = _lower_note+_range_note;
+    high_note = lower_note+range_note;
     if ( high_note > 127 ) {
       high_note = 127;
     }
 
-    note = Harmonizer.getNoteByMaxNumOfTones(random(_lower_note, high_note)) + _lower_note;
-    accent = random(0, 100) < _accent_probability ? 1 : 0;
-    slide = random(0, 100) < _slide_probability ? 1 : 0;
+    // rewrite it for number_of_tones...
+    note = random(lower_note, high_note);
+    
+    accent = random(0, 100) < accent_probability ? 1 : 0;
+    slide = random(0, 100) < slide_probability ? 1 : 0;
     
     _sequencer[track].data.step[i].note = note;
     _sequencer[track].data.step[i].accent = accent;

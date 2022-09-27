@@ -307,11 +307,11 @@ void AcidSequencerClass::setMidiOutputCallback(void (*callback)(uint8_t msg_type
   _engine808->setMidiOutputCallback(callback);
 }
 
-void AcidSequencerClass::acidRandomize(uint8_t track, uint8_t fill) 
+void AcidSequencerClass::acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1, uint8_t param_2, uint8_t param_3, uint8_t param_4, uint8_t param_5) 
 {
   // 303 request
   if(track < TRACK_NUMBER_303)
-    _engine303->acidRandomize(track, fill);
+    _engine303->acidRandomize(track, fill, param_1, param_2, param_3, param_4, param_5);
   // 808 request?
   else
     _engine808->acidRandomize(track-TRACK_NUMBER_303, fill);

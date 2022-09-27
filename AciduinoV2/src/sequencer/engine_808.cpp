@@ -47,6 +47,7 @@ void Engine808::init()
       _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
+      _sequencer[track].voice[i].stack_length = -1;
       _sequencer[track].voice[i].note = 36+i; // general midi drums map #36 kick drum
       _sequencer[track].voice[i].accent = 0ULL;
       _sequencer[track].voice[i].roll = 0ULL;
@@ -60,13 +61,6 @@ void Engine808::init()
         }
       }
     }
-  
-    // initing note stack data
-    for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _sequencer[track].stack[i].note = 0;
-      _sequencer[track].stack[i].length = -1;
-    }
-    
   }
 }
 
@@ -100,18 +94,12 @@ void Engine808::onStepCall(uint32_t tick)
         // does it have accent?
         accent = GET_BIT(_sequencer[track].voice[voice].accent, step);
 
-        // find a free note stack to fit in
-        for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-          if ( _sequencer[track].stack[i].length == -1 ) {
-            // it this a roll? prepare the data
-            _sequencer[track].stack[i].note = _sequencer[track].voice[voice].note;
-            _sequencer[track].stack[i].length = NOTE_LENGTH_808;
-            // send the drum triger
-            _onMidiEventCallback(NoteOn, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
-            break;
-          }
-        }
-        
+        // it this a roll? prepare the data
+        _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
+
+        // send the drum triger
+        _onMidiEventCallback(NoteOn, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
+
       } 
     }
     
@@ -125,11 +113,11 @@ void Engine808::onClockCall(uint32_t tick)
 
     // handle note on stack
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      if ( _sequencer[track].stack[i].length != -1 ) {
-        --_sequencer[track].stack[i].length;
-        if ( _sequencer[track].stack[i].length == 0 ) {
-          _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
-          _sequencer[track].stack[i].length = -1;
+      if ( _sequencer[track].voice[i].stack_length != -1 ) {
+        --_sequencer[track].voice[i].stack_length;
+        if ( _sequencer[track].voice[i].stack_length == 0 ) {
+          _onMidiEventCallback(NoteOff, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+          _sequencer[track].voice[i].stack_length = -1;
         }
       }  
     }
@@ -144,15 +132,15 @@ void Engine808::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_808; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < VOICE_MAX_SIZE_808; j++ ) {
-        _onMidiEventCallback(NoteOff, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
-        _sequencer[i].stack[j].length = -1;
+        _onMidiEventCallback(NoteOff, _sequencer[i].voice[j].note, 0, _sequencer[i].channel, 0);
+        _sequencer[i].voice[j].stack_length = -1;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _onMidiEventCallback(NoteOff, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
-      _sequencer[track].stack[i].length = -1;
+      _onMidiEventCallback(NoteOff, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+      _sequencer[track].voice[i].stack_length = -1;
     }     
   }
 }

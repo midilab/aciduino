@@ -38,7 +38,8 @@ void step_sequencer_page_refresh(uint8_t subpage)
       // voice init point.
       // voice config note for midi, port for cv
       // note(selected voice)/port(eurorack)
-      uCtrl.page->component(voiceConfigComponent, 4, 2);
+      //uCtrl.page->component(voiceConfigComponent, 4, 2);
+      uCtrl.page->component(voiceSelectComponent, 4, 2);
     }
 
     // seq divider!

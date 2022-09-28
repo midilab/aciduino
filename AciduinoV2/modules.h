@@ -6,9 +6,6 @@
 #define USE_OLED
 #define USE_OLED_U8G2
 
-#define USE_MIDI
-#define USE_USB_MIDI
-
 #define USE_DOUT
 #define USE_DIN
 

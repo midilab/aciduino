@@ -4,19 +4,8 @@
 U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
 
 void uCtrlSetup() {
-// process midi at 250 microseconds speed
-  uCtrl.setOn250usCallback(midiHandle);
-  // process sequencer at 1 milisecond speed
-  //uCtrl.setOn1msCallback(sequencerHandle);
-
-  //
-  // MIDI setup
-  //
-  //uCtrl.initMidi();
-  //uCtrl.midi->plug(&usbMIDI);
-  //uCtrl.midi->plug(&MIDI1);
-  //uCtrl.midi->setMidiInputCallback(midiInputHandler);
-  //uCtrl.midi->setMidiOutputCallback(midiOutputHandler);
+  // process midi at 250 microseconds speed
+  uCtrl.setOn250usCallback(midiInputHandle);
 
   //
   // OLED setup

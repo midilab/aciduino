@@ -18,6 +18,18 @@ void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, ui
   //uCtrl.oled->display->drawBox(64, 59, 1, 5);
 }
 
+// for a 1x grid 1x line size
+// large == true ? 2x grid size
+void genericOptionView(String title, String value, uint8_t line, uint8_t col, bool selected, bool large = false)
+{
+  const uint8_t view_size = 12;
+  uint8_t x=(col-1)*5, y=(line-1)*8;
+  uint8_t value_col = large ? (view_size*2)-value.length()+1 : view_size-value.length();
+  uCtrl.oled->display->drawBox(x+1, y, 1, 7);
+  uCtrl.oled->print(title, line, col+1, selected);
+  uCtrl.oled->print(value, line, col+value_col, selected);
+}
+
 struct TopBar : PageComponent {
 
     bool track_selected = true;
@@ -37,7 +49,7 @@ struct TopBar : PageComponent {
       // track number and name
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
       uCtrl.oled->print("T", 1, 1); 
-      uCtrl.oled->print(String(_selected_track+1), 1, 2); 
+      uCtrl.oled->print(_selected_track+1, 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4, track_selected); 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
@@ -45,7 +57,7 @@ struct TopBar : PageComponent {
       // bpm display and setup
       uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "M" : "S", 1, 19);    
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
-      uCtrl.oled->print(uClock.getTempo(), 1, 21, tempo_selected);
+      uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, tempo_selected);
 
       // f1 and f2
       if (track_selected) {
@@ -140,7 +152,7 @@ struct StepSequencer : PageComponent {
     
     void view() {
       uint8_t steps_line = line + 1;
-      uint8_t idx, step_on = 0;
+      uint8_t idx = 0, step_on = 0;
 
       curr_step = AcidSequencer.getCurrentStep(_selected_track);
       step_size = AcidSequencer.getTrackLength(_selected_track);
@@ -362,9 +374,7 @@ struct StepSequencer : PageComponent {
 struct TrackLength : PageComponent {
 
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("lenght", line, col+1, selected);
-      uCtrl.oled->print(String(AcidSequencer.getTrackLength(_selected_track)), line, col+10, selected);
+      genericOptionView("lenght", AcidSequencer.getTrackLength(_selected_track), line, col, selected);
     }
 
     void change(int8_t data) {
@@ -389,9 +399,7 @@ struct TrackLength : PageComponent {
 
 struct SequenceShift : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("shift", line, col+1, selected);
-      uCtrl.oled->print(String(AcidSequencer.getShiftPos(_selected_track)), line, col+10, selected);
+      genericOptionView("shift", AcidSequencer.getShiftPos(_selected_track), line, col, selected);
     }
 
     void change(int8_t data) {
@@ -409,8 +417,7 @@ struct SequenceShift : PageComponent {
 
 struct SequenceVariation : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("seq.      A", line, col+1, selected);
+      genericOptionView("seq.", "A", line, col, selected);
     }
 
 } variationComponent;
@@ -419,10 +426,7 @@ struct SequenceVariation : PageComponent {
 
 struct VoiceSelect : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("voice", line, col+1, selected);
-      //
-      uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col+10, selected);
+      genericOptionView("voice", AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col, selected);
     }
 
     void change(int8_t data) {
@@ -441,9 +445,7 @@ struct VoiceSelect : PageComponent {
 
 struct TrackTune : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("tune", line, col+1, selected);
-      uCtrl.oled->print(AcidSequencer.getTune(_selected_track) == 0 ? "off" : AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1), line, col+10, selected);
+      genericOptionView("tune", AcidSequencer.getTune(_selected_track) == 0 ? "off" : AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1), line, col, selected);
     }
 
     void change(int8_t data) {
@@ -464,15 +466,8 @@ struct TrackTune : PageComponent {
 } tuneComponent;
 
 struct TonesNumber : PageComponent {
-  
-    String test;
-    
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      test = "tones" + String(_number_of_tones);
-      //uCtrl.oled->print("tones", line, col+1, selected);
-      //uCtrl.oled->print(String(_number_of_tones), line, col+10, selected);
-      uCtrl.oled->print(test, line, col+1, selected);
+      genericOptionView("tones", _number_of_tones, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -488,9 +483,7 @@ struct TonesNumber : PageComponent {
 
 struct LowRange : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("low", line, col+1, selected);
-      uCtrl.oled->print(AcidSequencer.getNoteString(_lower_note), line, col+10, selected);
+      genericOptionView("low", AcidSequencer.getNoteString(_lower_note), line, col, selected);
     }
 
     void change(int8_t data) {
@@ -506,9 +499,7 @@ struct LowRange : PageComponent {
 
 struct HighRange : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("high", line, col+1, selected);
-      uCtrl.oled->print(String(_range_note), line, col+10, selected);
+      genericOptionView("high", _range_note, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -524,9 +515,7 @@ struct HighRange : PageComponent {
 
 struct AccentAmount : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("accent", line, col+1, selected);
-      uCtrl.oled->print(String(_accent_probability), line, col+10, selected);
+      genericOptionView("accent", _accent_probability, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -542,9 +531,7 @@ struct AccentAmount : PageComponent {
 
 struct SlideAmount : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("slide", line, col+1, selected);
-      uCtrl.oled->print(String(_slide_probability), line, col+10, selected);
+      genericOptionView("slide", _slide_probability, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -560,9 +547,7 @@ struct SlideAmount : PageComponent {
 
 struct RollAmount : PageComponent {
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("roll", line, col+1, selected);
-      uCtrl.oled->print(String(_roll_probability), line, col+10, selected);
+      genericOptionView("roll", _roll_probability, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -584,9 +569,7 @@ struct TrackScale : PageComponent {
     }
     
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("scale", line, col+1, selected);
-      uCtrl.oled->print(AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId()), line, col+10, selected);
+      genericOptionView("scale", AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId()), line, col, selected, true);
     }
 
     void change(int8_t data) {
@@ -614,9 +597,7 @@ struct TrackFill : PageComponent {
     }
     
     void view() {
-      uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("fill", line, col+1, selected);
-      uCtrl.oled->print(String(_generative_fill), line, col+20, selected);
+      genericOptionView("fill", _generative_fill, line, col, selected, true);
     }
 
     void change(int8_t data) {

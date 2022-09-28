@@ -37,7 +37,7 @@ struct TopBar : PageComponent {
       // track number and name
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
       uCtrl.oled->print("T", 1, 1); 
-      uCtrl.oled->print((int16_t)(_selected_track+1), 1, 2); 
+      uCtrl.oled->print(String(_selected_track+1), 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4, track_selected); 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
@@ -364,7 +364,7 @@ struct TrackLength : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("lenght", line, col+1, selected);
-      uCtrl.oled->print((int16_t)AcidSequencer.getTrackLength(_selected_track), line, col+10, selected);
+      uCtrl.oled->print(String(AcidSequencer.getTrackLength(_selected_track)), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -391,7 +391,7 @@ struct SequenceShift : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("shift", line, col+1, selected);
-      uCtrl.oled->print((int16_t)AcidSequencer.getShiftPos(_selected_track), line, col+10, selected);
+      uCtrl.oled->print(String(AcidSequencer.getShiftPos(_selected_track)), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -464,10 +464,15 @@ struct TrackTune : PageComponent {
 } tuneComponent;
 
 struct TonesNumber : PageComponent {
+  
+    String test;
+    
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
-      uCtrl.oled->print("tones", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_number_of_tones, line, col+10, selected);
+      test = "tones" + String(_number_of_tones);
+      //uCtrl.oled->print("tones", line, col+1, selected);
+      //uCtrl.oled->print(String(_number_of_tones), line, col+10, selected);
+      uCtrl.oled->print(test, line, col+1, selected);
     }
 
     void change(int8_t data) {
@@ -503,7 +508,7 @@ struct HighRange : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("high", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_range_note, line, col+10, selected);
+      uCtrl.oled->print(String(_range_note), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -521,7 +526,7 @@ struct AccentAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("accent", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_accent_probability, line, col+10, selected);
+      uCtrl.oled->print(String(_accent_probability), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -539,7 +544,7 @@ struct SlideAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("slide", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_slide_probability, line, col+10, selected);
+      uCtrl.oled->print(String(_slide_probability), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -557,7 +562,7 @@ struct RollAmount : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("roll", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_roll_probability, line, col+10, selected);
+      uCtrl.oled->print(String(_roll_probability), line, col+10, selected);
     }
 
     void change(int8_t data) {
@@ -611,7 +616,7 @@ struct TrackFill : PageComponent {
     void view() {
       uCtrl.oled->display->drawBox(x+1, y, 1, 7);
       uCtrl.oled->print("fill", line, col+1, selected);
-      uCtrl.oled->print((int16_t)_generative_fill, line, col+20, selected);
+      uCtrl.oled->print(String(_generative_fill), line, col+20, selected);
     }
 
     void change(int8_t data) {

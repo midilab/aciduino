@@ -36,7 +36,7 @@ void welcome_page_refresh(uint8_t subpage)
 
   // debug stack/heap memory
   uCtrl.oled->print("free ram: ", 3, 1);  
-  uCtrl.oled->print((int16_t)freeram(), 3, 11); 
+  uCtrl.oled->print(String(freeram()), 3, 11); 
 }
 
 void welcome_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)

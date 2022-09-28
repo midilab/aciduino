@@ -16,7 +16,7 @@
 // Sequencer config
 //
 // 303
-#define STEP_MAX_SIZE_303       64 // UI is prepared for only 64 steps, but you can further until the memory blow up
+#define STEP_MAX_SIZE_303       64 // UI is prepared for only 64 steps, but you can go further until the memory blow up
 #define NOTE_LENGTH_303         4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY_303       70
 #define ACCENT_VELOCITY_303     127
@@ -29,21 +29,12 @@
 #define ACCENT_VELOCITY_808     127
 #define MAX_VOICE_NAME_CHARS    2
 
-// based on uCtrl
-typedef enum {
-	ControlChange,
-	ProgramChange,			
-	NoteOn,
-	NoteOnHold,
-	NoteOff,
-	AfterTouchPoly,
-	AfterTouchChannel,
-	PitchBend,
-	Nrpn,
-	Sysex,
-	Clock,
-	Start,
-	Stop
-} MidiMessageType;	
+// MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
+#define MIDI_CLOCK 0xF8
+#define MIDI_START 0xFA
+#define MIDI_STOP  0xFC
+#define NOTE_ON    0x90
+#define NOTE_OFF   0x80
+#define MIDI_CC    0xB0
 
 #endif

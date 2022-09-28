@@ -98,7 +98,7 @@ void Engine808::onStepCall(uint32_t tick)
         _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
 
         // send the drum triger
-        _onMidiEventCallback(NoteOn, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
+        _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
 
       } 
     }
@@ -116,7 +116,7 @@ void Engine808::onClockCall(uint32_t tick)
       if ( _sequencer[track].voice[i].stack_length != -1 ) {
         --_sequencer[track].voice[i].stack_length;
         if ( _sequencer[track].voice[i].stack_length == 0 ) {
-          _onMidiEventCallback(NoteOff, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+          _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
           _sequencer[track].voice[i].stack_length = -1;
         }
       }  
@@ -132,14 +132,14 @@ void Engine808::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_808; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < VOICE_MAX_SIZE_808; j++ ) {
-        _onMidiEventCallback(NoteOff, _sequencer[i].voice[j].note, 0, _sequencer[i].channel, 0);
+        _onMidiEventCallback(NOTE_OFF, _sequencer[i].voice[j].note, 0, _sequencer[i].channel, 0);
         _sequencer[i].voice[j].stack_length = -1;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _onMidiEventCallback(NoteOff, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+      _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
       _sequencer[track].voice[i].stack_length = -1;
     }     
   }

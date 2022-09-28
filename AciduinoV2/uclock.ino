@@ -45,8 +45,7 @@ void ClockOut16PPQN(uint32_t tick)
 void ClockOut96PPQN(uint32_t tick) 
 {
   // Send MIDI_CLOCK to external gears
-  msg.type = uctrl::protocol::midi::Clock;
-  uCtrl.midi->writeAllPorts(&msg, 1);
+  sendMidiClock();
   // sequencer tick
   AcidSequencer.on96PPQN(tick);
   // led clock monitor
@@ -56,16 +55,15 @@ void ClockOut96PPQN(uint32_t tick)
 // The callback function wich will be called when clock starts by using Clock.start() method.
 void onClockStart() 
 {
-  msg.type = uctrl::protocol::midi::Start;
-  uCtrl.midi->writeAllPorts(&msg);
+  sendMidiStart();
   _playing = true;
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
 void onClockStop() 
 {
-  msg.type = uctrl::protocol::midi::Stop;
-  uCtrl.midi->writeAllPorts(&msg);
+  sendMidiStop();
+  // force to turn bpm led off
   uCtrl.dout->write(1, LOW);
   // clear all tracks stack note
   AcidSequencer.clearStackNote();

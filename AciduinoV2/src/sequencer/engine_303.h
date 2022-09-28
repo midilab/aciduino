@@ -90,6 +90,7 @@ class Engine303 : public Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
+      uint8_t getTrackChannel(uint8_t track);
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       uint8_t getTune(uint8_t track);

@@ -47,6 +47,11 @@ void sendMidiStart() {
 void sendMidiStop() {
   usbMIDI.sendRealTime(usbMIDI.Stop);
 }
+
+// called outside interruption by user request on PageComponent
+void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
+  ATOMIC(usbMIDI.sendControlChange(cc, value, channel+1))
+}
   
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
 void midiInputHandle() {

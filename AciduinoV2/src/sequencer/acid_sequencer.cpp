@@ -276,6 +276,16 @@ const char * AcidSequencerClass::getTrackVoiceName(uint8_t track, uint8_t voice)
   return _engine808->getTrackVoiceName(track-TRACK_NUMBER_303, voice);
 }
 
+uint8_t AcidSequencerClass::getTrackChannel(uint8_t track)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    _engine303->getTrackChannel(track); 
+  // 808 request?
+  else
+    _engine808->getTrackChannel(track-TRACK_NUMBER_303);
+}
+
 uint8_t AcidSequencerClass::getTune(uint8_t track)
 {
   return _engine303->getTune(track);
@@ -314,7 +324,7 @@ void AcidSequencerClass::acidRandomize(uint8_t track, uint8_t fill, uint8_t para
     _engine303->acidRandomize(track, fill, param_1, param_2, param_3, param_4, param_5);
   // 808 request?
   else
-    _engine808->acidRandomize(track-TRACK_NUMBER_303, fill);
+    _engine808->acidRandomize(track-TRACK_NUMBER_303, fill, param_1, param_2);
 }
 
 const char * AcidSequencerClass::getNoteString(uint8_t note)

@@ -82,6 +82,8 @@ class AcidSequencerClass
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       uint8_t getCurrentStep(uint8_t track);
+      uint8_t getTrackChannel(uint8_t track);
+      uint8_t getTrackPort(uint8_t track) { return 0; };
       uint8_t getTrackNumber();
       uint8_t getTrackLength(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);

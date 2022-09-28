@@ -30,6 +30,40 @@ void genericOptionView(String title, String value, uint8_t line, uint8_t col, bo
   uCtrl.oled->print(value, line, col+value_col, selected);
 }
 
+// generic midi cc control object
+struct MidiCCControl : PageComponent {
+
+    String control_name;
+    uint8_t control_data = 0;
+    uint8_t control_cc = 0;
+
+    MidiCCControl(String name, uint8_t cc, uint8_t initial_value = 0)
+    {
+      control_name = name;
+      control_data = initial_value;
+      control_cc = cc;
+    }
+    
+    void view() {
+      genericOptionView(control_name, control_data, line, col, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      data = parseData(data, 0, 127, control_data);
+      control_data = data;
+      // send data
+      sendMidiCC(control_cc, control_data, AcidSequencer.getTrackChannel(_selected_track));
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, control_data);
+      control_data = data;
+      // send data
+      sendMidiCC(control_cc, control_data, AcidSequencer.getTrackChannel(_selected_track));
+    }
+};
+
 struct TopBar : PageComponent {
 
     bool track_selected = true;
@@ -433,12 +467,12 @@ struct VoiceSelect : PageComponent {
       // incrementer 1, decrementer -1
       //clearStackNote(_selected_track);
       // create a getter for track voice size
-      data = parseData(data, 0, 3, AcidSequencer.getTrackVoice(_selected_track));
+      data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
       AcidSequencer.setTrackVoice(_selected_track, data);
     }
     
     void pot(uint16_t data) {
-      data = parseData(data, 0, 3, AcidSequencer.getTrackVoice(_selected_track));
+      data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
       AcidSequencer.setTrackVoice(_selected_track, data);
     }
 } voiceSelectComponent;
@@ -467,7 +501,7 @@ struct TrackTune : PageComponent {
 
 struct TonesNumber : PageComponent {
     void view() {
-      genericOptionView("tones", _number_of_tones, line, col, selected);
+      genericOptionView("tones", _number_of_tones, line, col, selected, true);
     }
 
     void change(int8_t data) {

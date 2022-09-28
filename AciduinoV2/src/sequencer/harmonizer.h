@@ -102,12 +102,9 @@ class HarmonizerClass
         uint8_t getTemperamentId();
 
     private:
-
         uint8_t _scale[8] = {0};
         uint8_t _temperament_id = 0;
-
         HARMONY_DATA _harmony_mode_table[14];
-
 };
 
 extern HarmonizerClass Harmonizer;

@@ -148,6 +148,11 @@ uint8_t Engine303::getCurrentStep(uint8_t track)
     return step;
 }
 
+uint8_t Engine303::getTrackChannel(uint8_t track)
+{
+  return _sequencer[track].channel;
+}
+
 uint8_t Engine303::getTrackLength(uint8_t track)
 {
     static uint8_t length;

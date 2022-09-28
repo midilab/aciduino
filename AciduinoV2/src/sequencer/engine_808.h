@@ -72,6 +72,7 @@ class Engine808 : public Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
+      uint8_t getTrackChannel(uint8_t track);
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
@@ -80,7 +81,7 @@ class Engine808 : public Engine
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
       const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
-      void acidRandomize(uint8_t track, uint8_t fill);
+      void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability);
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);
 
@@ -89,15 +90,10 @@ class Engine808 : public Engine
       void clearStackNote(int8_t track);
 
     private:
-      uint8_t _voice = 0;
-
       SEQUENCER_TRACK_808 volatile _sequencer[TRACK_NUMBER_808];
-
       // SNS Stuff for 64bits
 		  Bjorklund<uint64_t, 10> _bjorklund;
-
-      uint8_t _accent_probability = 50;
-      uint8_t _roll_probability = 10;
+      uint8_t _voice = 0;
 };
 
 #endif

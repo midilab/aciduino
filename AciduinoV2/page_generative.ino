@@ -75,7 +75,7 @@ void generative_page_refresh(uint8_t subpage)
       uCtrl.page->component(slideAmountComponent, 3, 2);
       uCtrl.page->component(lowRangeComponent, 4, 1);
       uCtrl.page->component(highRangeComponent, 4, 2);
-      uCtrl.page->component(tonesNumberComponent, 5, 2);
+      uCtrl.page->component(tonesNumberComponent, 5, 1);
       // for 303(scale)
       uCtrl.page->component(scaleComponent, 6, 1);
     } else {

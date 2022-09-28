@@ -206,6 +206,11 @@ uint8_t Engine808::getCurrentStep(uint8_t track)
     return step;
 }
 
+uint8_t Engine808::getTrackChannel(uint8_t track)
+{
+  return _sequencer[track].channel;
+}
+
 uint8_t Engine808::getTrackLength(uint8_t track)
 {
     static uint8_t length;
@@ -253,7 +258,7 @@ const char * Engine808::getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0)
   return (const char *)_sequencer[track].voice[voice].name;  
 }
 
-void Engine808::acidRandomize(uint8_t track, uint8_t fill) 
+void Engine808::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability) 
 {
   uint64_t accent, roll;
 
@@ -269,14 +274,14 @@ void Engine808::acidRandomize(uint8_t track, uint8_t fill)
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
 
     // classic randomizer
-    //random(0, 100) < fill ? 1 : 0;
+    // random(0, 100) < fill ? 1 : 0;
     // we are going to randomize only parameters where step is on
     if (GET_BIT(_sequencer[track].voice[_voice].steps, i)) {
 
-      if (random(0, 100) < _accent_probability)
+      if (random(0, 100) < accent_probability)
         SET_BIT(_sequencer[track].voice[_voice].accent, i);
 
-      if (random(0, 100) < _roll_probability)
+      if (random(0, 100) < roll_probability)
         SET_BIT(_sequencer[track].voice[_voice].roll, i);    
       
     }

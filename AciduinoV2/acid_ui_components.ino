@@ -456,12 +456,12 @@ struct TrackLength : PageComponent {
     void change(int8_t data) {
       // incrementer 1, decrementer -1
       //clearStackNote(_selected_track);
-      data = parseData(data, 1, 64, AcidSequencer.getTrackLength(_selected_track));
+      data = parseData(data, 1, AcidSequencer.getTrackMaxLength(_selected_track), AcidSequencer.getTrackLength(_selected_track));
       AcidSequencer.setTrackLength(_selected_track, data);
     }
     
     void pot(uint16_t data) {
-      data = parseData(data, 1, 64, AcidSequencer.getTrackLength(_selected_track));
+      data = parseData(data, 1, AcidSequencer.getTrackMaxLength(_selected_track), AcidSequencer.getTrackLength(_selected_track));
       AcidSequencer.setTrackLength(_selected_track, data);
     }
     

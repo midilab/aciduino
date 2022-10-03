@@ -90,7 +90,7 @@ class Engine808 : public Engine
       void clearStackNote(int8_t track);
 
     private:
-      SEQUENCER_TRACK_808 volatile _sequencer[TRACK_NUMBER_808];
+      volatile SEQUENCER_TRACK_808 _sequencer[TRACK_NUMBER_808];
       // SNS Stuff for 64bits
 		  Bjorklund<uint16_t, 10> _bjorklund;
       uint8_t _voice = 0;

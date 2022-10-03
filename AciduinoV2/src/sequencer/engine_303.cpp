@@ -103,6 +103,10 @@ void Engine303::setStepData(uint8_t track, uint8_t step, uint8_t data)
 
 uint8_t Engine303::getStepData(uint8_t track, uint8_t step)
 {
+  // harmonizer on?
+  if ( _sequencer[track].data.tune > 0 )
+    return Harmonizer.harmonizer(_sequencer[track].data.step[step].note) + (_sequencer[track].data.tune-1);
+
   return _sequencer[track].data.step[step].note;
 }
 

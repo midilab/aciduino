@@ -30,8 +30,10 @@
 //
 // Acid step sequencer
 //
-#define 
 #include "src/sequencer/acid_sequencer.h"
+
+// want a acid midi controller?
+//#define MIDI_CONTROLER
 
 // globals
 bool _playing = false;

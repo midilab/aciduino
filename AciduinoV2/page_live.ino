@@ -130,7 +130,7 @@ CC  Parameter
 87  RC DECAY
 88  RC LEVEL
 */
-
+#ifdef MIDI_CONTROLER
 // for 303 roland cloud
 MidiCCControl filterComponent("filter", 74, 0), 
               resonanceComponent("resonance", 71, 0), 
@@ -161,6 +161,7 @@ MidiCCControl bdDecayComponent("bd decay", 23, 2),
 24  BD LEVEL 
 
  */
+#endif
 // called each cycle interaction of interface object for UI refresh
 void live_page_refresh(uint8_t subpage)
 {
@@ -171,6 +172,9 @@ void live_page_refresh(uint8_t subpage)
   if (subpage == 0) {
     // add div control? 32, 16, 8
 
+  } else if (subpage == 1) {
+    // pattern control subpage
+#ifdef MIDI_CONTROLER
     if (AcidSequencer.is303(_selected_track)) {
       // midi control subpage?
       uCtrl.page->component(filterComponent, 3, 1);
@@ -187,9 +191,7 @@ void live_page_refresh(uint8_t subpage)
       uCtrl.page->component(snSnappyComponent, 4, 1);
       uCtrl.page->component(snToneComponent, 4, 2);
     }
-
-  } else if (subpage == 1) {
-    // pattern control subpage
+#endif
   }
   
 }

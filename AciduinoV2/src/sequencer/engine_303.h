@@ -111,7 +111,7 @@ class Engine303 : public Engine
 
     private:
 
-      SEQUENCER_TRACK_303 volatile _sequencer[TRACK_NUMBER_303];
+      volatile SEQUENCER_TRACK_303 _sequencer[TRACK_NUMBER_303];
 };
 
 #endif

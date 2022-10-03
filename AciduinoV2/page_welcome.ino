@@ -14,6 +14,12 @@
 uint8_t _select_page_menu = 1;
 bool _powersave = false;
 
+extern "C" char* sbrk(int incr);
+int freeram() {
+  char top;
+  return &top - reinterpret_cast<char*>(sbrk(0));
+}
+
 void welcome_page_init()
 { 
   uCtrl.page->set("welcome", welcome_page_create, welcome_page_destroy, welcome_page_refresh, welcome_page_digital_input);    

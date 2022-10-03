@@ -131,12 +131,36 @@ CC  Parameter
 88  RC LEVEL
 */
 
-MidiCCControl filterComponent("filter", 74), 
-              resonanceComponent("resonance", 71), 
-              envelopeComponent("env mod", 12), 
-              decayComponent("decay", 75), 
-              accentComponent("accent", 16);
+// for 303 roland cloud
+MidiCCControl filterComponent("filter", 74, 0), 
+              resonanceComponent("resonance", 71, 0), 
+              envelopeComponent("env mod", 12, 0), 
+              decayComponent("decay", 75, 0), 
+              accentComponent("accent", 16, 0);
 
+/*
+1   0x01    VCF BEND DOWN
+11  0x0B    MASTER LEVEL
+17  0x11    DRIVE DEPTH
+18  0x12    DELAY TIME
+19  0x13    DELAY LEVEL
+64  0x40    HOLD PEDAL
+104 0x68 TUNING
+*/
+
+// for 808 roland cloud
+MidiCCControl bdDecayComponent("bd decay", 23, 2), 
+              bdToneComponent("bd tone", 21, 2), 
+              snSnappyComponent("sn snappy", 26, 2), 
+              snToneComponent("sn tone", 25, 2);
+/*
+20  BD TUNE
+21  BD TONE
+22  BD COMP
+23  BD DECAY
+24  BD LEVEL 
+
+ */
 // called each cycle interaction of interface object for UI refresh
 void live_page_refresh(uint8_t subpage)
 {
@@ -146,14 +170,23 @@ void live_page_refresh(uint8_t subpage)
 
   if (subpage == 0) {
     // add div control? 32, 16, 8
-    // midi control subpage?
-    uCtrl.page->component(filterComponent, 3, 1);
-    uCtrl.page->component(resonanceComponent, 3, 2);
 
-    uCtrl.page->component(envelopeComponent, 4, 1);
-    uCtrl.page->component(decayComponent, 4, 2);
-
-    uCtrl.page->component(accentComponent, 5, 1);
+    if (AcidSequencer.is303(_selected_track)) {
+      // midi control subpage?
+      uCtrl.page->component(filterComponent, 3, 1);
+      uCtrl.page->component(resonanceComponent, 3, 2);
+  
+      uCtrl.page->component(envelopeComponent, 4, 1);
+      uCtrl.page->component(decayComponent, 4, 2);
+  
+      uCtrl.page->component(accentComponent, 5, 1);
+    } else {
+      uCtrl.page->component(bdDecayComponent, 3, 1);
+      uCtrl.page->component(bdToneComponent, 3, 2);
+  
+      uCtrl.page->component(snSnappyComponent, 4, 1);
+      uCtrl.page->component(snToneComponent, 4, 2);
+    }
 
   } else if (subpage == 1) {
     // pattern control subpage

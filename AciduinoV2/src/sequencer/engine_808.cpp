@@ -260,9 +260,9 @@ const char * Engine808::getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0)
 
 void Engine808::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability) 
 {
-  uint64_t accent, roll;
+  uint16_t accent, roll;
 
-  uint64_t bjorklund_data = _bjorklund.compute(_sequencer[track].voice[_voice].step_length, ceil(_sequencer[track].voice[_voice].step_length*(float)(fill/100.0)));
+  uint16_t bjorklund_data = _bjorklund.compute(_sequencer[track].voice[_voice].step_length, ceil(_sequencer[track].voice[_voice].step_length*(float)(fill/100.0)));
 
   ATOMIC(_sequencer[track].mute = true)
   //clearStackNote(track); // PS: this is global! how to not affect other tracks?

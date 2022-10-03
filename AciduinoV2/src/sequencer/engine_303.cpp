@@ -173,7 +173,6 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
 
   // clear track before random data or only clear stack note?
   // probably clear stack note is a better idea
-  uint64_t bjorklund_data = _bjorklund.compute(_sequencer[track].data.step_length, ceil(_sequencer[track].data.step_length*(float)(fill/100.0)));
   
   // prepare the allowed notes for number of tones parameter
   // fix notes outside number of tones choosed and pre computed
@@ -198,13 +197,8 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
   clearStackNote(track);
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_303; i++ ) {
 
-    // aciduino classic randomizer
-    if (true) {
-      _sequencer[track].data.step[i].rest = random(0, 100) < fill ? 0 : 1;
-    // bjorklund randomizer
-    } else {
-      _sequencer[track].data.step[i].rest = GET_BIT(bjorklund_data, i) ? 0 : 1;
-    }
+    // step on/off
+    _sequencer[track].data.step[i].rest = random(0, 100) < fill ? 0 : 1;
 
     // random other parameters?
     if (_sequencer[track].data.step[i].rest)

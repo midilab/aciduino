@@ -35,7 +35,7 @@ void midiOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t chan
   usbMIDI.send(msg_type, byte1, byte2, channel+1, 0);
 }
 
-// used by uClock object inside interruption
+// 3 realtime messages used by uClock object inside interruption
 void sendMidiClock() {
   usbMIDI.sendRealTime(usbMIDI.Clock);
 }
@@ -49,6 +49,7 @@ void sendMidiStop() {
 }
 
 // called outside interruption by user request on PageComponent
+// ATOMIC him!
 void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
   ATOMIC(usbMIDI.sendControlChange(cc, value, channel+1))
 }

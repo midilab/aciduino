@@ -16,13 +16,13 @@
 // Sequencer config
 //
 // 303
-#define STEP_MAX_SIZE_303       64 // UI is prepared for only 64 steps, but you can go further until the memory blow up
+#define STEP_MAX_SIZE_303       32 // UI is prepared for only 64 steps, but you can go further until the memory blow up
 #define NOTE_LENGTH_303         4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY_303       70
 #define ACCENT_VELOCITY_303     127
 #define NOTE_STACK_SIZE_303     3
 // 808
-#define STEP_MAX_SIZE_808       64
+#define STEP_MAX_SIZE_808       16
 #define VOICE_MAX_SIZE_808      8
 #define NOTE_LENGTH_808         4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY_808       70

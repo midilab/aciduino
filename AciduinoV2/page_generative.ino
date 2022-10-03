@@ -1,6 +1,8 @@
 const char * f1_page = "undo";
 const char * f2_page = "generate";
 
+//GeneralDataControl fillComponent("fill", &_generative_fill, 0, 100)
+
 void generativeFunction1()
 {
   // undo new generated sequence

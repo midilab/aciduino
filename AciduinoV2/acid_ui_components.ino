@@ -30,17 +30,62 @@ void genericOptionView(String title, String value, uint8_t line, uint8_t col, bo
   uCtrl.oled->print(value, line, col+value_col, selected);
 }
 
-// generic midi cc control object
+// generic midi cc control object for 2 channels data
+// 2x 303
+// 2x 808
+// always guard it behind a if (AcidSequencer.is303(_selected_track)) {
+// to avoid array index access crash
 struct MidiCCControl : PageComponent {
 
+    // generic controler for TRACK_NUMBER_303 controlers
     String control_name;
-    uint8_t control_data = 0;
     uint8_t control_cc = 0;
+    uint8_t control_idx = 0;
+    uint8_t control_data[TRACK_NUMBER_303];
 
-    MidiCCControl(String name, uint8_t cc, uint8_t initial_value = 0)
+    MidiCCControl(String name, uint8_t cc, uint8_t track_idx = 0, uint8_t initial_value = 0)
     {
       control_name = name;
-      control_data = initial_value;
+      control_cc = cc;
+      control_idx = track_idx;
+      for (uint8_t i; i < TRACK_NUMBER_303; i++) {
+        control_data[i] = initial_value;
+      }
+    }
+    
+    void view() {
+      genericOptionView(control_name, control_data[_selected_track-control_idx], line, col, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      data = parseData(data, 0, 127, control_data[_selected_track-control_idx]);
+      control_data[_selected_track-control_idx] = data;
+      // send data
+      sendMidiCC(control_cc, control_data[_selected_track-control_idx], AcidSequencer.getTrackChannel(_selected_track));
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, control_data[_selected_track-control_idx]);
+      control_data[_selected_track-control_idx] = data;
+      // send data
+      sendMidiCC(control_cc, control_data[_selected_track-control_idx], AcidSequencer.getTrackChannel(_selected_track));
+    }
+};
+
+/*
+// generic global scope data control
+struct GeneralDataControl : PageComponent {
+
+    String control_name;
+    uint8_t * control_data;
+    uint8_t control_min = 0;
+    uint8_t control_max = 0;
+
+    GeneralDataControl(String name, uint8_t * control_data_ptr, uint8_t min, uint8_t max)
+    {
+      control_name = name;
+      control_data = control_data_ptr;
       control_cc = cc;
     }
     
@@ -50,19 +95,16 @@ struct MidiCCControl : PageComponent {
 
     void change(int8_t data) {
       // incrementer 1, decrementer -1
-      data = parseData(data, 0, 127, control_data);
-      control_data = data;
-      // send data
-      sendMidiCC(control_cc, control_data, AcidSequencer.getTrackChannel(_selected_track));
+      data = parseData(data, 0, 127, *control_data);
+      *control_data = data;
     }
     
     void pot(uint16_t data) {
-      data = parseData(data, 0, 127, control_data);
-      control_data = data;
-      // send data
-      sendMidiCC(control_cc, control_data, AcidSequencer.getTrackChannel(_selected_track));
+      data = parseData(data, 0, 127, *control_data);
+      *control_data = data;
     }
 };
+*/
 
 struct TopBar : PageComponent {
 

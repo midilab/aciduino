@@ -27,7 +27,10 @@
 //
 #include "src/uCtrl/uCtrl.h"
 
-// step sequencer
+//
+// Acid step sequencer
+//
+#define 
 #include "src/sequencer/acid_sequencer.h"
 
 // globals
@@ -67,10 +70,4 @@ void setup() {
 
 void loop() {
   uCtrl.run();
-}
-
-extern "C" char* sbrk(int incr);
-int freeram() {
-  char top;
-  return &top - reinterpret_cast<char*>(sbrk(0));
 }

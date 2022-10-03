@@ -34,9 +34,9 @@
 
 typedef struct
 {
-  uint64_t steps; // 8 bytes, 64 steps max
-  uint64_t accent; // 8 bytes, 64 steps max
-  uint64_t roll; // 8 bytes, 64 steps max
+  uint16_t steps; // 8 bytes, 64 steps max
+  uint16_t accent; // 8 bytes, 64 steps max
+  uint16_t roll; // 8 bytes, 64 steps max
   uint8_t note;
   uint8_t step_length;
   int8_t shift;
@@ -92,7 +92,7 @@ class Engine808 : public Engine
     private:
       SEQUENCER_TRACK_808 volatile _sequencer[TRACK_NUMBER_808];
       // SNS Stuff for 64bits
-		  Bjorklund<uint64_t, 10> _bjorklund;
+		  Bjorklund<uint16_t, 10> _bjorklund;
       uint8_t _voice = 0;
 };
 

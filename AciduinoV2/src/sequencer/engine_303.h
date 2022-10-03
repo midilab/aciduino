@@ -32,7 +32,6 @@
 #include "setup.h"
 #include "engine.h"
 #include "harmonizer.h"
-#include "bjorklund.h"
 
 // sequencer data
 typedef struct
@@ -113,9 +112,6 @@ class Engine303 : public Engine
     private:
 
       SEQUENCER_TRACK_303 volatile _sequencer[TRACK_NUMBER_303];
-      
-      // SNS Stuff for 64bits
-		  Bjorklund<uint64_t, 10> _bjorklund;
 };
 
 #endif

@@ -1,0 +1,3 @@
+[submodule "AciduinoV2/src/uClock"]
+	path = AciduinoV2/src/uClock
+	url = https://github.com/midilab/uClock.git

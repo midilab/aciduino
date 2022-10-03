@@ -20,7 +20,7 @@
 //
 // BPM Clock support
 //
-#include "src/uClock/uClock.h"
+#include "src/uClock/src/uClock.h"
 
 //
 // Controlling interfaces support

@@ -67,16 +67,18 @@ void uCtrlSetup() {
   // Page Module for UI
   //
   uCtrl.initPage(4);
-  // Track config page
-  // it will be registred in order call
   welcome_page_init();
   step_sequencer_page_init();
   generative_page_init();
   live_page_init();
   // use component UI
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, 1);
+  // use shift button callback?
+  
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
   uCtrl.page->setNavPot(true);
+
+  // 
   uCtrl.page->setPage(1);
 
   //

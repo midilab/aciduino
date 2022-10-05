@@ -121,6 +121,10 @@ struct TopBar : PageComponent {
       //set selected element
       track_selected = selected && selected_grid == 1;
       tempo_selected = selected && selected_grid == 2;
+
+      // new layout
+      // short page name at left most with box over it
+      // |sequencer| track 1     |M| 120.0
       
       // track number and name
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
@@ -293,8 +297,8 @@ struct StepSequencer : PageComponent {
         }
       // 808
       } else {
-        //uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
-        uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+2, 1);
+        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
+        //uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+2, 1);
       }
 
       // f1 and f2
@@ -418,11 +422,13 @@ struct StepSequencer : PageComponent {
       // 808
       } else {
         // select voice
-        //data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
-        //AcidSequencer.setTrackVoice(_selected_track, data);
+        data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
+        AcidSequencer.setTrackVoice(_selected_track, data);
         // select voice note[midi] or port[cv]
-        data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-        AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+        //data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+        //AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+        // send note for preview while change data
+        //sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
       }
     }
 
@@ -518,6 +524,28 @@ struct VoiceSelect : PageComponent {
       AcidSequencer.setTrackVoice(_selected_track, data);
     }
 } voiceSelectComponent;
+
+struct VoiceConfig : PageComponent {
+    void view() {
+      genericOptionView("note", AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line, col, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+      // send note for preview while change data
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+    }
+
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+      // send note for preview while change data
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+    }
+} voiceConfigComponent;
 
 struct TrackTune : PageComponent {
     void view() {

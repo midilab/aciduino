@@ -3,6 +3,24 @@
 //U8X8 * u8x8 = new U8X8_SH1106_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
 U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
 
+void previousTrack()
+{
+  if (_selected_track == 0) {
+    _selected_track = AcidSequencer.getTrackNumber() - 1;
+  } else {
+    --_selected_track;
+  }
+}
+
+void nextTrack()
+{
+  if (_selected_track == AcidSequencer.getTrackNumber() - 1) {
+    _selected_track = 0;
+  } else {
+    ++_selected_track;
+  }
+}
+
 void uCtrlSetup() {
   // process midi at 250 microseconds speed
   uCtrl.setOn250usCallback(midiInputHandle);
@@ -74,6 +92,10 @@ void uCtrlSetup() {
   // use component UI
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, 1);
   // use shift button callback?
+  // previous track
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
+  // next track
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
   
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
   uCtrl.page->setNavPot(true);

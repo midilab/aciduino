@@ -1,17 +1,3 @@
-void live_page_init()
-{
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);     
-}
-
-void live_page_create()
-{
-  //uCtrl.dout->writeAll(LOW); 
-}
-
-void live_page_destroy()
-{
-  //uCtrl.dout->writeAll(LOW);
-}
 
 // +++ live page
 // patterns 
@@ -162,6 +148,22 @@ MidiCCControl bdDecayComponent("bd decay", 23, 2),
 
  */
 #endif
+
+void live_page_init()
+{
+  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);     
+}
+
+void live_page_create()
+{
+  //uCtrl.dout->writeAll(LOW); 
+}
+
+void live_page_destroy()
+{
+  //uCtrl.dout->writeAll(LOW);
+}
+
 // called each cycle interaction of interface object for UI refresh
 void live_page_refresh(uint8_t subpage)
 {

@@ -33,7 +33,7 @@
 #include "src/sequencer/acid_sequencer.h"
 
 // want a acid midi controller?
-//#define MIDI_CONTROLER
+#define MIDI_CONTROLER
 
 // globals
 bool _playing = false;

@@ -179,7 +179,7 @@ void live_page_refresh(uint8_t subpage)
 #ifdef MIDI_CONTROLER
     if (AcidSequencer.is303(_selected_track)) {
       // midi control subpage?
-      uCtrl.page->component(filterComponent, 3, 1);
+      uCtrl.page->component(filterComponent, 3, 1, true);
       uCtrl.page->component(resonanceComponent, 3, 2);
   
       uCtrl.page->component(envelopeComponent, 4, 1);
@@ -187,7 +187,7 @@ void live_page_refresh(uint8_t subpage)
   
       uCtrl.page->component(accentComponent, 5, 1);
     } else {
-      uCtrl.page->component(bdDecayComponent, 3, 1);
+      uCtrl.page->component(bdDecayComponent, 3, 1, true);
       uCtrl.page->component(bdToneComponent, 3, 2);
   
       uCtrl.page->component(snSnappyComponent, 4, 1);

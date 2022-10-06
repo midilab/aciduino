@@ -20,7 +20,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
 
   if (subpage == 0) {
     // line 3. 2 grids
-    uCtrl.page->component(lengthComponent, 3, 1);
+    uCtrl.page->component(lengthComponent, 3, 1, true);
     uCtrl.page->component(shiftComponent, 3, 2);
     // time signature: off(step lenght ate classic mode), 1/3(length goes to size of signature block)
     
@@ -60,7 +60,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // _bjorklund size(length?), _bjorklund (fill)
     // 
 
-    uCtrl.page->component(stepSequencerComponent, 3, 1);
+    uCtrl.page->component(stepSequencerComponent, 3, 1, true);
   }
   
 }

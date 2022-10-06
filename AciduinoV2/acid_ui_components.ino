@@ -134,8 +134,10 @@ struct TopBar : PageComponent {
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4, track_selected); 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
 
+      //uCtrl.oled->print(uCtrl.page->getPageName(), 2, 1);
+
       // bpm display and setup
-      uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "M" : "S", 1, 19);    
+      uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);    
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
       uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, tempo_selected);
 
@@ -145,7 +147,7 @@ struct TopBar : PageComponent {
         setF2("paste");
       }
       if (tempo_selected) {
-        setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "slave" : "master");
+        setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
         setF2(_playing ? "stop" : "play");
       }
     }
@@ -570,6 +572,11 @@ struct TrackTune : PageComponent {
 } tuneComponent;
 
 struct TonesNumber : PageComponent {
+
+    TonesNumber() {
+      grid_size = 2;
+    }
+    
     void view() {
       genericOptionView("tones", _number_of_tones, line, col, selected, true);
     }

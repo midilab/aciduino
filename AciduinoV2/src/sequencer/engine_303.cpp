@@ -147,9 +147,9 @@ const char * Engine303::getTemperamentName(uint8_t temperament_id)
 
 uint8_t Engine303::getCurrentStep(uint8_t track)
 {
-    static uint8_t step;
-    ATOMIC(step = _sequencer[track].step_location) 
-    return step;
+  static uint8_t step;
+  ATOMIC(step = _sequencer[track].step_location) 
+  return step;
 }
 
 uint8_t Engine303::getTrackChannel(uint8_t track)
@@ -159,9 +159,9 @@ uint8_t Engine303::getTrackChannel(uint8_t track)
 
 uint8_t Engine303::getTrackLength(uint8_t track)
 {
-    static uint8_t length;
-    ATOMIC(length = _sequencer[track].data.step_length) 
-    return length;
+  static uint8_t length;
+  ATOMIC(length = _sequencer[track].data.step_length) 
+  return length;
 }
 
 void Engine303::setTrackLength(uint8_t track, uint16_t length)

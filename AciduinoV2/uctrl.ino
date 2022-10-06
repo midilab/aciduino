@@ -3,6 +3,22 @@
 //U8X8 * u8x8 = new U8X8_SH1106_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
 U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
 
+void playStop()
+{
+  if (_playing)
+    uClock.stop();
+  else
+    uClock.start();
+}
+
+void clockMode()
+{
+  // so instead of clock mode lets get call a screen(create a dialog call screen with f1/2 options and a control over something) with tempo setup... pot controls tempo, inc/dec controls fine tempo tune
+  // F1 and F@ for the new screen will be internal, external with state to choose from
+  // or we just move the selector to the tempo at top bar and leave it as non selectable via user interface nav buttons
+  uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
+}
+
 void previousTrack()
 {
   if (_selected_track == 0) {
@@ -92,6 +108,10 @@ void uCtrlSetup() {
   // use component UI
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, 1);
   // use shift button callback?
+  // slave/master tempo set
+  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, clockMode);
+  // play/stop tempo
+  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_2, playStop);
   // previous track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
   // next track
@@ -100,9 +120,9 @@ void uCtrlSetup() {
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
   uCtrl.page->setNavPot(true);
 
-  // 
-  uCtrl.page->setPage(1);
-
   //
   uCtrl.init();
+
+  // 
+  uCtrl.page->setPage(1);
 }

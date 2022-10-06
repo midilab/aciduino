@@ -22,7 +22,7 @@ int freeram() {
 
 void welcome_page_init()
 { 
-  uCtrl.page->set("welcome", welcome_page_create, welcome_page_destroy, welcome_page_refresh, welcome_page_digital_input);    
+  uCtrl.page->set("", welcome_page_create, welcome_page_destroy, welcome_page_refresh, welcome_page_digital_input);    
 }
 
 void welcome_page_create()

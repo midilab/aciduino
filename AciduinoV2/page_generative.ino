@@ -43,7 +43,7 @@ void generative_page_refresh(uint8_t subpage)
   uCtrl.page->component(topBarComponent, 1, 1);
 
   if (subpage == 0) {
-    uCtrl.page->component(lengthComponent, 3, 1);
+    uCtrl.page->component(lengthComponent, 3, 1, true);
     uCtrl.page->component(shiftComponent, 3, 2);
     // time signature: off(step lenght ate classic mode), 1/3(length goes to size of signature block)
 
@@ -71,7 +71,7 @@ void generative_page_refresh(uint8_t subpage)
     // classical vs euclidian
     // 
 
-    uCtrl.page->component(accentAmountComponent, 3, 1);
+    uCtrl.page->component(accentAmountComponent, 3, 1, true);
     
     if (AcidSequencer.is303(_selected_track)) {
       uCtrl.page->component(slideAmountComponent, 3, 2);

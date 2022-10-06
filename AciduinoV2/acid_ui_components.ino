@@ -40,36 +40,38 @@ struct MidiCCControl : PageComponent {
     // generic controler for TRACK_NUMBER_303 controlers
     String control_name;
     uint8_t control_cc = 0;
-    uint8_t control_idx = 0;
-    uint8_t control_data[TRACK_NUMBER_303];
+    uint8_t * control_data;
 
-    MidiCCControl(String name, uint8_t cc, uint8_t track_idx = 0, uint8_t initial_value = 0)
+    MidiCCControl(String name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
     {
       control_name = name;
       control_cc = cc;
-      control_idx = track_idx;
-      for (uint8_t i; i < TRACK_NUMBER_303; i++) {
+      control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
+      for (uint8_t i; i < data_slot; i++) {
         control_data[i] = initial_value;
       }
     }
     
     void view() {
-      genericOptionView(control_name, control_data[_selected_track-control_idx], line, col, selected);
+      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
+      genericOptionView(control_name, control_data[data_idx], line, col, selected);
     }
 
     void change(int8_t data) {
       // incrementer 1, decrementer -1
-      data = parseData(data, 0, 127, control_data[_selected_track-control_idx]);
-      control_data[_selected_track-control_idx] = data;
+      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
+      data = parseData(data, 0, 127, control_data[data_idx]);
+      control_data[data_idx] = data;
       // send data
-      sendMidiCC(control_cc, control_data[_selected_track-control_idx], AcidSequencer.getTrackChannel(_selected_track));
+      //sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
     }
     
     void pot(uint16_t data) {
-      data = parseData(data, 0, 127, control_data[_selected_track-control_idx]);
-      control_data[_selected_track-control_idx] = data;
+      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
+      data = parseData(data, 0, 127, control_data[data_idx]);
+      control_data[data_idx] = data;
       // send data
-      sendMidiCC(control_cc, control_data[_selected_track-control_idx], AcidSequencer.getTrackChannel(_selected_track));
+      //sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
     }
 };
 
@@ -424,7 +426,7 @@ struct StepSequencer : PageComponent {
       // 808
       } else {
         // select voice
-        data = parseData(data, 0, 3 /*VOICE_MAX_SIZE_808-1*/, AcidSequencer.getTrackVoice(_selected_track));
+        data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
         AcidSequencer.setTrackVoice(_selected_track, data);
         // select voice note[midi] or port[cv]
         //data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));

@@ -118,11 +118,11 @@ CC  Parameter
 */
 #ifdef MIDI_CONTROLER
 // for 303 roland cloud
-MidiCCControl filterComponent("filter", 74, 0), 
-              resonanceComponent("resonance", 71, 0), 
-              envelopeComponent("env mod", 12, 0), 
-              decayComponent("decay", 75, 0), 
-              accentComponent("accent", 16, 0);
+MidiCCControl filterComponent("filter", 74, TRACK_NUMBER_303), 
+              resonanceComponent("reso.", 71, TRACK_NUMBER_303), 
+              envelopeComponent("env mod", 12, TRACK_NUMBER_303), 
+              decayComponent("decay", 75, TRACK_NUMBER_303), 
+              accentComponent("accent", 16, TRACK_NUMBER_303);
 
 /*
 1   0x01    VCF BEND DOWN
@@ -135,10 +135,10 @@ MidiCCControl filterComponent("filter", 74, 0),
 */
 
 // for 808 roland cloud
-MidiCCControl bdDecayComponent("bd decay", 23, 2), 
-              bdToneComponent("bd tone", 21, 2), 
-              snSnappyComponent("sn snappy", 26, 2), 
-              snToneComponent("sn tone", 25, 2);
+MidiCCControl bdDecayComponent("bd decay", 23, TRACK_NUMBER_808), 
+              bdToneComponent("bd tone", 21, TRACK_NUMBER_808), 
+              snSnappyComponent("sd snap", 26, TRACK_NUMBER_808), 
+              snToneComponent("sd tone", 25, TRACK_NUMBER_808);
 /*
 20  BD TUNE
 21  BD TONE

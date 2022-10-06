@@ -1,7 +1,9 @@
 // Display device
 //U8X8 * u8x8 = new U8X8_SSD1306_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
 //U8X8 * u8x8 = new U8X8_SH1106_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
-U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
+//U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
+
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 void playStop()
 {
@@ -45,7 +47,7 @@ void uCtrlSetup() {
   // OLED setup
   // Please check you oled model to correctly init him
   //
-  uCtrl.initOled(u8g2);
+  uCtrl.initOled(&u8g2);
   uCtrl.oled->flipDisplay(1); 
   uCtrl.oled->print("booting", 4, 1);
   uCtrl.oled->print("please wait...", 5, 1); 
@@ -100,7 +102,7 @@ void uCtrlSetup() {
   //
   // Page Module for UI
   //
-  uCtrl.initPage(4);
+  uCtrl.initPage();
   welcome_page_init();
   step_sequencer_page_init();
   generative_page_init();

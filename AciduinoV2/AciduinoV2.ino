@@ -25,6 +25,7 @@
 //
 // Controlling interfaces support
 //
+#include "modules.h"
 #include "src/uCtrl/uCtrl.h"
 
 //

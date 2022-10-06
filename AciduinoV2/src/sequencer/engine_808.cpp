@@ -44,11 +44,14 @@ void Engine808::init()
 
     // initing voice data
     for ( uint16_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
+      //_sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
+      _sequencer[track].voice[i].name[0] = _default_voice_data_808[i].name[0]; 
+      _sequencer[track].voice[i].name[1] = _default_voice_data_808[i].name[1]; 
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
-      _sequencer[track].voice[i].stack_length = -1;
-      _sequencer[track].voice[i].note = 36+i; // general midi drums map #36 kick drum
+      _sequencer[track].voice[i].stack_length = -1;\
+      //_sequencer[track].voice[i].note = 36+i; // general midi drums map #36 kick drum
+      _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
       _sequencer[track].voice[i].accent = 0ULL;
       _sequencer[track].voice[i].roll = 0ULL;
       _sequencer[track].voice[i].steps = 0ULL;

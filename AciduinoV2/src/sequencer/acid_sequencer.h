@@ -51,8 +51,8 @@ class AcidSequencerClass
 {
     private:
 
-      Engine303 * _engine303;
-      Engine808 * _engine808;
+      Engine303 _engine303;
+      Engine808 _engine808;
       
       uint8_t _selected_pattern = 0;
 

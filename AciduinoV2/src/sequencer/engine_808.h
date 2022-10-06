@@ -55,9 +55,36 @@ typedef struct
   VOICE_DATA voice[VOICE_MAX_SIZE_808];
 } SEQUENCER_TRACK_808;
 
+typedef struct
+{
+	const char * name;
+  // for midi
+	uint8_t note;
+  // for cc
+  //uint8_t port;
+} CTRL_DATA; 
+  
 class Engine808 : public Engine
 {
     public:
+
+      Engine808() 
+        : _default_voice_data_808({
+            {"bd", 36},
+            {"sd", 38},
+            {"lt", 41},
+            {"mt", 45},
+            {"ht", 48},
+            {"rs", 37},
+            {"cp", 39},
+            {"cb", 51},
+            {"cy", 49},
+            {"oh", 46},
+            {"ch", 42}
+          })
+        {
+          
+        }
 
       void setTrackChannel(uint8_t track, uint8_t channel);
       void init();
@@ -94,6 +121,8 @@ class Engine808 : public Engine
       // SNS Stuff for 64bits
 		  Bjorklund<uint16_t, 10> _bjorklund;
       uint8_t _voice = 0;
+      CTRL_DATA _default_voice_data_808[11];
+
 };
 
 #endif

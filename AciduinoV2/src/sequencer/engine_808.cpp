@@ -128,8 +128,12 @@ void Engine808::onStepCall(uint32_t tick)
         accent = GET_BIT(_sequencer[track].voice[voice].accent, step);
 #endif
         // it this a roll? prepare the data
-        _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
-
+        if (roll) {
+          _sequencer[track].voice[voice].stack_length = -6;
+        } else {
+          _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
+        }
+        
         // send the drum triger
         _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
 
@@ -146,15 +150,21 @@ void Engine808::onClockCall(uint32_t tick)
 
     // handle note on stack
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      if ( _sequencer[track].voice[i].stack_length != -1 ) {
+
+      if ( _sequencer[track].voice[i].stack_length > 0 ) {
         --_sequencer[track].voice[i].stack_length;
         if ( _sequencer[track].voice[i].stack_length == 0 ) {
           _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
-          _sequencer[track].voice[i].stack_length = -1;
         }
-      }  
+      } 
+      
+      if ( _sequencer[track].voice[i].stack_length < 0 ) {
+        ++_sequencer[track].voice[i].stack_length;
+        _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, _sequencer[track].channel, 0);
+      }
+
     }
-  
+
   }
 }
 
@@ -305,13 +315,9 @@ const char * Engine808::getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0)
 
 void Engine808::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability) 
 {
-  uint16_t accent, roll;
-
-  uint16_t bjorklund_data = _bjorklund.compute(_sequencer[track].voice[_voice].step_length, ceil(_sequencer[track].voice[_voice].step_length*(float)(fill/100.0)));
-
   ATOMIC(_sequencer[track].mute = true)
   //clearStackNote(track); // PS: this is global! how to not affect other tracks?
-  _sequencer[track].voice[_voice].steps = bjorklund_data;
+  _sequencer[track].voice[_voice].steps = _bjorklund.compute(_sequencer[track].voice[_voice].step_length, ceil(_sequencer[track].voice[_voice].step_length*(float)(fill/100.0)));
 
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
 

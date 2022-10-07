@@ -26,6 +26,22 @@
  * DEALINGS IN THE SOFTWARE. 
  */
 
+// TODO:
+// + pre-scale function
+// + roll/flam 0-48ms one step hits two times place. (on our implementation of 96ppqn we can only use 6 steps and no millisecond precision)
+// + substep: duplets, triplets, qudruplets... like flam but with more than 2 hits
+// + add weak note? as 808 cloud
+// + solo and mute for voices?
+// + copy/paste
+// + shuffle
+// + var a/b? we can keep length as more usefull stuff but.. get a fill stuff will be cool instead
+// + fill per pattern? the length control looks like better approach before goes into full 808 mode
+// + global or single rack accent level controller(will vary the accent level for midi from base velocity to the setup velocity max)
+// + clear accents
+// + step button function (the tap) to record wilhe play the steps! this is a good one(generic1 and generic2: one could be the swap step selected just like the original one press invert the on/off state, the other button can be the one for live step record)
+// the same idea for step button for record can be used for 303, with knob for note selection while press play
+// global accent options vs per track accent(make an option, same programmin way but changes the whole track)
+// on generative add the option to generate new accent only
 #include "engine_808.h"
 
 void Engine808::setTrackChannel(uint8_t track, uint8_t channel)
@@ -42,22 +58,33 @@ void Engine808::init()
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = false;
 
+#ifdef GLOBAL_ACCENT
+    for ( uint8_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
+      CLR_BIT(_sequencer[track].accent, i);
+    }
+#endif
+
     // initing voice data
-    for ( uint16_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      //_sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
-      _sequencer[track].voice[i].name[0] = _default_voice_data_808[i].name[0]; 
-      _sequencer[track].voice[i].name[1] = _default_voice_data_808[i].name[1]; 
+    for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
+      // avoid setup problems for our 11 pre defined names
+      if (i < 11) {
+        _sequencer[track].voice[i].name[0] = _default_voice_data_808[i].name[0]; 
+        _sequencer[track].voice[i].name[1] = _default_voice_data_808[i].name[1]; 
+      } else {
+        _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
+      }
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
-      _sequencer[track].voice[i].stack_length = -1;\
-      //_sequencer[track].voice[i].note = 36+i; // general midi drums map #36 kick drum
+      _sequencer[track].voice[i].stack_length = -1;
       _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
-      _sequencer[track].voice[i].accent = 0ULL;
-      _sequencer[track].voice[i].roll = 0ULL;
-      _sequencer[track].voice[i].steps = 0ULL;
-      // get a 4/4 kick mark on firts voice of each channel
-      if (i == 0) {
-        for ( uint16_t j = 0; j < STEP_MAX_SIZE_808; j++ ) {
+      for ( uint8_t j = 0; j < STEP_MAX_SIZE_808; j++ ) {
+        CLR_BIT(_sequencer[track].voice[i].steps, j);
+        CLR_BIT(_sequencer[track].voice[i].roll, j);
+#ifndef GLOBAL_ACCENT
+        CLR_BIT(_sequencer[track].voice[i].accent, j);
+#endif
+        // get a 4/4 kick mark on firts voice of each channel
+        if (i == 0) {
           if (j % 4 == 0) {
             SET_BIT(_sequencer[track].voice[i].steps, j);
           }
@@ -95,8 +122,11 @@ void Engine808::onStepCall(uint32_t tick)
         roll = GET_BIT(_sequencer[track].voice[voice].roll, step);
 
         // does it have accent?
+#ifdef GLOBAL_ACCENT
+        accent = GET_BIT(_sequencer[track].accent, step);
+#else
         accent = GET_BIT(_sequencer[track].voice[voice].accent, step);
-
+#endif
         // it this a roll? prepare the data
         _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
 
@@ -159,11 +189,19 @@ void Engine808::rest(uint8_t track, uint8_t step, bool state)
 
 void Engine808::setAccent(uint8_t track, uint8_t step, bool state) 
 {
+#ifdef GLOBAL_ACCENT
+  if (state) {
+    ATOMIC(SET_BIT(_sequencer[track].accent, step));
+  } else {
+    ATOMIC(CLR_BIT(_sequencer[track].accent, step));
+  }
+#else
   if (state) {
     ATOMIC(SET_BIT(_sequencer[track].voice[_voice].accent, step));
   } else {
     ATOMIC(CLR_BIT(_sequencer[track].voice[_voice].accent, step));
   }
+#endif
 }
 
 void Engine808::setRoll(uint8_t track, uint8_t step, bool state) 
@@ -182,7 +220,11 @@ bool Engine808::stepOn(uint8_t track, uint8_t step)
 
 bool Engine808::accentOn(uint8_t track, uint8_t step)
 {
-    return GET_BIT(_sequencer[track].voice[_voice].accent, step);
+#ifdef GLOBAL_ACCENT
+  return GET_BIT(_sequencer[track].accent, step);
+#else
+  return GET_BIT(_sequencer[track].voice[_voice].accent, step);
+#endif
 }
 
 bool Engine808::rollOn(uint8_t track, uint8_t step)
@@ -271,18 +313,22 @@ void Engine808::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
   //clearStackNote(track); // PS: this is global! how to not affect other tracks?
   _sequencer[track].voice[_voice].steps = bjorklund_data;
 
-  // randomize accent and roll?
-  _sequencer[track].voice[_voice].accent = 0ULL;
-  _sequencer[track].voice[_voice].roll = 0ULL;
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
+
+#ifndef GLOBAL_ACCENT
+    CLR_BIT(_sequencer[track].voice[_voice].accent, i);
+#endif
+    CLR_BIT(_sequencer[track].voice[_voice].roll, i);
 
     // classic randomizer
     // random(0, 100) < fill ? 1 : 0;
     // we are going to randomize only parameters where step is on
     if (GET_BIT(_sequencer[track].voice[_voice].steps, i)) {
 
+#ifndef GLOBAL_ACCENT
       if (random(0, 100) < accent_probability)
         SET_BIT(_sequencer[track].voice[_voice].accent, i);
+#endif
 
       if (random(0, 100) < roll_probability)
         SET_BIT(_sequencer[track].voice[_voice].roll, i);    

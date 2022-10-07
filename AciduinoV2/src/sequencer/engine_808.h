@@ -32,35 +32,41 @@
 #include "setup.h"
 #include "engine.h"
 
-typedef struct
+template <typename T> 
+struct VOICE_DATA
 {
-  uint16_t steps; // 8 bytes, 64 steps max
-  uint16_t accent; // 8 bytes, 64 steps max
-  uint16_t roll; // 8 bytes, 64 steps max
+  T steps; // 8 bytes, 64 steps max
+#ifndef GLOBAL_ACCENT
+  T accent; // 8 bytes, 64 steps max
+#endif
+  T roll; // 8 bytes, 64 steps max
   uint8_t note;
   uint8_t step_length;
   int8_t shift;
   char name[MAX_VOICE_NAME_CHARS];
   int8_t stack_length; 
-} VOICE_DATA;  // 27 bytes
+};  // 27 bytes
 
-typedef struct
+template <typename T> 
+struct SEQUENCER_TRACK_808
 {
   uint8_t step_location;
   uint8_t step_length;
   int8_t shift;
   uint8_t channel;
   bool mute;
-  // euclidian voices linked list, only percusion voice types will make use of more than one voice.
-  VOICE_DATA voice[VOICE_MAX_SIZE_808];
-} SEQUENCER_TRACK_808;
+#ifdef GLOBAL_ACCENT
+  T accent;
+#endif
+  VOICE_DATA<T> voice[VOICE_MAX_SIZE_808];
+};
 
 typedef struct
 {
 	const char * name;
   // for midi
 	uint8_t note;
-  // for cc
+  // for gate
   //uint8_t port;
 } CTRL_DATA; 
   
@@ -117,9 +123,17 @@ class Engine808 : public Engine
       void clearStackNote(int8_t track);
 
     private:
-      volatile SEQUENCER_TRACK_808 _sequencer[TRACK_NUMBER_808];
-      // SNS Stuff for 64bits
+#if STEP_MAX_SIZE_808 <= 16
+      volatile SEQUENCER_TRACK_808<uint16_t> _sequencer[TRACK_NUMBER_808];
 		  Bjorklund<uint16_t, 10> _bjorklund;
+#elif STEP_MAX_SIZE_808 <= 32
+      volatile SEQUENCER_TRACK_808<uint32_t> _sequencer[TRACK_NUMBER_808];
+ 		  Bjorklund<uint32_t, 10> _bjorklund;
+#elif STEP_MAX_SIZE_808 <= 64
+      volatile SEQUENCER_TRACK_808<uint64_t> _sequencer[TRACK_NUMBER_808];
+		  Bjorklund<uint64_t, 10> _bjorklund;
+#endif
+
       uint8_t _voice = 0;
       CTRL_DATA _default_voice_data_808[11];
 

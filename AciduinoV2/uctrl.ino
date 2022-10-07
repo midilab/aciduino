@@ -1,8 +1,5 @@
 // Display device
-//U8X8 * u8x8 = new U8X8_SSD1306_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
-//U8X8 * u8x8 = new U8X8_SH1106_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
-//U8G2 * u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
-
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8X8_PIN_NONE);
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 void playStop()
@@ -16,7 +13,7 @@ void playStop()
 void clockMode()
 {
   // so instead of clock mode lets get call a screen(create a dialog call screen with f1/2 options and a control over something) with tempo setup... pot controls tempo, inc/dec controls fine tempo tune
-  // F1 and F@ for the new screen will be internal, external with state to choose from
+  // F1 and F2 for the new screen will be internal, external with state to choose from
   // or we just move the selector to the tempo at top bar and leave it as non selectable via user interface nav buttons
   uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
 }

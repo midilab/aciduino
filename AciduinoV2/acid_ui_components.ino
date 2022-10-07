@@ -37,16 +37,17 @@ void genericOptionView(String title, String value, uint8_t line, uint8_t col, bo
 // to avoid array index access crash
 struct MidiCCControl : PageComponent {
 
-    // generic controler for TRACK_NUMBER_303 controlers
+    // generic controler for 303 and 808 controlers
     String control_name;
     uint8_t control_cc = 0;
-    uint8_t * control_data;
+    //uint8_t * control_data;
+    uint8_t control_data[2];
 
     MidiCCControl(String name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
     {
       control_name = name;
       control_cc = cc;
-      control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
+      //control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
       for (uint8_t i; i < data_slot; i++) {
         control_data[i] = initial_value;
       }

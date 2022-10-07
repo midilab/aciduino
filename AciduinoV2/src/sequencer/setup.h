@@ -22,12 +22,13 @@
 #define ACCENT_VELOCITY_303     127
 #define NOTE_STACK_SIZE_303     3
 // 808
-#define STEP_MAX_SIZE_808       16
+#define STEP_MAX_SIZE_808       64 // max 64 steps always!
 #define VOICE_MAX_SIZE_808      11
 #define NOTE_LENGTH_808         4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY_808       70
 #define ACCENT_VELOCITY_808     127
 #define MAX_VOICE_NAME_CHARS    2
+#define GLOBAL_ACCENT           // if you choose to go with global accent you can save some ram
 
 // MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
 #define MIDI_CLOCK 0xF8

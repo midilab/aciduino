@@ -16,6 +16,10 @@
   shift+knob turn = last used midi control of the channel
 
   shift+ generic1/2 changes track...
+
+  compatible with uOne
+
+  create a #define to allow uOne 32 buttons and nav to work with same code base
 */
 //
 // BPM Clock support
@@ -25,7 +29,6 @@
 //
 // Controlling interfaces support
 //
-#include "modules.h"
 #include "src/uCtrl/uCtrl.h"
 
 //

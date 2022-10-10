@@ -57,6 +57,7 @@ void Engine808::init()
     _sequencer[track].channel = track+TRACK_NUMBER_808;
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = false;
+    _sequencer[track].roll_type = 0;
 
 #ifdef GLOBAL_ACCENT
     for ( uint8_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
@@ -75,7 +76,7 @@ void Engine808::init()
       }
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
-      _sequencer[track].voice[i].stack_length = -1;
+      _sequencer[track].voice[i].trigger_ctrl = 0;
       _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
       for ( uint8_t j = 0; j < STEP_MAX_SIZE_808; j++ ) {
         CLR_BIT(_sequencer[track].voice[i].steps, j);
@@ -129,9 +130,10 @@ void Engine808::onStepCall(uint32_t tick)
 #endif
         // it this a roll? prepare the data
         if (roll) {
-          _sequencer[track].voice[voice].stack_length = -6;
+          // a full one step in 96ppqn is 6 pulses. minus this shot one, we have 5 pulses left
+          _sequencer[track].voice[voice].trigger_ctrl = -5;
         } else {
-          _sequencer[track].voice[voice].stack_length = NOTE_LENGTH_808;
+          _sequencer[track].voice[voice].trigger_ctrl = NOTE_LENGTH_808;
         }
         
         // send the drum triger
@@ -148,19 +150,39 @@ void Engine808::onClockCall(uint32_t tick)
 {
   for ( uint8_t track = 0; track < TRACK_NUMBER_808; track++ ) {
 
-    // handle note on stack
+    // handle trigger stack
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
 
-      if ( _sequencer[track].voice[i].stack_length > 0 ) {
-        --_sequencer[track].voice[i].stack_length;
-        if ( _sequencer[track].voice[i].stack_length == 0 ) {
+      // normal trigger on event
+      if ( _sequencer[track].voice[i].trigger_ctrl > 0 ) { 
+
+        --_sequencer[track].voice[i].trigger_ctrl;
+        if ( _sequencer[track].voice[i].trigger_ctrl == 0 ) {
           _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
         }
-      } 
-      
-      if ( _sequencer[track].voice[i].stack_length < 0 ) {
-        ++_sequencer[track].voice[i].stack_length;
-        _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, _sequencer[track].channel, 0);
+
+      // roll handler
+      } else if ( _sequencer[track].voice[i].trigger_ctrl < 0 ) { 
+        
+        bool shot_the_moon = false;
+        ++_sequencer[track].voice[i].trigger_ctrl;
+        if (_sequencer[track].roll_type <= FLAM_5) {
+          if (_sequencer[track].voice[i].trigger_ctrl == _sequencer[track].roll_type*-1)
+            shot_the_moon = true;
+        } else {
+          // SUB_STEP_1
+          if (_sequencer[track].roll_type == SUB_STEP_1) {
+            if (_sequencer[track].voice[i].trigger_ctrl == -3 || _sequencer[track].voice[i].trigger_ctrl == -1)
+              shot_the_moon = true;
+          // SUB_STEP_2
+          } else if (_sequencer[track].roll_type == SUB_STEP_2) {
+            shot_the_moon = true;
+          }
+
+        }
+
+        if (shot_the_moon)
+          _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, _sequencer[track].channel, 0);
       }
 
     }
@@ -176,14 +198,14 @@ void Engine808::clearStackNote(int8_t track)
       // clear and send any note off 
       for ( uint8_t j = 0; j < VOICE_MAX_SIZE_808; j++ ) {
         _onMidiEventCallback(NOTE_OFF, _sequencer[i].voice[j].note, 0, _sequencer[i].channel, 0);
-        _sequencer[i].voice[j].stack_length = -1;
+        _sequencer[i].voice[j].trigger_ctrl = 0;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
       _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
-      _sequencer[track].voice[i].stack_length = -1;
+      _sequencer[track].voice[i].trigger_ctrl = 0;
     }     
   }
 }
@@ -221,6 +243,16 @@ void Engine808::setRoll(uint8_t track, uint8_t step, bool state)
   } else {
     ATOMIC(CLR_BIT(_sequencer[track].voice[_voice].roll, step));
   }
+}
+
+void Engine808::setRollType(uint8_t track, uint8_t type)
+{
+  ATOMIC(_sequencer[track].roll_type = type);
+}
+
+uint8_t Engine808::getRollType(uint8_t track)
+{
+  return _sequencer[track].roll_type;
 }
 
 bool Engine808::stepOn(uint8_t track, uint8_t step)

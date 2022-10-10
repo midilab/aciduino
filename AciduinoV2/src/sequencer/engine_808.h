@@ -32,6 +32,16 @@
 #include "setup.h"
 #include "engine.h"
 
+typedef enum {
+  FLAM_1,
+  FLAM_2,
+  FLAM_3,
+  FLAM_4,
+  FLAM_5,
+  SUB_STEP_1,
+  SUB_STEP_2,  
+} ROLL_TYPE;
+
 template <typename T> 
 struct VOICE_DATA
 {
@@ -44,7 +54,7 @@ struct VOICE_DATA
   uint8_t step_length;
   int8_t shift;
   char name[MAX_VOICE_NAME_CHARS];
-  int8_t stack_length; 
+  int8_t trigger_ctrl; 
 };  // 27 bytes
 
 template <typename T> 
@@ -55,6 +65,7 @@ struct SEQUENCER_TRACK_808
   int8_t shift;
   uint8_t channel;
   bool mute;
+  uint8_t roll_type;
 #ifdef GLOBAL_ACCENT
   T accent;
 #endif
@@ -101,6 +112,8 @@ class Engine808 : public Engine
       bool rollOn(uint8_t track, uint8_t step);
       void setAccent(uint8_t track, uint8_t step, bool state);
       void setRoll(uint8_t track, uint8_t step, bool state);
+      void setRollType(uint8_t track, uint8_t type);
+      uint8_t getRollType(uint8_t track);
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);

@@ -502,12 +502,31 @@ struct SequenceShift : PageComponent {
     }
 } shiftComponent;
 
-struct SequenceVariation : PageComponent {
+struct RollType : PageComponent {
+    String options = "";
     void view() {
-      genericOptionView("seq.", "A", line, col, selected);
+      uint8_t roll_type = AcidSequencer.getRollType(_selected_track);
+      if (roll_type <= FLAM_5) {
+        options = "f"  + String(roll_type+1);
+      } else {
+        options = "s"  + String(roll_type - FLAM_5);
+      }
+      genericOptionView("roll", options, line, col, selected);
+      // flam1, flam2, flam3, flam4, flam5, flam6. sub6, sub3, sub2?
     }
 
-} variationComponent;
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, 0, 6, AcidSequencer.getRollType(_selected_track));
+      AcidSequencer.setRollType(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 6, AcidSequencer.getRollType(_selected_track));
+      AcidSequencer.setRollType(_selected_track, data);
+    }
+} rollTypeComponent;
 
 // make a seq divider too!
 

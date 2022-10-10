@@ -48,7 +48,7 @@ void generative_page_refresh(uint8_t subpage)
     // time signature: off(step lenght ate classic mode), 1/3(length goes to size of signature block)
 
     // sequence variation A/B
-    uCtrl.page->component(variationComponent, 4, 1);
+    //uCtrl.page->component(variationComponent, 4, 1);
     
     // for 808(fill): with common options. 4/4, tripplets...
     uCtrl.page->component(fillComponent, 6, 1);

@@ -128,6 +128,22 @@ void AcidSequencerClass::setRoll(uint8_t track, uint8_t step, bool state)
     _engine808.setRoll(track-TRACK_NUMBER_303, step, state);
 }
 
+void AcidSequencerClass::setRollType(uint8_t track, uint8_t type)
+{
+  // 808 request?
+  if(track >= TRACK_NUMBER_303)
+    _engine808.setRollType(track-TRACK_NUMBER_303, type);
+}
+
+uint8_t AcidSequencerClass::getRollType(uint8_t track)
+{
+  // 808 request?
+  if(track >= TRACK_NUMBER_303)
+    return _engine808.getRollType(track-TRACK_NUMBER_303);
+  
+  return 0;
+}
+
 bool AcidSequencerClass::stepOn(uint8_t track, uint8_t step)
 {
   // 303 request

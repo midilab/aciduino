@@ -26,6 +26,13 @@
  * DEALINGS IN THE SOFTWARE. 
  */
 
+/*
+ if selected step is in rest mode, show tie option(if we put step in on state automaticly also set tie off for that one), if its in on mode, show slide option
+ note length
+ 50% of a step on normal patterns, or 62.5% on triplet patterns 
+ triplets: plays 3 notes within a time of 4 notes. so sequencing looks like its slower than normal
+*/
+
 #include "engine_303.h"
 
 void Engine303::setTrackChannel(uint8_t track, uint8_t channel)
@@ -52,6 +59,7 @@ void Engine303::init()
       _sequencer[track].data.step[i].accent = 0;
       _sequencer[track].data.step[i].slide = 0;
       _sequencer[track].data.step[i].rest = 0;
+      _sequencer[track].data.step[i].tie = 0;
       //_sequencer[track].data.step[i].rest = (i+2) % 4 == 0 ? 0 : 1;
       //_sequencer[track].data.step[i].rest = i % 4 == 0 ? 0 : 1;
     }
@@ -67,33 +75,43 @@ void Engine303::init()
 
 void Engine303::rest(uint8_t track, uint8_t step, bool state) 
 {
-    ATOMIC(_sequencer[track].data.step[step].rest = state);
+  ATOMIC(_sequencer[track].data.step[step].rest = state);
 }
 
 void Engine303::setAccent(uint8_t track, uint8_t step, bool state) 
 {
-    ATOMIC(_sequencer[track].data.step[step].accent = state);
+  ATOMIC(_sequencer[track].data.step[step].accent = state);
 }
 
 void Engine303::setSlide(uint8_t track, uint8_t step, bool state) 
 {
-    ATOMIC(_sequencer[track].data.step[step].slide = state);
+  ATOMIC(_sequencer[track].data.step[step].slide = state);
+}
+
+void Engine303::setTie(uint8_t track, uint8_t step, bool state) 
+{
+  ATOMIC(_sequencer[track].data.step[step].tie = state);
 }
 
 bool Engine303::stepOn(uint8_t track, uint8_t step)
 {
-    //int8_t relative_step = uint8_t(step - _sequencer[track].data.shift) % _sequencer[track].data.step_length;
-    return !_sequencer[track].data.step[step].rest;
+  //int8_t relative_step = uint8_t(step - _sequencer[track].data.shift) % _sequencer[track].data.step_length;
+  return !_sequencer[track].data.step[step].rest;
 }
 
 bool Engine303::accentOn(uint8_t track, uint8_t step)
 {
-    return _sequencer[track].data.step[step].accent;
+  return _sequencer[track].data.step[step].accent;
 }
 
 bool Engine303::slideOn(uint8_t track, uint8_t step)
 {
-    return _sequencer[track].data.step[step].slide;
+  return _sequencer[track].data.step[step].slide;
+}
+
+bool Engine303::TieOn(uint8_t track, uint8_t step)
+{
+  return _sequencer[track].data.step[step].tie;
 }
 
 void Engine303::setStepData(uint8_t track, uint8_t step, uint8_t data)
@@ -232,7 +250,7 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
 void Engine303::onStepCall(uint32_t tick) 
 {
-  uint8_t step;
+  uint8_t step, next_step;
   uint16_t length;
   int8_t note;
 
@@ -250,15 +268,16 @@ void Engine303::onStepCall(uint32_t tick)
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {
   
-      // check for slide event ahead of _sequencer[track].step_location
+      // check for slide or tie event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
       for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
-        ++step;
-        step = step % _sequencer[track].data.step_length;
-        if ( _sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[step].rest == 1 ) {
-          length = NOTE_LENGTH_303 + (i * 6);
+        next_step = ++step % _sequencer[track].data.step_length;
+        if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
+          length = NOTE_LENGTH_303 + 5;
           break;
-        } else if ( _sequencer[track].data.step[step].rest == 0 ) {
+        } else if (_sequencer[track].data.step[next_step].tie == 1) {
+          length = NOTE_LENGTH_303 + (i * 6);
+        } else if ( _sequencer[track].data.step[next_step].rest == 0 || _sequencer[track].data.step[next_step].tie == 0) {
           break;
         }
       }

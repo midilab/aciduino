@@ -103,6 +103,8 @@ class AcidSequencerClass
 
       // 808 specific
       void setRoll(uint8_t track, uint8_t step, bool state);
+      void setRollType(uint8_t track, uint8_t type);
+      uint8_t getRollType(uint8_t track);
       bool rollOn(uint8_t track, uint8_t step);
       void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
       uint8_t getTrackVoice(uint8_t track);

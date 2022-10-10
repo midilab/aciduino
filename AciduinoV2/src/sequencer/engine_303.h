@@ -45,8 +45,9 @@ typedef struct
   uint8_t note:7;
   uint8_t accent:1;
   uint8_t slide:1;
+  uint8_t tie:1;
   uint8_t rest:1;
-  uint8_t reserved:6;
+  uint8_t reserved:5;
 } SEQUENCER_STEP_DATA_303;
 // 2 bytes per step
 
@@ -83,8 +84,10 @@ class Engine303 : public Engine
       bool stepOn(uint8_t track, uint8_t step);
       bool accentOn(uint8_t track, uint8_t step);
       bool slideOn(uint8_t track, uint8_t step);
+      bool TieOn(uint8_t track, uint8_t step);
       void setAccent(uint8_t track, uint8_t step, bool state);
       void setSlide(uint8_t track, uint8_t step, bool state);
+      void setTie(uint8_t track, uint8_t step, bool state);
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);

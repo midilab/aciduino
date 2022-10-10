@@ -28,7 +28,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
     //uCtrl.page->component(typeComponent, 4, 1);
 
     // sequence variation A/B
-    uCtrl.page->component(variationComponent, 4, 1);
+    //uCtrl.page->component(variationComponent, 4, 1);
     
     if (AcidSequencer.is303(_selected_track)) {
       // randomizer type: classic, bjulrk
@@ -40,6 +40,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
       // note(selected voice)/port(eurorack)
       //uCtrl.page->component(voiceConfigComponent, 4, 2);
       //uCtrl.page->component(voiceSelectComponent, 4, 1);
+      uCtrl.page->component(rollTypeComponent, 4, 1);
       uCtrl.page->component(voiceConfigComponent, 4, 2);
     }
 

@@ -19,7 +19,6 @@
 #define USE_PAGE
 #define USE_PAGE_MAX_PAGES  4
 #define USE_PAGE_MAX_SUB_PAGES  2
-
 #define USE_PAGE_COMPONENT
 
 #endif

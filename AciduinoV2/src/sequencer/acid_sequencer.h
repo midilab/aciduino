@@ -88,14 +88,16 @@ class AcidSequencerClass
       uint8_t getTrackMaxLength(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
-      void acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1 = 0, uint8_t param_2 = 0, uint8_t param_3 = 0, uint8_t param_4 = 0, uint8_t param_5 = 0);
+      void acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1 = 0, uint8_t param_2 = 0, uint8_t param_3 = 0, uint8_t param_4 = 0, uint8_t param_5 = 0, uint8_t param_6 = 0);
       bool is303(uint8_t track);
 
       // 303 specific
       uint8_t getTune(uint8_t track);
       void setTune(uint8_t track, uint8_t tune);
       void setSlide(uint8_t track, uint8_t step, bool state);
+      void setTie(uint8_t track, uint8_t step, bool state);
       bool slideOn(uint8_t track, uint8_t step);
+      bool tieOn(uint8_t track, uint8_t step);
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();

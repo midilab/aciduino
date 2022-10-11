@@ -64,7 +64,7 @@ struct MidiCCControl : PageComponent {
       data = parseData(data, 0, 127, control_data[data_idx]);
       control_data[data_idx] = data;
       // send data
-      //sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
+      sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
     }
     
     void pot(uint16_t data) {
@@ -72,7 +72,7 @@ struct MidiCCControl : PageComponent {
       data = parseData(data, 0, 127, control_data[data_idx]);
       control_data[data_idx] = data;
       // send data
-      //sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
+      sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
     }
 };
 
@@ -316,7 +316,11 @@ struct StepSequencer : PageComponent {
         setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
         // 303
         if (AcidSequencer.is303(_selected_track)) {
-          setF2("slide", AcidSequencer.slideOn(_selected_track, selected_step));
+          if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {
+            setF2("tie", AcidSequencer.tieOn(_selected_track, selected_step));
+          } else {
+            setF2("slide", AcidSequencer.slideOn(_selected_track, selected_step));
+          }
         // 808
         } else {
           setF2("roll", AcidSequencer.rollOn(_selected_track, selected_step));
@@ -404,9 +408,22 @@ struct StepSequencer : PageComponent {
     }
     
     void change(int8_t data) {
-      // incrementer, decrementer
       if(selected_line == 2) {
-        AcidSequencer.rest(_selected_track, selected_step, data > 0 ? false : true);
+        // toggle on/off step with generic button 2(+1)
+        if (data > 0) {
+          AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
+        // tap button for preview and realtime record with generic button 1(-1)
+        } else {
+          // if its playing we record, o
+          if (_playing) {
+            AcidSequencer.rest(_selected_track, curr_step, false);
+            
+          // therwise we preview data only for user
+          } else {
+            // ...
+          }
+        }
+        
       }
     }
 
@@ -448,7 +465,11 @@ struct StepSequencer : PageComponent {
       if (selected_line == 2) {
         // 303
         if (AcidSequencer.is303(_selected_track)) {
-          AcidSequencer.setSlide(_selected_track, selected_step, !AcidSequencer.slideOn(_selected_track, selected_step));
+          if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {
+            AcidSequencer.setTie(_selected_track, selected_step, !AcidSequencer.tieOn(_selected_track, selected_step));
+          } else {
+            AcidSequencer.setSlide(_selected_track, selected_step, !AcidSequencer.slideOn(_selected_track, selected_step));
+          }
         // 808
         } else {
           AcidSequencer.setRoll(_selected_track, selected_step, !AcidSequencer.rollOn(_selected_track, selected_step));

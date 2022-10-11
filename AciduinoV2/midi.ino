@@ -55,8 +55,8 @@ void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
 }
  
 void sendNote(uint8_t note, uint8_t channel) {
-  ATOMIC(usbMIDI.sendNoteOn(note, 127, channel+1));
-  ATOMIC(usbMIDI.sendNoteOff(note, 0, channel+1));
+  ATOMIC(usbMIDI.sendNoteOn(note, 127, channel+1))
+  ATOMIC(usbMIDI.sendNoteOff(note, 0, channel+1))
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time

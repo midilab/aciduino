@@ -84,7 +84,7 @@ class Engine303 : public Engine
       bool stepOn(uint8_t track, uint8_t step);
       bool accentOn(uint8_t track, uint8_t step);
       bool slideOn(uint8_t track, uint8_t step);
-      bool TieOn(uint8_t track, uint8_t step);
+      bool tieOn(uint8_t track, uint8_t step);
       void setAccent(uint8_t track, uint8_t step, bool state);
       void setSlide(uint8_t track, uint8_t step, bool state);
       void setTie(uint8_t track, uint8_t step, bool state);
@@ -102,7 +102,7 @@ class Engine303 : public Engine
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
-      void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note);
+      void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note);
 
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);

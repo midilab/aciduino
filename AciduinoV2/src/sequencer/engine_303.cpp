@@ -109,7 +109,7 @@ bool Engine303::slideOn(uint8_t track, uint8_t step)
   return _sequencer[track].data.step[step].slide;
 }
 
-bool Engine303::TieOn(uint8_t track, uint8_t step)
+bool Engine303::tieOn(uint8_t track, uint8_t step)
 {
   return _sequencer[track].data.step[step].tie;
 }
@@ -187,9 +187,9 @@ void Engine303::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].data.step_length = length);  
 }
 
-void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note) 
+void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note) 
 {
-  uint8_t note, high_note, accent, slide, rest;
+  uint8_t note, high_note, accent, slide, tie, rest, last_step;
   // initialize as full tone scale array(root c)
   uint8_t fix_tones[12] = {0};
 
@@ -217,14 +217,32 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
   // random it all
   ATOMIC(_sequencer[track].mute = true);
   clearStackNote(track);
+
   for ( uint16_t i = 0; i < STEP_MAX_SIZE_303; i++ ) {
 
     // step on/off
     _sequencer[track].data.step[i].rest = random(0, 100) < fill ? 0 : 1;
 
-    // random other parameters?
-    if (_sequencer[track].data.step[i].rest)
+    // random tie and reset accent and slide in case of a rest
+    if (_sequencer[track].data.step[i].rest) {
+
+      _sequencer[track].data.step[i].accent = 0;
+      _sequencer[track].data.step[i].slide = 0;
+      _sequencer[track].data.step[i].tie = 0;
+      
+      if (i == 0) {
+        last_step = STEP_MAX_SIZE_303-1;
+      } else {
+        last_step = i-1;
+      }
+
+      // only tie probrablity when last step has a note or another tie event
+      if (_sequencer[track].data.step[last_step].rest == 0 || _sequencer[track].data.step[last_step].tie == 1)
+        _sequencer[track].data.step[i].tie = random(0, 100) < tie_probability ? 1 : 0;
+
       continue;
+
+    }
 
     high_note = lower_note+range_note;
     if ( high_note > 127 ) {
@@ -275,7 +293,7 @@ void Engine303::onStepCall(uint32_t tick)
         if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
           length = NOTE_LENGTH_303 + 5;
           break;
-        } else if (_sequencer[track].data.step[next_step].tie == 1) {
+        } else if (_sequencer[track].data.step[next_step].tie == 1 && _sequencer[track].data.step[next_step].rest == 1) {
           length = NOTE_LENGTH_303 + (i * 6);
         } else if ( _sequencer[track].data.step[next_step].rest == 0 || _sequencer[track].data.step[next_step].tie == 0) {
           break;

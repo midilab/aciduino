@@ -51,10 +51,6 @@ typedef struct
 } SEQUENCER_STEP_DATA_303;
 // 2 bytes per step
 
-// or
-// octave: 2 bits: 4 values / 3 bits: 8 values
-// note: 4 bits: 16 values
-
 typedef struct
 {
   SEQUENCER_STEP_DATA_303 step[STEP_MAX_SIZE_303];
@@ -97,7 +93,11 @@ class Engine303 : public Engine
       int8_t getShiftPos(uint8_t track);
       uint8_t getTune(uint8_t track);
       void setTune(uint8_t track, uint8_t tune);
+      int8_t getTranspose(uint8_t track);
+      void setTranspose(uint8_t track, int8_t transpose);
       void setTrackLength(uint8_t track, uint16_t length);
+      void clearStepData(uint8_t track, uint8_t rest);
+      void clearTrack(uint8_t track);
       void setTrackChannel(uint8_t track, uint8_t channel);
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);

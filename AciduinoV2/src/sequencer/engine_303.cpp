@@ -53,16 +53,8 @@ void Engine303::init()
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = false;
 
-    // initing note data
-    for ( uint16_t i = 0; i < STEP_MAX_SIZE_303; i++ ) {
-      _sequencer[track].data.step[i].note = 36;
-      _sequencer[track].data.step[i].accent = 0;
-      _sequencer[track].data.step[i].slide = 0;
-      _sequencer[track].data.step[i].rest = 0;
-      _sequencer[track].data.step[i].tie = 0;
-      //_sequencer[track].data.step[i].rest = (i+2) % 4 == 0 ? 0 : 1;
-      //_sequencer[track].data.step[i].rest = i % 4 == 0 ? 0 : 1;
-    }
+    // clear step data
+    clearStepData(track, 0);
   
     // initing note stack data
     for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
@@ -148,6 +140,16 @@ void Engine303::setTune(uint8_t track, uint8_t tune)
   ATOMIC(_sequencer[track].data.tune = tune)
 }
 
+int8_t Engine303::getTranspose(uint8_t track)
+{
+  return _sequencer[track].data.transpose;
+}
+
+void Engine303::setTranspose(uint8_t track, int8_t transpose)
+{
+  ATOMIC(_sequencer[track].data.transpose = transpose)
+}
+
 uint8_t Engine303::getTemperamentId()
 {
   return Harmonizer.getTemperamentId();
@@ -173,6 +175,25 @@ uint8_t Engine303::getCurrentStep(uint8_t track)
 uint8_t Engine303::getTrackChannel(uint8_t track)
 {
   return _sequencer[track].channel;
+}
+
+void Engine303::clearStepData(uint8_t track, uint8_t rest)
+{
+  for ( uint16_t i = 0; i < STEP_MAX_SIZE_303; i++ ) {
+    _sequencer[track].data.step[i].note = 36;
+    _sequencer[track].data.step[i].accent = 0;
+    _sequencer[track].data.step[i].slide = 0;
+    _sequencer[track].data.step[i].rest = rest;
+    _sequencer[track].data.step[i].tie = 0;
+  }
+}
+
+void Engine303::clearTrack(uint8_t track)
+{
+  ATOMIC(_sequencer[track].mute = true);
+  clearStackNote(track);
+  clearStepData(track, 1);
+  ATOMIC(_sequencer[track].mute = false);
 }
 
 uint8_t Engine303::getTrackLength(uint8_t track)
@@ -285,7 +306,7 @@ void Engine303::onStepCall(uint32_t tick)
     
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {
-  
+
       // check for slide or tie event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
       for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
@@ -299,7 +320,7 @@ void Engine303::onStepCall(uint32_t tick)
           break;
         }
       }
-  
+
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {

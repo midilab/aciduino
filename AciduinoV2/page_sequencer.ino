@@ -32,7 +32,8 @@ void step_sequencer_page_refresh(uint8_t subpage)
     
     if (AcidSequencer.is303(_selected_track)) {
       // randomizer type: classic, bjulrk
-      uCtrl.page->component(tuneComponent, 4, 2);
+      uCtrl.page->component(tuneComponent, 4, 1);
+      uCtrl.page->component(transposeComponent, 4, 2);
     } else {
       // 808
       // voice init point.

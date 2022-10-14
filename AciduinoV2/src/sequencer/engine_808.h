@@ -50,12 +50,14 @@ struct VOICE_DATA
   T accent; // 8 bytes, 64 steps max
 #endif
   T roll; // 8 bytes, 64 steps max
-  uint8_t note;
+  uint8_t note:7;
+  uint8_t mute:1;
   uint8_t step_length;
   int8_t shift;
   char name[MAX_VOICE_NAME_CHARS];
   int8_t trigger_ctrl; 
-};  // 27 bytes
+};  // 48 bytes + 8bytes accent + char name[] for pattern voice
+// track with 11 voices 616bytes or 561bytes with global accent
 
 template <typename T> 
 struct SEQUENCER_TRACK_808
@@ -71,6 +73,7 @@ struct SEQUENCER_TRACK_808
 #endif
   VOICE_DATA<T> voice[VOICE_MAX_SIZE_808];
 };
+// 48 bytes + 8bits accent + 
 
 typedef struct
 {
@@ -122,6 +125,8 @@ class Engine808 : public Engine
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
+      void clearStepData(uint8_t track, uint8_t voice);
+      void clearTrack(uint8_t track, uint8_t mode = 1);
       void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
       uint8_t getTrackVoice(uint8_t track = 0);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);

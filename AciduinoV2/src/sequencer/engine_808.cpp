@@ -74,22 +74,15 @@ void Engine808::init()
       } else {
         _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
       }
+      _sequencer[track].voice[i].mute = false;
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
       _sequencer[track].voice[i].trigger_ctrl = 0;
       _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
-      for ( uint8_t j = 0; j < STEP_MAX_SIZE_808; j++ ) {
-        CLR_BIT(_sequencer[track].voice[i].steps, j);
-        CLR_BIT(_sequencer[track].voice[i].roll, j);
-#ifndef GLOBAL_ACCENT
-        CLR_BIT(_sequencer[track].voice[i].accent, j);
-#endif
-        // get a 4/4 kick mark on firts voice of each channel
-        if (i == 0) {
-          if (j % 4 == 0) {
-            SET_BIT(_sequencer[track].voice[i].steps, j);
-          }
-        }
+      clearStepData(track, i);
+      // if bd, fill 4/4 kick pattern;
+      if (i == 0) {
+        _sequencer[track].voice[i].steps = 1229782938247303441;
       }
     }
   }
@@ -114,6 +107,10 @@ void Engine808::onStepCall(uint32_t tick)
     // walk thru all track voices
     for (uint8_t voice = 0; voice < VOICE_MAX_SIZE_808; voice++) {
       
+      if ( _sequencer[track].voice[voice].mute == true ) {
+        continue;
+      }
+
       step = (_sequencer[track].step_location + _sequencer[track].voice[voice].shift) % _sequencer[track].voice[voice].step_length;
 
       // send note on only if this step are not in rest mode
@@ -192,7 +189,7 @@ void Engine808::onClockCall(uint32_t tick)
 
 void Engine808::clearStackNote(int8_t track)
 {
-  if ( track <= -1 ) {
+  //if ( track <= -1 ) {
     // clear all tracks stack note
     for ( uint8_t i = 0; i < TRACK_NUMBER_808; i++ ) {
       // clear and send any note off 
@@ -201,13 +198,13 @@ void Engine808::clearStackNote(int8_t track)
         _sequencer[i].voice[j].trigger_ctrl = 0;
       } 
     }
-  } else {
-    // clear and send any note off 
-    for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
-      _sequencer[track].voice[i].trigger_ctrl = 0;
-    }     
-  }
+  //} else {
+  //  // clear and send any note off 
+  //  for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
+  //    _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+  //    _sequencer[track].voice[i].trigger_ctrl = 0;
+  //  }     
+  //}
 }
 
 void Engine808::rest(uint8_t track, uint8_t step, bool state) 
@@ -296,6 +293,35 @@ uint8_t Engine808::getCurrentStep(uint8_t track)
 uint8_t Engine808::getTrackChannel(uint8_t track)
 {
   return _sequencer[track].channel;
+}
+
+void Engine808::clearStepData(uint8_t track, uint8_t voice)
+{
+  _sequencer[track].voice[voice].steps = 0UL;
+  _sequencer[track].voice[voice].roll = 0UL;
+#ifndef GLOBAL_ACCENT
+  _sequencer[track].voice[voice].accent = 0UL;
+#endif
+}
+
+void Engine808::clearTrack(uint8_t track, uint8_t mode)
+{
+  // clear voice
+  if (mode == 1) {
+    ATOMIC(_sequencer[track].voice[_voice].mute = true)
+    clearStepData(track, _voice);
+    ATOMIC(_sequencer[track].voice[_voice].mute = false)
+  // clear all track voices
+  } else if (mode == 0) {
+    ATOMIC(_sequencer[track].mute = true)
+    for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
+      clearStepData(track, i);
+    }
+#ifdef GLOBAL_ACCENT
+    _sequencer[track].accent = 0UL;
+#endif
+    ATOMIC(_sequencer[track].mute = false)
+  }
 }
 
 uint8_t Engine808::getTrackLength(uint8_t track)

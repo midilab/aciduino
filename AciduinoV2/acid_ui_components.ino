@@ -76,55 +76,18 @@ struct MidiCCControl : PageComponent {
     }
 };
 
-/*
-// generic global scope data control
-struct GeneralDataControl : PageComponent {
-
-    String control_name;
-    uint8_t * control_data;
-    uint8_t control_min = 0;
-    uint8_t control_max = 0;
-
-    GeneralDataControl(String name, uint8_t * control_data_ptr, uint8_t min, uint8_t max)
-    {
-      control_name = name;
-      control_data = control_data_ptr;
-      control_cc = cc;
-    }
-    
-    void view() {
-      genericOptionView(control_name, control_data, line, col, selected);
-    }
-
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
-      data = parseData(data, 0, 127, *control_data);
-      *control_data = data;
-    }
-    
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 127, *control_data);
-      *control_data = data;
-    }
-};
-*/
-
 struct TopBar : PageComponent {
 
     bool track_selected = true;
     bool tempo_selected = false;
     
     TopBar() {
-      grid_size = 2;
       // not overried by hook callback of a page
       no_hook = true;
+      no_nav = true;
     }
 
     void view() {
-      //set selected element
-      track_selected = selected && selected_grid == 1;
-      tempo_selected = selected && selected_grid == 2;
-
       // new layout
       // short page name at left most with box over it
       // |sequencer| track 1     |M| 120.0
@@ -134,7 +97,7 @@ struct TopBar : PageComponent {
       uCtrl.oled->print("T", 1, 1); 
       uCtrl.oled->print(_selected_track+1, 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
-      uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4, track_selected); 
+      uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4); 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
 
       //uCtrl.oled->print(uCtrl.page->getPageName(), 2, 1);
@@ -142,44 +105,23 @@ struct TopBar : PageComponent {
       // bpm display and setup
       uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);    
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
-      uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, tempo_selected);
+      uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
 
       // f1 and f2
-      if (track_selected) {
-        setF1("save");
-        setF2("paste");
-      }
-      if (tempo_selected) {
-        setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
-        setF2(_playing ? "stop" : "play");
-      }
+      setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
+      setF2(_playing ? "stop" : "play");
     }
     
     void change(int8_t data) {
       // incrementer, decrementer
-      if (track_selected) {
-        // change track
-        if (_selected_track == 0 && data < 0) {
-          _selected_track = AcidSequencer.getTrackNumber() - 1;
-        } else {
-          _selected_track = (_selected_track + data) % AcidSequencer.getTrackNumber();
-        }
-      } else if (tempo_selected) {
-        // inc and dec will fine update to 0.1 bpm
-        uClock.setTempo(uClock.getTempo()+(data * 0.1));
-      }
+      // inc and dec will fine update to 0.1 bpm
+      uClock.setTempo(uClock.getTempo()+(data * 0.1));
     }
 
     void pot(uint16_t data) {
       // incrementer, decrementer
-      if (track_selected) {
-        // change track
-      } else if (tempo_selected) {
-        // pot will increment with 1bpm fine update 
-        // parseData(value, min, max, curr_value);
-        data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
-        uClock.setTempo(data);
-      }
+      data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
+      uClock.setTempo(data);
     }
     
     void function1() {
@@ -192,23 +134,6 @@ struct TopBar : PageComponent {
         else
           uClock.start();
     }
-    /*
-    void nav(uint8_t dir) {
-      // left, rigth
-      switch (dir) {
-        case LEFT:
-        case RIGHT:
-          if (selected_grid == 1) {
-            track_selected = true;
-            tempo_selected = false;
-          } else if (selected_grid == 2) {
-            tempo_selected = true;
-            track_selected = false;
-          }
-          break;
-      }
-    }
-    */
 } topBarComponent;
 
 struct StepSequencer : PageComponent {
@@ -309,8 +234,9 @@ struct StepSequencer : PageComponent {
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("copy");
-          setF2("paste");
+          setF1("clear");
+          // you can only paste if the selected selector is cleared otherwise it will shows copy
+          setF2("copy");
       // Steps
       } else if (selected_line == 2) {
         setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
@@ -455,7 +381,10 @@ struct StepSequencer : PageComponent {
     }
 
     void function1() {
-      if (selected_line == 2) {
+      if (selected_line == 1) {
+        // clear track
+        AcidSequencer.clearTrack(_selected_track);
+      } else if (selected_line == 2) {
         // 303 and 808 uses the same accent button f1
         AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
       }
@@ -522,6 +451,24 @@ struct SequenceShift : PageComponent {
       AcidSequencer.setShiftPos(_selected_track, data);
     }
 } shiftComponent;
+
+struct Transpose : PageComponent {
+    void view() {
+      genericOptionView("transpose", AcidSequencer.getTranspose(_selected_track), line, col, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      //clearStackNote(_selected_track);
+      data = parseData(data, -12, 12, AcidSequencer.getTranspose(_selected_track));
+      AcidSequencer.setTranspose(_selected_track, data);
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, -12, 12, AcidSequencer.getTranspose(_selected_track));
+      AcidSequencer.setTranspose(_selected_track, data);
+    }
+} transposeComponent;
 
 struct RollType : PageComponent {
     String options = "";
@@ -613,6 +560,40 @@ struct TrackTune : PageComponent {
     }
 
 } tuneComponent;
+
+/*
+// generic global scope data control
+struct GeneralDataControl : PageComponent {
+
+    String control_name;
+    int8_t * control_data;
+    uint8_t control_min = 0;
+    uint8_t control_max = 0;
+
+    GeneralDataControl(String name, int8_t * control_data_ptr, uint8_t min, uint8_t max)
+    {
+      control_name = name;
+      control_data = control_data_ptr;
+      control_min = min;
+      control_max = max;
+    }
+    
+    void view() {
+      genericOptionView(control_name, control_data, line, col, selected);
+    }
+
+    void change(int8_t data) {
+      // incrementer 1, decrementer -1
+      data = parseData(data, control_min, control_max, *control_data);
+      *control_data = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, control_min, control_max, *control_data);
+      *control_data = data;
+    }
+} tonesNumberComponent("tones", &_number_of_tones, 1, 7);
+*/
 
 struct TonesNumber : PageComponent {
 

@@ -10,12 +10,9 @@ void playStop()
     uClock.start();
 }
 
-void clockMode()
+void tempoSetup()
 {
-  // so instead of clock mode lets get call a screen(create a dialog call screen with f1/2 options and a control over something) with tempo setup... pot controls tempo, inc/dec controls fine tempo tune
-  // F1 and F2 for the new screen will be internal, external with state to choose from
-  // or we just move the selector to the tempo at top bar and leave it as non selectable via user interface nav buttons
-  uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
+  uCtrl.page->selectComponent(topBarComponent);
 }
 
 void previousTrack()
@@ -95,6 +92,11 @@ void uCtrlSetup() {
   // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
   pinMode(22, OUTPUT);
   digitalWrite(22, LOW);
+   
+  //
+  // SdCard Module
+  //
+  //uCtrl.initSdCard(&SPI, 7); 
   
   //
   // Page Module for UI
@@ -108,7 +110,7 @@ void uCtrlSetup() {
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, 1);
   // use shift button callback?
   // slave/master tempo set
-  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, clockMode);
+  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, tempoSetup);
   // play/stop tempo
   uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_2, playStop);
   // previous track

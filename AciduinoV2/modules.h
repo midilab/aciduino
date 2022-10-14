@@ -21,4 +21,6 @@
 #define USE_PAGE_MAX_SUB_PAGES  2
 #define USE_PAGE_COMPONENT
 
+//#define USE_SDCARD
+
 #endif

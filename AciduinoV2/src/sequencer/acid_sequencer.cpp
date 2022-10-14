@@ -274,6 +274,16 @@ void AcidSequencerClass::setTrackLength(uint8_t track, uint16_t length)
     _engine808.setTrackLength(track-TRACK_NUMBER_303, length);
 }
 
+void AcidSequencerClass::clearTrack(uint8_t track)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    _engine303.clearTrack(track);
+  // 808 request?
+  else
+    _engine808.clearTrack(track);
+}
+
 int8_t AcidSequencerClass::getShiftPos(uint8_t track)
 {
   // 303 request
@@ -337,6 +347,16 @@ uint8_t AcidSequencerClass::getTune(uint8_t track)
 void AcidSequencerClass::setTune(uint8_t track, uint8_t tune)
 {
   _engine303.setTune(track, tune);
+}
+
+int8_t AcidSequencerClass::getTranspose(uint8_t track)
+{
+  return _engine303.getTranspose(track);
+}
+
+void AcidSequencerClass::setTranspose(uint8_t track, int8_t transpose)
+{
+  _engine303.setTranspose(track, transpose);
 }
 
 uint8_t AcidSequencerClass::getTemperamentId()

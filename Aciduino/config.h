@@ -34,6 +34,7 @@
 //
 #define ACCENT_PROBABILITY_GENERATION   50
 #define GLIDE_PROBABILITY_GENERATION    30
+#define TIE_PROBABILITY_GENERATION      80
 #define REST_PROBABILITY_GENERATION     10
 
 //
@@ -41,7 +42,7 @@
 //
 #define TRACK_NUMBER       2 // you can go up to 8 but no interface ready to control it
 #define STEP_MAX_SIZE      16
-#define NOTE_LENGTH        4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
+#define NOTE_LENGTH        3 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY      90
 #define ACCENT_VELOCITY    127
 

@@ -26,7 +26,8 @@ typedef struct
   uint8_t accent:1;
   uint8_t glide:1;
   uint8_t rest:1;
-  uint8_t reserved:6;
+  uint8_t tie:1;
+  uint8_t reserved:5;
 } SEQUENCER_STEP_DATA;
 // 2 bytes per step
 
@@ -77,7 +78,7 @@ void sendMidiMessage(uint8_t command, uint8_t byte1, uint8_t byte2, uint8_t chan
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
 void ClockOut16PPQN(uint32_t * tick) 
 {
-  uint8_t step;
+  uint8_t step, next_step;
   uint16_t length;
   int8_t note;
 
@@ -94,7 +95,22 @@ void ClockOut16PPQN(uint32_t * tick)
     
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {
-  
+
+      // check for slide or tie event ahead of _sequencer[track].step_location
+      step = _sequencer[track].step_location;
+      for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
+        next_step = ++step % _sequencer[track].data.step_length;
+        if (_sequencer[track].data.step[step].glide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
+          length = NOTE_LENGTH + 5;
+          break;
+        } else if (_sequencer[track].data.step[next_step].tie == 1 && _sequencer[track].data.step[next_step].rest == 1) {
+          length = NOTE_LENGTH + (i * 6);
+        } else if ( _sequencer[track].data.step[next_step].rest == 0 || _sequencer[track].data.step[next_step].tie == 0) {
+          break;
+        }
+      }
+
+      /*
       // check for glide event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
       for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
@@ -107,6 +123,7 @@ void ClockOut16PPQN(uint32_t * tick)
           break;
         }
       }
+      */
   
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
@@ -255,6 +272,7 @@ void initAcidStepSequencer(uint8_t mode)
       _sequencer[track].data.step[i].note = 48;
       _sequencer[track].data.step[i].accent = 0;
       _sequencer[track].data.step[i].glide = 0;
+      _sequencer[track].data.step[i].tie = 0;
       _sequencer[track].data.step[i].rest = 0;
     }
   

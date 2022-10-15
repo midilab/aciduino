@@ -281,7 +281,7 @@ void AcidSequencerClass::clearTrack(uint8_t track)
     _engine303.clearTrack(track);
   // 808 request?
   else
-    _engine808.clearTrack(track);
+    _engine808.clearTrack(track-TRACK_NUMBER_303);
 }
 
 int8_t AcidSequencerClass::getShiftPos(uint8_t track)

@@ -1,5 +1,9 @@
-
+//
+// uCtrl PageComponent 
 // all UI components are programmed as PageComponent to be reused on different pages
+//
+
+// used by page module for themed function button display
 void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
 {
   // menu action
@@ -20,6 +24,7 @@ void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, ui
 
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
+// used byu a lot of simple components
 void genericOptionView(String title, String value, uint8_t line, uint8_t col, bool selected, bool large = false)
 {
   const uint8_t view_size = 12;
@@ -40,7 +45,7 @@ struct MidiCCControl : PageComponent {
     // generic controler for 303 and 808 controlers
     String control_name;
     uint8_t control_cc = 0;
-    //uint8_t * control_data;
+    //uint8_t * control_data; // heap troubles here? why? debug it!
     uint8_t control_data[2];
 
     MidiCCControl(String name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
@@ -78,8 +83,10 @@ struct MidiCCControl : PageComponent {
 
 struct TopBar : PageComponent {
 
-    bool track_selected = true;
-    bool tempo_selected = false;
+    // http://dotmatrixtool.com/#
+    // 8px by 8px, row major, little endian
+    const uint8_t SUBPAGE[8] = {0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00};
+    const uint8_t SUBPAGE_SELECTED[8] = {0x00, 0x00, 0x3c, 0x3c, 0x3c, 0x3c, 0x00, 0x00};
     
     TopBar() {
       // not overried by hook callback of a page
@@ -88,9 +95,8 @@ struct TopBar : PageComponent {
     }
 
     void view() {
-      // new layout
       // short page name at left most with box over it
-      // |sequencer| track 1     |M| 120.0
+      // |T1| 808 |seq.|1 2    |i| 120.0
       
       // track number and name
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
@@ -98,15 +104,21 @@ struct TopBar : PageComponent {
       uCtrl.oled->print(_selected_track+1, 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4); 
-      uCtrl.oled->display->drawBox(0, 9, 128, 1);
 
-      //uCtrl.oled->print(uCtrl.page->getPageName(), 2, 1);
+      // page/subpage 
+      uCtrl.oled->print(uCtrl.page->getPageName(), 1, 9);
+      uCtrl.oled->display->drawBox(39, 0, 22, 8);
+      uCtrl.oled->print(SUBPAGE_SELECTED, 1, 9);
+      uCtrl.oled->print(SUBPAGE, 1, 10);
 
       // bpm display and setup
       uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);    
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
       uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
 
+      // top bar big line 
+      uCtrl.oled->display->drawBox(0, 9, 128, 1);
+      
       // f1 and f2
       setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
       setF2(_playing ? "stop" : "play");
@@ -138,9 +150,10 @@ struct TopBar : PageComponent {
 
 struct StepSequencer : PageComponent {
 
-    // step sequencer theme
+    // step sequencer theme editor
     // http://dotmatrixtool.com/#
     // 8px by 8px, row major, little endian
+    // made your self a nice theme? share it with aciduino community via pull request now!
     const uint8_t STEP_ON[8] = {0x00, 0x00, 0x3c, 0x3c, 0x3c, 0x3c, 0x00, 0x00};
     const uint8_t STEP_OFF[8] = {0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00};
     const uint8_t STEP_SELECTED[8] = {0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xff};
@@ -153,21 +166,27 @@ struct StepSequencer : PageComponent {
     uint8_t selected_step = 0;
     uint8_t curr_step = 0;
     uint8_t step_size = 0;
+    bool full_size_view = false;
     
     StepSequencer() {
       // we want this component to be 2 lines and 2 grids navigable object
       line_size = 2;
       grid_size = 2;
     }
+
+    void setViewMode(bool full_size) {
+      full_size_view = full_size;
+    }
     
     void view() {
       uint8_t steps_line = line + 1;
       uint8_t idx = 0, step_on = 0;
+      uint8_t max_steps_per_view = full_size_view ? 64 : 16;
 
       curr_step = AcidSequencer.getCurrentStep(_selected_track);
       step_size = AcidSequencer.getTrackLength(_selected_track);
-      locator_length = ceil((float)step_size/16);
       locator_current = curr_step == 0 ? 0 : ceil((float)curr_step/16) - 1;
+      locator_length = ceil((float)step_size/max_steps_per_view);
       
       // step locators
       uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
@@ -176,16 +195,16 @@ struct StepSequencer : PageComponent {
       }
 
       // steps
-      uint8_t first_step = (selected_line == 1 || selected_line == 2) && selected ? selected_locator*16 : locator_current*16;
-      uint8_t last_step = first_step + 16 > step_size ? step_size : first_step + 16;
+      uint8_t first_step = (selected_line == 1 || selected_line == 2) && selected ? selected_locator*max_steps_per_view : locator_current*max_steps_per_view;
+      uint8_t last_step = first_step + max_steps_per_view > step_size ? step_size : first_step + max_steps_per_view;
       for (uint8_t i=first_step; i < last_step; i++) {
         step_on = AcidSequencer.stepOn(_selected_track, i);
         idx = i % 16;
 
         // only use this in full sized mode
-        //if (idx == 0 && i != 0) {
-        //  steps_line++;
-        //}
+        if (idx == 0 && i != 0 && full_size_view) {
+          steps_line++;
+        }
     
         // reset step asset memory 8 bytes array
         memset(step_asset, 0x00, sizeof(step_asset));
@@ -216,27 +235,28 @@ struct StepSequencer : PageComponent {
       }
 
       // step info
+      uint8_t info_line_idx = ceil(step_size/16) + 1;
       // 303
       if (AcidSequencer.is303(_selected_track)) {
         if (selected_line == 2) {
-          uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, selected_step)), line+2, 1);
+          uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, selected_step)), line+info_line_idx, 1);
         } else{
           if (AcidSequencer.stepOn(_selected_track, curr_step) && _playing) {
-            uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, curr_step)), line+2, 1);
+            uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, curr_step)), line+info_line_idx, 1);
           }
         }
       // 808
       } else {
-        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+2, 1);
-        //uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+2, 1);
+        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+info_line_idx, 1);
+        //uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+info_line_idx, 1);
       }
 
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("clear");
+          setF1("copy");
           // you can only paste if the selected selector is cleared otherwise it will shows copy
-          setF2("copy");
+          setF2("clear");
       // Steps
       } else if (selected_line == 2) {
         setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
@@ -382,8 +402,8 @@ struct StepSequencer : PageComponent {
 
     void function1() {
       if (selected_line == 1) {
-        // clear track
-        AcidSequencer.clearTrack(_selected_track);
+        // undo clear
+        //AcidSequencer.undo(_selected_track);
       } else if (selected_line == 2) {
         // 303 and 808 uses the same accent button f1
         AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
@@ -391,7 +411,10 @@ struct StepSequencer : PageComponent {
     }
 
     void function2() {
-      if (selected_line == 2) {
+      if (selected_line == 1) {
+        // clear track
+        AcidSequencer.clearTrack(_selected_track);
+      } else if (selected_line == 2) {
         // 303
         if (AcidSequencer.is303(_selected_track)) {
           if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {
@@ -597,12 +620,8 @@ struct GeneralDataControl : PageComponent {
 
 struct TonesNumber : PageComponent {
 
-    TonesNumber() {
-      grid_size = 2;
-    }
-    
     void view() {
-      genericOptionView("tones", _number_of_tones, line, col, selected, true);
+      genericOptionView("tones", _number_of_tones, line, col, selected);
     }
 
     void change(int8_t data) {
@@ -679,6 +698,22 @@ struct SlideAmount : PageComponent {
       _slide_probability = data;
     }
 } slideAmountComponent;
+
+struct TieAmount : PageComponent {
+    void view() {
+      genericOptionView("tie", _tie_probability, line, col, selected);
+    }
+
+    void change(int8_t data) {
+      data = parseData(data, 0, 100, _tie_probability);
+      _tie_probability = data;
+    }
+    
+    void pot(uint16_t data) {
+      data = parseData(data, 0, 100, _tie_probability);
+      _tie_probability = data;
+    }
+} tieAmountComponent;
 
 struct RollAmount : PageComponent {
     void view() {

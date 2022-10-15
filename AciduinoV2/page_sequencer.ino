@@ -1,6 +1,6 @@
 void step_sequencer_page_init()
 {
-  uCtrl.page->set("seq", step_sequencer_page_create, step_sequencer_page_destroy, step_sequencer_page_refresh, step_sequencer_page_digital_input, step_sequencer_page_analog_input, 2);     
+  uCtrl.page->set("seqr", step_sequencer_page_create, step_sequencer_page_destroy, step_sequencer_page_refresh, step_sequencer_page_digital_input, step_sequencer_page_analog_input, 2);     
 }
 
 void step_sequencer_page_create()
@@ -19,6 +19,8 @@ void step_sequencer_page_refresh(uint8_t subpage)
   uCtrl.page->component(topBarComponent, 1, 1);
 
   if (subpage == 0) {
+    // set step sequencer mode view as small
+    stepSequencerComponent.setViewMode(false);
     // line 3. 2 grids
     uCtrl.page->component(lengthComponent, 3, 1, true);
     uCtrl.page->component(shiftComponent, 3, 2);
@@ -41,8 +43,8 @@ void step_sequencer_page_refresh(uint8_t subpage)
       // note(selected voice)/port(eurorack)
       //uCtrl.page->component(voiceConfigComponent, 4, 2);
       //uCtrl.page->component(voiceSelectComponent, 4, 1);
-      uCtrl.page->component(rollTypeComponent, 4, 1);
-      uCtrl.page->component(voiceConfigComponent, 4, 2);
+      uCtrl.page->component(voiceConfigComponent, 4, 1);
+      uCtrl.page->component(rollTypeComponent, 4, 2);
     }
 
     // seq divider!
@@ -50,6 +52,8 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // step edit
     uCtrl.page->component(stepSequencerComponent, 5, 1);
   } else if (subpage == 1) {
+    // set step sequencer mode view as full size view
+    stepSequencerComponent.setViewMode(true);
     // generative
     // ...
     // 303
@@ -62,7 +66,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // _bjorklund size(length?), _bjorklund (fill)
     // 
 
-    uCtrl.page->component(stepSequencerComponent, 3, 1, true);
+    uCtrl.page->component(stepSequencerComponent, 2, 1, true);
   }
   
 }

@@ -21,7 +21,7 @@ void generativeFunction2()
 
 void generative_page_init()
 {
-  uCtrl.page->set("gen", generative_page_create, generative_page_destroy, generative_page_refresh, generative_page_digital_input, generative_page_analog_input, 2);     
+  uCtrl.page->set("gene", generative_page_create, generative_page_destroy, generative_page_refresh, generative_page_digital_input, generative_page_analog_input, 2);     
 }
 
 void generative_page_create()
@@ -62,8 +62,8 @@ void generative_page_refresh(uint8_t subpage)
       // voice init point.
       // voice config note for midi, port for cv
       // note(selected voice)/port(eurorack)
-      uCtrl.page->component(voiceSelectComponent, 4, 2);
-
+      uCtrl.page->component(voiceSelectComponent, 4, 1);
+      uCtrl.page->component(rollTypeComponent, 4, 2);
     }
   } else if (subpage == 1) {
     // generative
@@ -76,9 +76,12 @@ void generative_page_refresh(uint8_t subpage)
     
     if (AcidSequencer.is303(_selected_track)) {
       uCtrl.page->component(slideAmountComponent, 3, 2);
-      uCtrl.page->component(lowRangeComponent, 4, 1);
-      uCtrl.page->component(highRangeComponent, 4, 2);
-      uCtrl.page->component(tonesNumberComponent, 5, 1);
+      
+      uCtrl.page->component(tieAmountComponent, 4, 1);
+      uCtrl.page->component(tonesNumberComponent, 4, 2);
+      
+      uCtrl.page->component(lowRangeComponent, 5, 1);
+      uCtrl.page->component(highRangeComponent, 5, 2);
       // for 303(scale)
       uCtrl.page->component(scaleComponent, 6, 1);
     } else {

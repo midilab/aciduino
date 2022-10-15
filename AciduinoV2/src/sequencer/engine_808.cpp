@@ -54,7 +54,7 @@ void Engine808::init()
   // initing sequencer memory data
   for ( uint8_t track = 0; track < TRACK_NUMBER_808; track++ ) {
 
-    _sequencer[track].channel = track+TRACK_NUMBER_808;
+    _sequencer[track].channel = track+TRACK_NUMBER_303;
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = false;
     _sequencer[track].roll_type = 0;

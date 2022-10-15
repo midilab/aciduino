@@ -22,7 +22,7 @@
 #define ACCENT_VELOCITY_303     127
 #define NOTE_STACK_SIZE_303     3
 // 808
-#define STEP_MAX_SIZE_808       32 // max 64 steps always! do not go beyond!
+#define STEP_MAX_SIZE_808       64 // max 64 steps always! do not go beyond!
 #define VOICE_MAX_SIZE_808      11
 #define NOTE_LENGTH_808         4 // min: 1 max: 5 DO NOT EDIT BEYOND!!!
 #define NOTE_VELOCITY_808       70

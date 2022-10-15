@@ -151,7 +151,9 @@ MidiCCControl bdDecayComponent("bd decay", 23, TRACK_NUMBER_808),
 
 void live_page_init()
 {
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);     
+  //uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+  // one subpage for now until we get the pattern feature setup. ableton grid like patterns select screen     
+  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 1);     
 }
 
 void live_page_create()
@@ -173,9 +175,6 @@ void live_page_refresh(uint8_t subpage)
 
   if (subpage == 0) {
     // add div control? 32, 16, 8
-
-  } else if (subpage == 1) {
-    // pattern control subpage
 #ifdef MIDI_CONTROLER
     if (AcidSequencer.is303(_selected_track)) {
       // midi control subpage?
@@ -194,6 +193,9 @@ void live_page_refresh(uint8_t subpage)
       uCtrl.page->component(snToneComponent, 4, 2);
     }
 #endif
+  } else if (subpage == 1) {
+    // pattern control subpage
+
   }
   
 }

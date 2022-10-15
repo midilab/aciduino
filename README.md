@@ -109,15 +109,15 @@ Here you can program you acid lines in the same way you program a original one, 
 
 Using step navigation buttons the led on for prev step button means you are have the first step selected for edit, led on for next step button means you have the last step select for edit.
 
-The rest, glide and accent buttons are applied to selected step, led on/off are used to express the state of each parameter per step.
+The rest, glide, tie and accent buttons are applied to selected step, led on/off are used to express the state of each parameter per step.
 
 Octave and note knobs lets you select the note for the selected step.
 
 Sequence lenth knob lets you choose from 1 step to 16 steps or lenth for your sequence.
 
 **interface**  
-knobs     (octave)    (note)      (tunning)    (length)  
-buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]  
+knobs     (octave)    (note)      (tunning)      (length)  
+buttons [ << step ] [ step >> ] [   rest   ] [   glide/tie   ] [  accent  ] [play/stop]  
 
 # Configure for personal needs
 

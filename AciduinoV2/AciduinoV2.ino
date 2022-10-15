@@ -52,7 +52,7 @@ bool _playing = false;
 uint8_t _selected_track = 0;
 
 // generative engine
-uint8_t _generative_fill = 10;
+uint8_t _generative_fill = 80;
 uint8_t _accent_probability = 50;
 uint8_t _roll_probability = 0;
 uint8_t _slide_probability = 30;

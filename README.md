@@ -15,7 +15,7 @@ With some user interface changes for cheap construction of a functional TB303 en
 # Features
 
 ## 303 Step Sequencer clone
-2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots to save your work. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
+2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots to save your work. Programming using rest, glide, tie and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
 
 ## Generative Engine
 Generate automatic harmonized acid lines by pressing a single button and twist some harmonic parameter knobs. Just pick up a harmonic mode(scale), the low and high notes to fit the sequence and you have infinite sequences by pressing random it button!
@@ -55,8 +55,8 @@ buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/s
 
 
 **[page 3 step edit]**  
-knobs     (octave)    (note)      (tunning)    (length)  
-buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]  
+knobs     (octave)    (note)      (tunning)      (length)  
+buttons [ << step ] [ step >> ] [   rest   ] [   glide/tie   ] [  accent  ] [play/stop]  
 
 
 ## [page select]: press button1 and button2 together
@@ -105,19 +105,19 @@ knobs    (low range)  (high range)  (tones num)  (notes num)
 buttons [ << scale ] [ scale >> ] [ generate ] [ << shift ] [ shift >> ] [play/stop]  
 
 ## [step edit]
-Here you can program you acid lines in the same way you program a original one, but instead of keypad for notes you use 2 knobs, one for octave and other for note to get access to all midi range notes spectrum while editing step by step your sequence using rest, glide and accent.
+Here you can program you acid lines in the same way you program a original one, but instead of keypad for notes you use 2 knobs, one for octave and other for note to get access to all midi range notes spectrum while editing step by step your sequence using rest, glide, tie and accent.
 
 Using step navigation buttons the led on for prev step button means you are have the first step selected for edit, led on for next step button means you have the last step select for edit.
 
-The rest, glide and accent buttons are applied to selected step, led on/off are used to express the state of each parameter per step.
+The rest, glide, tie and accent buttons are applied to selected step, led on/off are used to express the state of each parameter per step.
 
 Octave and note knobs lets you select the note for the selected step.
 
 Sequence lenth knob lets you choose from 1 step to 16 steps or lenth for your sequence.
 
 **interface**  
-knobs     (octave)    (note)      (tunning)    (length)  
-buttons [ << step ] [ step >> ] [   rest   ] [   glide   ] [  accent  ] [play/stop]  
+knobs     (octave)    (note)      (tunning)      (length)  
+buttons [ << step ] [ step >> ] [   rest   ] [   glide/tie   ] [  accent  ] [play/stop]  
 
 # Configure for personal needs
 

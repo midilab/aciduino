@@ -10,6 +10,7 @@ uint8_t _range_note = 34;
 uint8_t _accent_probability = ACCENT_PROBABILITY_GENERATION;
 uint8_t _glide_probability = GLIDE_PROBABILITY_GENERATION;
 uint8_t _rest_probability = REST_PROBABILITY_GENERATION;
+uint8_t _tie_probability = TIE_PROBABILITY_GENERATION;
 uint8_t _number_of_tones = 3;
 
 uint8_t _allowed_tones[12] = {0};
@@ -136,29 +137,51 @@ uint8_t getNoteByMaxNumOfTones(uint8_t note)
 
 void acidRandomize() 
 {
-  uint8_t note, high_note, accent, glide, rest;
+  uint8_t note, high_note, accent, glide, tie, rest, last_step;
 
-  // clear track before random data or only clear stack note?
-  // probably clear stack note is a better idea
-  
-  // ramdom it all
+  // random it all
   ATOMIC(_sequencer[_selected_track].mute = true);
   clearStackNote(_selected_track);
+
   for ( uint16_t i = 0; i < STEP_MAX_SIZE; i++ ) {
+
+    // step on/off
+    _sequencer[_selected_track].data.step[i].rest = random(0, 100) < _rest_probability ? 0 : 1;
+
+    // random tie and reset accent and glide in case of a rest
+    if (_sequencer[_selected_track].data.step[i].rest) {
+
+      _sequencer[_selected_track].data.step[i].note = 36;
+      _sequencer[_selected_track].data.step[i].accent = 0;
+      _sequencer[_selected_track].data.step[i].glide = 0;
+      _sequencer[_selected_track].data.step[i].tie = 0;
+      
+      if (i == 0) {
+        last_step = STEP_MAX_SIZE-1;
+      } else {
+        last_step = i-1;
+      }
+
+      // only tie probrablity when last step has a note or another tie event
+      if (_sequencer[_selected_track].data.step[last_step].rest == 0 || _sequencer[_selected_track].data.step[last_step].tie == 1)
+        _sequencer[_selected_track].data.step[i].tie = random(0, 100) < _tie_probability ? 1 : 0;
+
+      continue;
+
+    }
+
     high_note = _lower_note+_range_note;
     if ( high_note > 127 ) {
       high_note = 127;
     }
-
     note = getNoteByMaxNumOfTones(random(_lower_note, high_note));
+
     accent = random(0, 100) < _accent_probability ? 1 : 0;
     glide = random(0, 100) < _glide_probability ? 1 : 0;
-    rest = random(0, 100) < _rest_probability ? 1 : 0;
     
-    ATOMIC(_sequencer[_selected_track].data.step[i].note = note);
-    ATOMIC(_sequencer[_selected_track].data.step[i].accent = accent);
-    ATOMIC(_sequencer[_selected_track].data.step[i].glide = glide);
-    ATOMIC(_sequencer[_selected_track].data.step[i].rest = rest);
+    _sequencer[_selected_track].data.step[i].note = note;
+    _sequencer[_selected_track].data.step[i].accent = accent;
+    _sequencer[_selected_track].data.step[i].glide = glide;
   }
   ATOMIC(_sequencer[_selected_track].mute = false);
 }

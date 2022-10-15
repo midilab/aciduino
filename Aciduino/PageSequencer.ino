@@ -2,7 +2,7 @@
 [step edit]
 knobs: octave, note, global tunning, sequence length
 
-buttons: prev step, next step, rest, glide, accent, play/stop
+buttons: prev step, next step, rest, glide/tie, accent, play/stop
 */
 void sendPreviewNote(uint8_t step)
 {
@@ -114,9 +114,15 @@ void processSequencerButtons()
     }
   }
 
-  // step glide
+  // step glide/tie
   if ( pressed(GENERIC_BUTTON_4) ) {
-    ATOMIC(_sequencer[_selected_track].data.step[relative_step].glide = !_sequencer[_selected_track].data.step[relative_step].glide);
+    // if last step is on or it has a tie, we manage tie data
+    if ((_sequencer[_selected_track].data.step[relative_step-1].rest == 0 || _sequencer[_selected_track].data.step[relative_step-1].tie) && _sequencer[_selected_track].data.step[relative_step].rest && relative_step != 0) {
+      ATOMIC(_sequencer[_selected_track].data.step[relative_step].tie = !_sequencer[_selected_track].data.step[relative_step].tie);
+    // otherwise glide step
+    } else {
+      ATOMIC(_sequencer[_selected_track].data.step[relative_step].glide = !_sequencer[_selected_track].data.step[relative_step].glide);
+    }
   }
 
   // step accent
@@ -153,12 +159,20 @@ void processSequencerLeds()
     digitalWrite(GENERIC_LED_3 , LOW);
   }
 
-  // Glide 
-  if ( _sequencer[_selected_track].data.step[relative_step].glide == 1 ) {
+  // Glide/Tie
+  uint8_t tie_glide_staus = 0;
+  // if last step is on or it has a tie, check for tie event
+  if ((_sequencer[_selected_track].data.step[relative_step-1].rest == 0 || _sequencer[_selected_track].data.step[relative_step-1].tie) && _sequencer[_selected_track].data.step[relative_step].rest && relative_step != 0) {
+    tie_glide_staus = _sequencer[_selected_track].data.step[relative_step].tie;
+  } else {
+    tie_glide_staus = _sequencer[_selected_track].data.step[relative_step].glide;
+  }
+
+  if ( tie_glide_staus ) {
     digitalWrite(GENERIC_LED_4 , HIGH);
   } else {
     digitalWrite(GENERIC_LED_4 , LOW);
-  }  
+  }
 
   // Accent 
   if ( _sequencer[_selected_track].data.step[relative_step].accent == 1 ) {

@@ -176,6 +176,7 @@ struct StepSequencer : PageComponent {
 
     void setViewMode(bool full_size) {
       full_size_view = full_size;
+      line_size = full_size_view ? 5 : 2;
     }
     
     void view() {
@@ -235,7 +236,7 @@ struct StepSequencer : PageComponent {
       }
 
       // step info
-      uint8_t info_line_idx = ceil(step_size/16) + 1;
+      uint8_t info_line_idx = full_size_view ? ceil(step_size/16) + 1 : 2;
       // 303
       if (AcidSequencer.is303(_selected_track)) {
         if (selected_line == 2) {
@@ -254,7 +255,7 @@ struct StepSequencer : PageComponent {
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("copy");
+          setF1("save");
           // you can only paste if the selected selector is cleared otherwise it will shows copy
           setF2("clear");
       // Steps

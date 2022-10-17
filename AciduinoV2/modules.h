@@ -5,6 +5,10 @@
 #define USE_OLED
 #define USE_OLED_U8G2
 
+//#define USE_MIDI
+
+//#define USE_CV_GATE
+
 #define USE_DOUT
 // always multiple of 8
 #define USE_DOUT_MAX_PORTS  8

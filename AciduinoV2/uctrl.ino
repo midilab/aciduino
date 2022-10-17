@@ -45,7 +45,7 @@ void uCtrlSetup() {
   uCtrl.oled->flipDisplay(1); 
   uCtrl.oled->print("booting", 4, 1);
   uCtrl.oled->print("please wait...", 5, 1); 
-  
+
   //
   // DIN Module
   //

@@ -46,6 +46,10 @@
 
 // want a acid midi controller?
 #define MIDI_CONTROLER
+// want a uart serial midi port?
+//#define USE_UART_MIDI
+// want a usb midi port?
+#define USE_USB_MIDI
 
 // globals
 bool _playing = false;

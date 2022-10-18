@@ -153,7 +153,7 @@ struct StepSequencer : PageComponent {
     // step sequencer theme editor
     // http://dotmatrixtool.com/#
     // 8px by 8px, row major, little endian
-    // made your self a nice theme? share it with aciduino community via pull request now!
+    // made your self a nice theme? share it with aciduino community via pull request!
     const uint8_t STEP_ON[8] = {0x00, 0x00, 0x3c, 0x3c, 0x3c, 0x3c, 0x00, 0x00};
     const uint8_t STEP_OFF[8] = {0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00};
     const uint8_t STEP_SELECTED[8] = {0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xff};
@@ -166,17 +166,21 @@ struct StepSequencer : PageComponent {
     uint8_t selected_step = 0;
     uint8_t curr_step = 0;
     uint8_t step_size = 0;
+    uint8_t pot_last_note = 36;
     bool full_size_view = false;
     
     StepSequencer() {
-      // we want this component to be 2 lines and 2 grids navigable object
+      // we want this component to be 2 lines for compact view(5 for full sized view) and 2 grids navigable object
       line_size = 2;
       grid_size = 2;
     }
 
     void setViewMode(bool full_size) {
-      full_size_view = full_size;
-      line_size = full_size_view ? 5 : 2;
+      if (full_size != full_size_view) {
+        full_size_view = full_size;
+        line_size = full_size_view ? 5 : 2;
+        selected_locator = selected_step / (full_size_view ? 64 : 16);
+      }
     }
     
     void view() {
@@ -186,17 +190,17 @@ struct StepSequencer : PageComponent {
 
       curr_step = AcidSequencer.getCurrentStep(_selected_track);
       step_size = AcidSequencer.getTrackLength(_selected_track);
-      locator_current = curr_step == 0 ? 0 : ceil((float)curr_step/16) - 1;
+      locator_current = curr_step == 0 ? 0 : ceil((float)curr_step/max_steps_per_view) - 1;
       locator_length = ceil((float)step_size/max_steps_per_view);
       
       // step locators
       uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
       for (uint8_t i=0; i < locator_length; i++) {
-        uCtrl.oled->drawBox(y+(locator_current == i ? 2 : 3), x+(bar_size*i)+2, (locator_current == i ? 3 : 1), bar_size-4, (selected_locator == i && (selected_line == 1 || selected_line == 2) && selected));
+        uCtrl.oled->drawBox(y+(locator_current == i ? 2 : 3), x+(bar_size*i)+2, (locator_current == i ? 3 : 1), bar_size-4, (selected_locator == i && (selected_line == 1 || selected_line >= 2) && selected));
       }
 
       // steps
-      uint8_t first_step = (selected_line == 1 || selected_line == 2) && selected ? selected_locator*max_steps_per_view : locator_current*max_steps_per_view;
+      uint8_t first_step = (selected_line == 1 || selected_line >= 2) && selected ? selected_locator * max_steps_per_view : locator_current*max_steps_per_view;
       uint8_t last_step = first_step + max_steps_per_view > step_size ? step_size : first_step + max_steps_per_view;
       for (uint8_t i=first_step; i < last_step; i++) {
         step_on = AcidSequencer.stepOn(_selected_track, i);
@@ -228,7 +232,7 @@ struct StepSequencer : PageComponent {
         }
     
         // step selected?
-        if (selected_step == i && selected && selected_line == 2) {
+        if (selected_step == i && selected && selected_line >= 2) {
            uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED, true);
         }
     
@@ -239,7 +243,7 @@ struct StepSequencer : PageComponent {
       uint8_t info_line_idx = full_size_view ? ceil(step_size/16) + 1 : 2;
       // 303
       if (AcidSequencer.is303(_selected_track)) {
-        if (selected_line == 2) {
+        if (selected_line >= 2) {
           uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, selected_step)), line+info_line_idx, 1);
         } else{
           if (AcidSequencer.stepOn(_selected_track, curr_step) && _playing) {
@@ -259,7 +263,7 @@ struct StepSequencer : PageComponent {
           // you can only paste if the selected selector is cleared otherwise it will shows copy
           setF2("clear");
       // Steps
-      } else if (selected_line == 2) {
+      } else if (selected_line >= 2) {
         setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
         // 303
         if (AcidSequencer.is303(_selected_track)) {
@@ -280,19 +284,15 @@ struct StepSequencer : PageComponent {
       // up, down, left, rigth
       switch (dir) {
         case UP:
-
+          if (full_size_view && selected_line != 1) {
+            selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
+            selected_locator = selected_step / (full_size_view ? 64 : 16);
+          }
           break;
         case DOWN:
-          // step locator
-          if (selected_line == 1) {
-            //if (_playing) {
-            //  selected_locator = locator_current;
-            //}
-          // steps
-          } else if (selected_line == 2) {
-            if (selected_step >= step_size) {
-              selected_step = step_size-1;
-            }
+          if (full_size_view && selected_line != 1) {
+            selected_step = (selected_step + 16) % step_size;
+            selected_locator = selected_step / (full_size_view ? 64 : 16);
           }
           break;
         case LEFT:
@@ -309,19 +309,15 @@ struct StepSequencer : PageComponent {
               selected_step -= 16;
             }
           // steps
-          } else if(selected_line == 2) {
+          } else if(selected_line >= 2) {
             if (selected_step == 0) {
               selected_step = step_size-1;
               selected_locator = locator_length-1;
             } else {
               --selected_step;
-              selected_locator = selected_step / 16;
+              selected_locator = selected_step / (full_size_view ? 64 : 16);
             }
-          // ???
-          } else if(selected_line == 3) {
-            
           }
-
           break;
         case RIGHT:
           if (selected_line == 1) {
@@ -335,18 +331,15 @@ struct StepSequencer : PageComponent {
               ++selected_locator;
               selected_step += 16;
             }
-          } else if(selected_line == 2) {
+          } else if(selected_line >= 2) {
             if (selected_step == step_size-1) {
               selected_step = 0;
               selected_locator = 0;
             } else {
               ++selected_step;
-              selected_locator = selected_step / 16;
+              selected_locator = selected_step / (full_size_view ? 64 : 16);
             }
-          } else if(selected_line == 3) {
-            
           }
-
           break;
       }
       // keep grid nav aligned for user best ux experience
@@ -355,7 +348,7 @@ struct StepSequencer : PageComponent {
     }
     
     void change(int8_t data) {
-      if(selected_line == 2) {
+      if(selected_line >= 2) {
         // toggle on/off step with generic button 2(+1)
         if (data > 0) {
           AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
@@ -363,8 +356,12 @@ struct StepSequencer : PageComponent {
         } else {
           // if its playing we record, o
           if (_playing) {
+            // for 303 we also set the note input via nav pot
+            if (AcidSequencer.is303(_selected_track)) {
+              AcidSequencer.setStepData(_selected_track, curr_step, pot_last_note);
+            }
+            // record note in!
             AcidSequencer.rest(_selected_track, curr_step, false);
-            
           // therwise we preview data only for user
           } else {
             // ...
@@ -377,16 +374,12 @@ struct StepSequencer : PageComponent {
     void pot(uint16_t data) {      
       // 303?
       if (AcidSequencer.is303(_selected_track)) {
-        if(selected_line == 2) {
+        if(selected_line >= 2) {
           // select step note
-          // lets use 0-7 as off step, the rest is 0-127 midi range notes
-          data = parseData(data, 0, 135, AcidSequencer.getStepData(_selected_track, selected_step));
-          if (data < 8) {
-            AcidSequencer.rest(_selected_track, selected_step, true);
-          } else {
-            AcidSequencer.setStepData(_selected_track, selected_step, data-8);
-            AcidSequencer.rest(_selected_track, selected_step, false);
-          }
+          data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
+          AcidSequencer.setStepData(_selected_track, selected_step, data);
+          // update knob last note for preview note
+          pot_last_note = data;
         }
       // 808
       } else {
@@ -405,7 +398,7 @@ struct StepSequencer : PageComponent {
       if (selected_line == 1) {
         // undo clear
         //AcidSequencer.undo(_selected_track);
-      } else if (selected_line == 2) {
+      } else if (selected_line >= 2) {
         // 303 and 808 uses the same accent button f1
         AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
       }
@@ -415,7 +408,7 @@ struct StepSequencer : PageComponent {
       if (selected_line == 1) {
         // clear track
         AcidSequencer.clearTrack(_selected_track);
-      } else if (selected_line == 2) {
+      } else if (selected_line >= 2) {
         // 303
         if (AcidSequencer.is303(_selected_track)) {
           if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {

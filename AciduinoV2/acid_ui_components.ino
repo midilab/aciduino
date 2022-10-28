@@ -91,14 +91,17 @@ struct TopBar : PageComponent {
     TopBar() {
       // not overried by hook callback of a page
       no_hook = true;
+      // no directly navigation thru here
       no_nav = true;
     }
 
     void view() {
       // short page name at left most with box over it
-      // |T1| 808 |seq.|1 2    |i| 120.0
-      
-      // track number and name
+      // |T1| 808 |seqr|o.   |i| 120.0
+      uint8_t subpage_size = uCtrl.page->getSubPageSize();
+      uint8_t selected_subpage = uCtrl.page->getSubPage();
+
+      // track number and type
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
       uCtrl.oled->print("T", 1, 1); 
       uCtrl.oled->print(_selected_track+1, 1, 2); 
@@ -108,9 +111,14 @@ struct TopBar : PageComponent {
       // page/subpage 
       uCtrl.oled->print(uCtrl.page->getPageName(), 1, 9);
       uCtrl.oled->display->drawBox(39, 0, 22, 8);
-      uCtrl.oled->print(SUBPAGE_SELECTED, 1, 9);
-      uCtrl.oled->print(SUBPAGE, 1, 10);
-
+      for (uint8_t i=0; i < subpage_size; i++) {
+        if (i == selected_subpage) {
+          uCtrl.oled->print(SUBPAGE_SELECTED, 1, i+9);
+        } else {
+          uCtrl.oled->print(SUBPAGE, 1, i+9);
+        }
+      }
+      
       // bpm display and setup
       uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);    
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
@@ -168,18 +176,24 @@ struct StepSequencer : PageComponent {
     uint8_t step_size = 0;
     uint8_t pot_last_note = 36;
     bool full_size_view = false;
-    
+    // rec and preview function helpers
+    uint8_t rec_step_in = 0;
+    uint8_t rec_track = 0;
+    uint8_t rec_note = 36;
+
     StepSequencer() {
       // we want this component to be 2 lines for compact view(5 for full sized view) and 2 grids navigable object
       line_size = 2;
       grid_size = 2;
+      // enables changeRelease() for release state of generic 1/2 buttons
+      change_full_state = true;
     }
 
     void setViewMode(bool full_size) {
       if (full_size != full_size_view) {
         full_size_view = full_size;
-        line_size = full_size_view ? 5 : 2;
-        selected_locator = selected_step / (full_size_view ? 64 : 16);
+        line_size = full_size_view ? ceil((float)step_size/16) + 1 : 2;
+        selected_locator = selected_step / (full_size_view ? step_size : 16);
       }
     }
     
@@ -192,7 +206,12 @@ struct StepSequencer : PageComponent {
       step_size = AcidSequencer.getTrackLength(_selected_track);
       locator_current = curr_step == 0 ? 0 : ceil((float)curr_step/max_steps_per_view) - 1;
       locator_length = ceil((float)step_size/max_steps_per_view);
-      
+      // fix selected step changes on tracks with different track length
+      selected_step = selected_step >= step_size ? step_size - 1 : selected_step;
+      selected_locator = selected_locator >= locator_length ? locator_current : selected_locator;
+      // force it again in case track length change
+      line_size = full_size_view ? ceil((float)step_size/16) + 1 : 2;
+
       // step locators
       uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
       for (uint8_t i=0; i < locator_length; i++) {
@@ -240,7 +259,7 @@ struct StepSequencer : PageComponent {
       }
 
       // step info
-      uint8_t info_line_idx = full_size_view ? ceil(step_size/16) + 1 : 2;
+      uint8_t info_line_idx = full_size_view ? ceil((float)step_size/16) + 1 : 2;
       // 303
       if (AcidSequencer.is303(_selected_track)) {
         if (selected_line >= 2) {
@@ -281,19 +300,20 @@ struct StepSequencer : PageComponent {
     }
 
     void nav(uint8_t dir) {
-      // up, down, left, rigth
+
       switch (dir) {
         case UP:
-          if (full_size_view && selected_line != 1) {
-            selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
-            selected_locator = selected_step / (full_size_view ? 64 : 16);
-          }
+          //if (full_size_view && selected_line >= 2) {
+          //  selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
+          //  selected_locator = selected_step / (full_size_view ? step_size : 16);
+          //}
           break;
         case DOWN:
-          if (full_size_view && selected_line != 1) {
-            selected_step = (selected_step + 16) % step_size;
-            selected_locator = selected_step / (full_size_view ? 64 : 16);
-          }
+          //if (full_size_view && selected_line >= 2) {
+          //  selected_step = (selected_step + 16) % step_size;
+            //selected_step = (selected_step + 16) > step_size ? step_size - 1 : (selected_step + 16) % step_size;
+          //  selected_locator = selected_step / (full_size_view ? step_size : 16);
+          //}
           break;
         case LEFT:
           // step locator
@@ -315,7 +335,7 @@ struct StepSequencer : PageComponent {
               selected_locator = locator_length-1;
             } else {
               --selected_step;
-              selected_locator = selected_step / (full_size_view ? 64 : 16);
+              selected_locator = selected_step / (full_size_view ? step_size : 16);
             }
           }
           break;
@@ -337,14 +357,20 @@ struct StepSequencer : PageComponent {
               selected_locator = 0;
             } else {
               ++selected_step;
-              selected_locator = selected_step / (full_size_view ? 64 : 16);
+              selected_locator = selected_step / (full_size_view ? step_size : 16);
             }
           }
           break;
       }
+
+      // update selected_line to avoid missalignment with full screen version navigation
+      //if (full_size_view && selected_line != 1)
+      //  selected_line = selected_step == 0 ? 2 : ceil((float)selected_step/16) + 1;
+        
       // keep grid nav aligned for user best ux experience
       selected_grid = (float)((float)(selected_locator+1)/(float)locator_length) > 0.5 ? 2 : 1;
       selected_grid = selected_step%16 >= 8 ? 2 : 1;
+      
     }
     
     void change(int8_t data) {
@@ -354,20 +380,58 @@ struct StepSequencer : PageComponent {
           AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
         // tap button for preview and realtime record with generic button 1(-1)
         } else {
-          // if its playing we record, o
+          // if its playing we record
+          // keep track to avoid changes on note while note on state
+          rec_step_in = curr_step+1;
+          rec_track = _selected_track;
+          rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
           if (_playing) {
             // for 303 we also set the note input via nav pot
-            if (AcidSequencer.is303(_selected_track)) {
-              AcidSequencer.setStepData(_selected_track, curr_step, pot_last_note);
+            if (AcidSequencer.is303(rec_track)) {
+              AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
             }
             // record note in!
-            AcidSequencer.rest(_selected_track, curr_step, false);
-          // therwise we preview data only for user
-          } else {
-            // ...
+            AcidSequencer.rest(rec_track, rec_step_in, false);
           }
+          // send note preview
+          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), 1); 
         }
-        
+      }
+    }
+
+    void changeRelease(int8_t data) {
+      if(selected_line >= 2) {
+        // preview note release for note off
+        if (data < 0) {
+          // if its playing we record
+          if (_playing) {
+            // for 303 we also set the note input via nav pot
+            if (AcidSequencer.is303(rec_track)) {
+              // should we set tie?
+              uint8_t start_step = rec_step_in+1;
+              uint8_t steps_holded = 0;
+              // hold longer than track end step
+              if (curr_step < rec_step_in) {
+                steps_holded = step_size - (rec_step_in - curr_step);
+              } else if (curr_step > rec_step_in) {
+                steps_holded = curr_step - rec_step_in;
+              }
+
+              if (steps_holded > 0) {
+                uint8_t end_step = start_step+steps_holded;
+                for (uint8_t i=start_step; i < end_step; i++) {
+                  uint8_t step_idx = i%step_size;
+                  // set step to rest mode and tie it and same note holded!
+                  AcidSequencer.rest(rec_track, step_idx, true);
+                  AcidSequencer.setTie(rec_track, step_idx, true);
+                  AcidSequencer.setStepData(rec_track, step_idx, rec_note);
+                }
+              }
+            }
+          }
+          // send note off
+          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), 0);
+        }
       }
     }
 
@@ -545,14 +609,16 @@ struct VoiceConfig : PageComponent {
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 1);
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
     }
 
     void pot(uint16_t data) {
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 1);
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
     }
 } voiceConfigComponent;
 

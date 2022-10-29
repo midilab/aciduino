@@ -187,6 +187,8 @@ struct StepSequencer : PageComponent {
       grid_size = 2;
       // enables changeRelease() for release state of generic 1/2 buttons
       change_full_state = true;
+      // enable more complex nav by updating selector pointer of page component
+      update_selector = true;
     }
 
     void setViewMode(bool full_size) {
@@ -301,19 +303,27 @@ struct StepSequencer : PageComponent {
 
     void nav(uint8_t dir) {
 
+      // update selected_line to avoid missalignment with full screen version navigation
+      //if (full_size_view && selected_line >= 2)
+      //  selected_line = selected_step == 0 ? 2 : ceil((float)selected_step/16) + 1;
+
       switch (dir) {
         case UP:
-          //if (full_size_view && selected_line >= 2) {
-          //  selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
-          //  selected_locator = selected_step / (full_size_view ? step_size : 16);
-          //}
+          if (full_size_view) {
+            bool locator_select = selected_step < 16  && selected_line >= 2 ? true : false;
+            selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
+            selected_locator = selected_step / (full_size_view ? step_size : 16);
+            selected_line = locator_select ? 1 : ceil((float)selected_step/16) + 1;
+          }
           break;
         case DOWN:
-          //if (full_size_view && selected_line >= 2) {
-          //  selected_step = (selected_step + 16) % step_size;
+          if (full_size_view) {
+            bool locator_select = selected_step + 16 >= step_size && selected_line >= 2 ? true : false;
+            selected_step = (selected_step + 16) % step_size;
             //selected_step = (selected_step + 16) > step_size ? step_size - 1 : (selected_step + 16) % step_size;
-          //  selected_locator = selected_step / (full_size_view ? step_size : 16);
-          //}
+            selected_locator = selected_step / (full_size_view ? step_size : 16);
+            selected_line = locator_select ? 1 : ceil((float)selected_step/16) + 1;
+          }
           break;
         case LEFT:
           // step locator
@@ -363,10 +373,6 @@ struct StepSequencer : PageComponent {
           break;
       }
 
-      // update selected_line to avoid missalignment with full screen version navigation
-      //if (full_size_view && selected_line != 1)
-      //  selected_line = selected_step == 0 ? 2 : ceil((float)selected_step/16) + 1;
-        
       // keep grid nav aligned for user best ux experience
       selected_grid = (float)((float)(selected_locator+1)/(float)locator_length) > 0.5 ? 2 : 1;
       selected_grid = selected_step%16 >= 8 ? 2 : 1;

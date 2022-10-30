@@ -88,20 +88,20 @@ void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
   ATOMIC(MIDI1.sendControlChange(cc, value, channel+1))
 #endif
 }
- 
-void sendNote(uint8_t note, uint8_t channel, uint8_t state) {
+
+void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
 #ifdef USE_USB_MIDI
-  if (state == 1) {
-    ATOMIC(usbMIDI.sendNoteOn(note, 127, channel+1))
-  } else if (state == 0) {
+  if (velocity == 0) {
     ATOMIC(usbMIDI.sendNoteOff(note, 0, channel+1))
+  } else {
+    ATOMIC(usbMIDI.sendNoteOn(note, velocity, channel+1))
   }
 #endif
 #ifdef USE_UART_MIDI
-  if (state == 1) {
-    ATOMIC(MIDI1.sendNoteOn(note, 127, channel+1))
-  } else if (state == 0) {
+  if (velocity == 0) {
     ATOMIC(MIDI1.sendNoteOff(note, 0, channel+1))
+  } else {
+    ATOMIC(MIDI1.sendNoteOn(note, velocity, channel+1))
   }
 #endif
 }

@@ -7,12 +7,12 @@ Please refer to the folder hierarchy above for the code.
 
 ↓↓↓Completed build image↓↓↓
 
-<img src="https://github.com/midilab/aciduino/raw/master/Hardware/ijnekenamay-PCB/mk2_image5.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/raw/master/v1/hardwareijnekenamay-PCB/mk2_image5.JPG" width="500">
 
 
-<img src="https://github.com/midilab/aciduino/raw/master/Hardware/ijnekenamay-PCB/mk2_image1.JPG" width="500">
-<img src="https://github.com/midilab/aciduino/raw/master/Hardware/ijnekenamay-PCB/mk2_image2.JPG" width="500">
-<img src="https://github.com/midilab/aciduino/raw/master/Hardware/ijnekenamay-PCB/mk2_image3.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/raw/master/v1/hardwareijnekenamay-PCB/mk2_image1.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/raw/master/v1/hardwareijnekenamay-PCB/mk2_image2.JPG" width="500">
+<img src="https://github.com/midilab/aciduino/raw/master/v1/hardwareijnekenamay-PCB/mk2_image3.JPG" width="500">
 
 # About Fabrication
 You can get the PCB by submitting the "aciduino_gerber.zip" to a PCB fabrication company in China.

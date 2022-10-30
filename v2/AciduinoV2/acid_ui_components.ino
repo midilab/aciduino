@@ -303,10 +303,6 @@ struct StepSequencer : PageComponent {
 
     void nav(uint8_t dir) {
 
-      // update selected_line to avoid missalignment with full screen version navigation
-      //if (full_size_view && selected_line >= 2)
-      //  selected_line = selected_step == 0 ? 2 : ceil((float)selected_step/16) + 1;
-
       switch (dir) {
         case UP:
           if (full_size_view) {
@@ -400,7 +396,7 @@ struct StepSequencer : PageComponent {
             AcidSequencer.rest(rec_track, rec_step_in, false);
           }
           // send note preview
-          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), 1); 
+          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
         }
       }
     }
@@ -615,7 +611,7 @@ struct VoiceConfig : PageComponent {
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 1);
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
       sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
     }
 
@@ -623,7 +619,7 @@ struct VoiceConfig : PageComponent {
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 1);
+      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
       sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
     }
 } voiceConfigComponent;

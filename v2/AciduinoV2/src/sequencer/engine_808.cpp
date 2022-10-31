@@ -56,7 +56,7 @@ void Engine808::init()
 
     _sequencer[track].channel = track+TRACK_NUMBER_303;
     _sequencer[track].step_location = 0;
-    _sequencer[track].mute = false;
+    _sequencer[track].mute = 0;
     _sequencer[track].roll_type = 0;
 
 #ifdef GLOBAL_ACCENT
@@ -74,7 +74,7 @@ void Engine808::init()
       } else {
         _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
       }
-      _sequencer[track].voice[i].mute = false;
+      _sequencer[track].voice[i].mute = 0;
       _sequencer[track].voice[i].shift = 0;
       _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
       _sequencer[track].voice[i].trigger_ctrl = 0;
@@ -150,6 +150,10 @@ void Engine808::onClockCall(uint32_t tick)
     // handle trigger stack
     for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
 
+      // are we mute?
+      if (_sequencer[track].voice[i].mute)
+        continue;
+        
       // normal trigger on event
       if ( _sequencer[track].voice[i].trigger_ctrl > 0 ) { 
 
@@ -334,6 +338,16 @@ uint8_t Engine808::getTrackLength(uint8_t track)
 void Engine808::setTrackLength(uint8_t track, uint16_t length)
 {
   ATOMIC(_sequencer[track].voice[_voice].step_length = length);  
+}
+
+void Engine808::setMute(uint8_t track, uint8_t mute)
+{
+  ATOMIC(_sequencer[track].voice[_voice].mute = mute);  
+}
+
+uint8_t Engine808::getMute(uint8_t track)
+{
+  return _sequencer[track].voice[_voice].mute;
 }
 
 void Engine808::setShiftPos(uint8_t track, int8_t shift)

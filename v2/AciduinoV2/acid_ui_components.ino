@@ -280,7 +280,7 @@ struct StepSequencer : PageComponent {
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("save");
+          setF1("mute", AcidSequencer.getMute(_selected_track));
           // you can only paste if the selected selector is cleared otherwise it will shows copy
           setF2("clear");
       // Steps
@@ -462,8 +462,8 @@ struct StepSequencer : PageComponent {
 
     void function1() {
       if (selected_line == 1) {
-        // undo clear
-        //AcidSequencer.undo(_selected_track);
+        // mute track(subtrack for 808)
+        AcidSequencer.setMute(_selected_track, !AcidSequencer.getMute(_selected_track));
       } else if (selected_line >= 2) {
         // 303 and 808 uses the same accent button f1
         AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));

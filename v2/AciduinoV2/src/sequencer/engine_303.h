@@ -66,7 +66,7 @@ typedef struct
   SEQUENCER_TRACK_DATA_303 data;
   uint8_t step_location;
   uint8_t channel;
-  bool mute;
+  uint8_t mute;
   STACK_NOTE_DATA_303 stack[NOTE_STACK_SIZE_303];  
 } SEQUENCER_TRACK_303;
 
@@ -96,6 +96,8 @@ class Engine303 : public Engine
       int8_t getTranspose(uint8_t track);
       void setTranspose(uint8_t track, int8_t transpose);
       void setTrackLength(uint8_t track, uint16_t length);
+      void setMute(uint8_t track, uint8_t mute);
+      uint8_t getMute(uint8_t track);
       void clearStepData(uint8_t track, uint8_t rest);
       void clearTrack(uint8_t track);
       void setTrackChannel(uint8_t track, uint8_t channel);

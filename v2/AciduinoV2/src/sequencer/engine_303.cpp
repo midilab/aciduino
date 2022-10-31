@@ -51,7 +51,7 @@ void Engine303::init()
     _sequencer[track].data.transpose = 0;
     _sequencer[track].data.tune = 0;
     _sequencer[track].step_location = 0;
-    _sequencer[track].mute = false;
+    _sequencer[track].mute = 0;
 
     // clear step data
     clearStepData(track, 0);
@@ -208,6 +208,16 @@ void Engine303::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].data.step_length = length);  
 }
 
+void Engine303::setMute(uint8_t track, uint8_t mute)
+{
+  ATOMIC(_sequencer[track].mute = mute);  
+}
+
+uint8_t Engine303::getMute(uint8_t track)
+{
+  return _sequencer[track].mute;
+}
+
 void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note) 
 {
   uint8_t note, high_note, accent, slide, tie, rest, last_step;
@@ -295,9 +305,9 @@ void Engine303::onStepCall(uint32_t tick)
 
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
 
-    if ( _sequencer[track].mute == true ) {
+    // are we mute?
+    if (_sequencer[track].mute)
       continue;
-    }
     
     length = NOTE_LENGTH_303;
     

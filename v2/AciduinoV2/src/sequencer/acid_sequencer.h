@@ -88,6 +88,8 @@ class AcidSequencerClass
       uint8_t getTrackMaxLength(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
+      void setMute(uint8_t track, uint8_t mute);
+      uint8_t getMute(uint8_t track);
       void clearTrack(uint8_t track);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1 = 0, uint8_t param_2 = 0, uint8_t param_3 = 0, uint8_t param_4 = 0, uint8_t param_5 = 0, uint8_t param_6 = 0);
       bool is303(uint8_t track);

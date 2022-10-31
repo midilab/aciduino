@@ -274,6 +274,26 @@ void AcidSequencerClass::setTrackLength(uint8_t track, uint16_t length)
     _engine808.setTrackLength(track-TRACK_NUMBER_303, length);
 }
 
+void AcidSequencerClass::setMute(uint8_t track, uint8_t mute)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    _engine303.setMute(track, mute);  
+  // 808 request?
+  else
+    _engine808.setMute(track-TRACK_NUMBER_303, mute);
+}
+
+uint8_t AcidSequencerClass::getMute(uint8_t track)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    return _engine303.getMute(track);
+
+  // 808 request
+  return _engine808.getMute(track-TRACK_NUMBER_303);
+}
+
 void AcidSequencerClass::clearTrack(uint8_t track)
 {
   // 303 request

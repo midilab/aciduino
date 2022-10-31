@@ -4,18 +4,18 @@ Cheap Roland TB303 Step Sequencer clone aimed for live interaction. Your acid li
 
 With some user interface changes for cheap construction of a functional TB303 engine we present you the interface:
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/acid_step_sequencer-protoboard-v002.png)
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v1/hardware/acid_step_sequencer-protoboard-v002.png)
 
-### <span style="color: red; ">So you want a aciduino PCB?</span>
+### So you want a aciduino PCB?
   
-[ijnekenamay](https://github.com/ijnekenamay) has created one for us, you can [download the files](https://github.com/midilab/aciduino/tree/master/v1/hardware/ijnekenamay-PCB) and send it to a fab house, or asking him to sell one for you.  
+[ijnekenamay](https://github.com/ijnekenamay) has created one for us, you can [download the files](https://github.com/midilab/aciduino/tree/aciduino_v2/v1/hardware/ijnekenamay-PCB) and send it to a fab house, or asking him to sell one for you.  
   
-![Image of aciduino on protoboard](https://github.com/midilab/aciduino/raw/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
+![Image of aciduino on pcb](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
 
 # Features
 
 ## 303 Step Sequencer clone
-2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots to save your work. Programming using rest, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
+2 Tracks of famous Roland TB303 sequencer with 14 non volatile pattern memory slots to save your work. Programming using rest, tie, glide and accent on each step. The addition of step length parameter per track makes you able to choose from 1 step to 16 steps of pattern length to make some unsual sequences.
 
 ## Generative Engine
 Generate automatic harmonized acid lines by pressing a single button and twist some harmonic parameter knobs. Just pick up a harmonic mode(scale), the low and high notes to fit the sequence and you have infinite sequences by pressing random it button!
@@ -127,7 +127,7 @@ Use config.h to hack your environment as you wish.
 
 This clone is based on uClock library to generate sequencer BPM clock. The library is now part of project to get DIYers a easy compile time.
 
-You can check more info for this library on: https://github.com/midilab/uClock
+You can check more info for this library on [github repo](https://github.com/midilab/uClock/)
 
 # BOM List
 
@@ -151,5 +151,5 @@ You can also use a MIDI input board to sync the aciduino with a master clock sou
 ## USB Connection?
 
 * Open config.h and set MIDI_MODE to 1. 
-* Download and install a serial-to-midi converter like http://projectgus.github.io/hairless-midiserial/ 
+* Download and install a [serial-to-midi converter like](http://projectgus.github.io/hairless-midiserial/)
 * Open your favorite DAW, configure MIDI port to get signal from serial-to-midi converter and just go acidulize with your preferred acid synth plugin. Depends on your operational system you may need a additional MIDI virtual port driver installed.

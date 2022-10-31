@@ -14,7 +14,15 @@ There are two flavors of aciduino, the first version is a TB303 sequencer only, 
 
 ## Aciduino V2
 
-A picture here...
+![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
+
+Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
+
+A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
 
 [Click here for more info](https://github.com/midilab/aciduino/tree/aciduino_v2/v2/)
 

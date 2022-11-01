@@ -10,27 +10,27 @@ You can do it in 1 hour on your protoboard or order a PCB.
 
 TB-303 only sequencer.
 
-![Image of aciduino-v1 on pcb](https://raw.githubusercontent.com/midilab/aciduino/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
+![Image of aciduino-v1 on pcb](https://github.com/midilab/aciduino/tree/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v1/hardware/acid_step_sequencer-protoboard-v002.png)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v1/hardware/acid_step_sequencer-protoboard-v002.png)
 
-[Click here for more info](https://github.com/midilab/aciduino/tree/v1/)
+[Click here for more info](https://github.com/midilab/aciduino/tree/master/v1)
 
 ## Aciduino V2
 
 TB-303 and TR-808 sequencer with Oled. The modular design allows you to extend it with more knobs or buttons/leds on another protoboard.
 
-![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
+![Image of aciduino on protoboard and uone](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
 
 Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
 
 A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
 
-[Click here for more info](https://github.com/midilab/aciduino/tree/v2/)
+[Click here for more info](https://github.com/midilab/aciduino/tree/master/v2/)
 
 # Features
 

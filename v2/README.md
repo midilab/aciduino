@@ -12,31 +12,31 @@ phuture@acidlab:~$ git submodule update --init --recursive
 
 ## How does it looks like?
 
-![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
+![Image of aciduino on protoboard and uone](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
 
 Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
 
 A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
 
-[Click here for more info](https://github.com/midilab/aciduino/tree/v2/)
+[Click here for more info](https://github.com/midilab/aciduino/tree/master/v2/)
 
 ## Assembly
 
 Place the buttons, knob and powerlines
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/step1.jpg)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/step1.jpg)
 
 You need to open a little hole to place the pot support on top ground line.
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/step1_pot_placement.jpg)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/step1_pot_placement.jpg)
 
 Place signal lines for buttons
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/v2/hardware/imgs/step2.jpg)
+![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v2/hardware/imgs/step2.jpg)
 
 ## How to use?
 

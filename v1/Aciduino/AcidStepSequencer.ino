@@ -110,21 +110,6 @@ void ClockOut16PPQN(uint32_t * tick)
         }
       }
 
-      /*
-      // check for glide event ahead of _sequencer[track].step_location
-      step = _sequencer[track].step_location;
-      for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
-        ++step;
-        step = step % _sequencer[track].data.step_length;
-        if ( _sequencer[track].data.step[step].glide == 1 && _sequencer[track].data.step[step].rest == 1 ) {
-          length = NOTE_LENGTH + (i * 6);
-          break;
-        } else if ( _sequencer[track].data.step[step].rest == 0 ) {
-          break;
-        }
-      }
-      */
-  
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {

@@ -2,6 +2,14 @@
 
 Cheap Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
 
+The second version of aciduino makes use of uCtrl and uClock library as submodule, so just remember to init submodules just after clone the repo.
+
+```console
+phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git
+phuture@acidlab:~$ cd aciduino/
+phuture@acidlab:~$ git submodule update --init --recursive
+```
+
 ## How does it looks like?
 
 ![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduinov2-lite-uone.jpg)

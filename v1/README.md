@@ -4,13 +4,13 @@ Cheap Roland TB303 Step Sequencer clone aimed for live interaction. Your acid li
 
 With some user interface changes for cheap construction of a functional TB303 engine we present you the interface:
 
-![Image of aciduino on protoboard](https://github.com/midilab/aciduino/tree/master/v1/hardware/acid_step_sequencer-protoboard-v002.png)
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/acid_step_sequencer-protoboard-v002.png)
 
 ### So you want a aciduino PCB?
   
 [ijnekenamay](https://github.com/ijnekenamay) has created one for us, you can [download the files](https://github.com/midilab/aciduino/tree/master/v1/hardware/ijnekenamay-PCB) and send it to a fab house, or asking him to sell one for you.  
   
-![Image of aciduino on pcb](https://github.com/midilab/aciduino/tree/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
+![Image of aciduino on pcb](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
 
 # Features
 

@@ -6,20 +6,6 @@ There are two flavors of aciduino, the first version is a TB303 sequencer only, 
 
 You can do it in 1 hour on your protoboard or order a PCB.
 
-# Features
-
-## TB-303 and TR-808 Step Sequencer clone
-Programming using the same analogy and features of originals. 
-
-## Generative Engine
-Generate automatic harmonized acid lines for your 303 or acid rythms for your 808 clones by pressing a single button and twist some generative parameter knobs. 
-
-## Midi Controller
-Controls your acid machines midi parameters per track.
-
-## Midi Clock
-Tight and solid MIDI clock to drive your gears clock needs or receive midi sync signal.
-
 ## Aciduino V1
 
 TB-303 only sequencer.
@@ -45,3 +31,17 @@ A oled screen to get access to all parameters that matters in realtime, a easy t
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
 
 [Click here for more info](https://github.com/midilab/aciduino/tree/aciduino_v2/v2/)
+
+# Features
+
+## TB-303 and TR-808 Step Sequencer clone
+Programming using the same analogy and features of originals. 
+
+## Generative Engine
+Generate automatic harmonized acid lines for your 303 or acid rythms for your 808 clones by pressing a single button and twist some generative parameter knobs. 
+
+## Midi Controller
+Controls your acid machines midi parameters per track.
+
+## Midi Clock
+Tight and solid MIDI clock to drive your gears clock needs or receive midi sync signal.

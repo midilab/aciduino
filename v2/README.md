@@ -2,8 +2,6 @@
 
 Cheap Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
 
-There are two flavors of aciduino, the first version is a TB303 sequencer only, the second one is a TB303 and TR808 sequencer with oled display and step grid system.
-
 ## How does it looks like?
 
 ![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/aciduino_v2/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
@@ -36,34 +34,34 @@ Place signal lines for buttons
 
 The interface presents you simple schema to navigate and interact with you aciduino.
 
-**Navigation buttons:** UP, DOWN, LEFT. RIGTH. use to navigate thru page elements.
-4 right most buttons
+**Navigation buttons:** UP, DOWN, LEFT. RIGTH. use to navigate thru page elements.  
+*4 right most buttons*  
 
-**Element buttons:** If the current selected element has an action, it will show up at bottom of your display with the action name for each button.
-2 upper buttons
+**Element buttons:** If the current selected element has an action, it will show up at bottom of your display with the action name for each button.  
+*2 upper buttons*  
 
-**Generic buttons:** Acts as value changer, a decrementer and incrementer for almost all elements.
-2 lower buttons
+**Generic buttons:** Acts as value changer, a decrementer and incrementer for almost all elements.  
+*2 lower buttons*  
 
-**Pot:** Acts as a value changer just like generic buttons, most of elements can be changed using generic buttons or the pot as wish.
+**Pot:** Acts as a value changer just like generic buttons, most of elements can be changed using generic buttons or the pot as wish.  
 
-**Shift button** Hold it while press another interface button.
-1 alone button at left
+**Shift button** Hold it while press another interface button.  
+*1 alone button at left*  
 
-**Shift + Nav UP/DOWN:** Change page
-**Shift + Nav LEFT/RIGHT:** Changes subpage
-**Shift + Element button 1:** Tempo setup
-**Shift + Element button 2:** Play/Stop
-**Shift + Generic button 1:** Previous track
-**Shift + Generic button 2:** Next track
+**Shift + Nav UP/DOWN:** Change page  
+**Shift + Nav LEFT/RIGHT:** Changes subpage  
+**Shift + Element button 1:** Tempo setup  
+**Shift + Element button 2:** Play/Stop  
+**Shift + Generic button 1:** Previous track  
+**Shift + Generic button 2:** Next track  
 
 ### Roadmap
 
-- midi in rec input
-- mute pattern automation patterns for live page
-- pattern grid for live page
-- 808 fill groups 1-4
-- save to epprom or sdcard
-- copy/paste
-- undo for generative
-- getbyvalue pot on midi controller
+- midi in rec input  
+- mute pattern automation patterns for live page  
+- pattern grid for live page  
+- 808 fill groups 1-4  
+- save to epprom or sdcard  
+- copy/paste  
+- undo for generative  
+- getbyvalue pot on midi controller  

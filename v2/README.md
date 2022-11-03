@@ -30,7 +30,7 @@ Place the buttons, knob and powerlines
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1.jpg)
 
-You need to open a little hole to place the pot support on top ground line.
+You need to open a little hole to place the pot support on top (+) line.
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1_pot_placement.jpg)
 

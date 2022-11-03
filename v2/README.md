@@ -2,7 +2,11 @@
 
 Cheap Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
 
-The second version of aciduino makes use of uCtrl and uClock library as submodule, so just remember to init submodules just after clone the repo.
+The first interation of aciduino v2 is based on [Teensy LC](https://www.pjrc.com/store/teensylc.html) and its a lite version of what aciduino can do. 
+
+By using uCtrl library we can easily extend this second version of aciduino to other arduinos compatible boards, like AVRs ones.
+
+The second version of aciduino makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) library as submodule, so just remember to init submodules just after clone the repo.
 
 ```console
 phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git
@@ -30,7 +34,7 @@ Place the buttons, knob and powerlines
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1.jpg)
 
-You need to open a little hole to place the pot support on top (+) line.
+You need to increase the size of two of the hole to place the pot base support on top (+) connect grid line.
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1_pot_placement.jpg)
 

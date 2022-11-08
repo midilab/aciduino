@@ -98,8 +98,9 @@ void ClockOut16PPQN(uint32_t * tick)
 
       // check for slide or tie event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
+      next_step = step;
       for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
-        next_step = ++step % _sequencer[track].data.step_length;
+        next_step = ++next_step % _sequencer[track].data.step_length;
         if (_sequencer[track].data.step[step].glide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
           length = NOTE_LENGTH + 5;
           break;

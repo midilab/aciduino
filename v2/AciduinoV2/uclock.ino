@@ -48,8 +48,10 @@ void ClockOut96PPQN(uint32_t tick)
   sendMidiClock();
   // sequencer tick
   AcidSequencer.on96PPQN(tick);
+#if defined(USE_LITE_BOARD)
   // led clock monitor
   handle_bpm_led(tick);
+#endif
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
@@ -63,9 +65,11 @@ void onClockStart()
 void onClockStop() 
 {
   sendMidiStop();
-  // force to turn bpm led off
-  uCtrl.dout->write(1, LOW);
   // clear all tracks stack note
   AcidSequencer.clearStackNote();
   _playing = false;
+#if defined(USE_LITE_BOARD)
+  // force to turn bpm led off
+  uCtrl.dout->write(1, LOW);
+#endif
 }

@@ -73,7 +73,20 @@ void step_sequencer_page_refresh(uint8_t subpage)
 
 void step_sequencer_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {  
+#if defined(USE_UONE_BOARD)
+  // step array buttons handling
+  if (value == LOW) return;
+  
   // step array buttons handling?
+  if (control_id >= SELECTOR_BUTTON_1 && control_id <= SELECTOR_BUTTON_8) {
+    // change selector
+    stepSequencerComponent.selectorButton(control_id-SELECTOR_BUTTON_1);
+  }
+  if (control_id >= STEP_BUTTON_1 && control_id <= STEP_BUTTON_16) {
+    // select step, on/off
+    stepSequencerComponent.stepButton(control_id-STEP_BUTTON_1);
+  }
+#endif
 }
 
 void step_sequencer_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)

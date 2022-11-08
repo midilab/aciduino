@@ -34,23 +34,26 @@ void nextTrack()
 }
 
 void uCtrlSetup() {
-  // process midi at 250 microseconds speed
-  uCtrl.setOn250usCallback(midiInputHandle);
-
+  // uCtrl initial setup
+  // drivers and handlers
+  
   //
   // OLED setup
   // Please check you oled model to correctly init him
   //
   uCtrl.initOled(&u8g2);
+#if defined(USE_LITE_BOARD)
   uCtrl.oled->flipDisplay(1); 
+#endif
   uCtrl.oled->print("booting", 4, 1);
   uCtrl.oled->print("please wait...", 5, 1); 
 
   //
   // DIN Module
   //
+  uCtrl.oled->print(">init din...", 8, 1);  
   uCtrl.initDin();
-  // those are the detent encoder pins. see above how to setup they as detent
+#if defined(USE_LITE_BOARD)
   // previous
   uCtrl.din->plug(16);
   // next
@@ -72,19 +75,32 @@ void uCtrlSetup() {
   // little hack to make the shift protoboard work, ground our gnd button pin 2 to avoid floating noises around...
   pinMode(2, OUTPUT);
   digitalWrite(2, LOW);
+#elif defined(USE_UONE_BOARD)
+  uCtrl.din->plug(24);
+  uCtrl.din->plug(25);
+  uCtrl.din->plug(23);
   // encoders setup
   // in pair order always! and pairs starting with odd ids
-  //uCtrl.din->encoder(PREVIOUS_BUTTON, NEXT_BUTTON);
+  uCtrl.din->encoder(ENCODER_DEC, ENCODER_INC);
+#endif
 
   //
   // DOUT Module
   //
+  uCtrl.oled->print(">init dout...", 8, 1);
+#if defined(USE_LITE_BOARD)
   uCtrl.initDout();
   uCtrl.dout->plug(LED_BUILTIN);
+#elif defined(USE_UONE_BOARD)
+  uCtrl.initDout(&SPI, 17);
+  uCtrl.dout->plug(3);
+#endif
 
   //
   // AIN Module
   //
+#if defined(USE_LITE_BOARD)
+  uCtrl.oled->print(">init ain...", 8, 1);
   uCtrl.initAin();
   uCtrl.ain->plug(A9);
   // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
@@ -92,7 +108,21 @@ void uCtrlSetup() {
   // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
   pinMode(22, OUTPUT);
   digitalWrite(22, LOW);
-   
+#endif
+
+  //
+  // Capacitive Touch Module
+  //
+#if defined(USE_UONE_BOARD)
+  uCtrl.oled->print(">init ctouch...", 8, 1);
+  // 4 and 3 needs a swap, fix it on rev 0.2
+  uCtrl.initCapTouch(6, 5, 3, 4);
+  //uCtrl.touch->setThreshold(45);
+  uCtrl.touch->setThreshold(38);
+  uCtrl.touch->plug(A6);
+  uCtrl.touch->plug(A7);
+#endif
+
   //
   // SdCard Module
   //
@@ -106,8 +136,14 @@ void uCtrlSetup() {
   step_sequencer_page_init();
   generative_page_init();
   live_page_init();
+#if defined(USE_LITE_BOARD)
   // use component UI
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, 1);
+  uCtrl.page->setNavPot(true);
+#elif defined(USE_UONE_BOARD)
+  // use component UI
+  uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, ENCODER_DEC, ENCODER_INC, 1);
+#endif
   // use shift button callback?
   // slave/master tempo set
   uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, tempoSetup);
@@ -117,13 +153,14 @@ void uCtrlSetup() {
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
   // next track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
-  
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
-  uCtrl.page->setNavPot(true);
 
   //
   uCtrl.init();
 
+  // get all leds off
+  uCtrl.dout->writeAll(LOW);
+  
   // 
   uCtrl.page->setPage(1);
 }

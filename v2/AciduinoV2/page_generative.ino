@@ -13,7 +13,7 @@ void generativeFunction2()
 {
   // generate new sequence
   if (AcidSequencer.is303(_selected_track)) {
-    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _slide_probability, /* tie_probability */ _tie_probability, _number_of_tones, _lower_note, _range_note);
+    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _slide_probability, _tie_probability, _number_of_tones, _lower_note, _range_note);
   } else {
     AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _roll_probability);
   }

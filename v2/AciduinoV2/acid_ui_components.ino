@@ -214,6 +214,18 @@ struct StepSequencer : PageComponent {
       // force it again in case track length change
       line_size = full_size_view ? ceil((float)step_size/16) + 1 : 2;
 
+#if defined(USE_UONE_BOARD)
+      // locator leds
+      uCtrl.dout->writeAll(LOW);
+      if (locator_current !=  selected_locator || !selected) {
+        uCtrl.dout->write(locator_current+1, HIGH); 
+      }
+      // selected locator and selected componet?
+      if ((selected_line == 1 || selected_line == 2) && selected) {
+        uCtrl.dout->write(selected_locator+1, uCtrl.dout->blink() ? LOW : HIGH);
+      }
+#endif
+      
       // step locators
       uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
       for (uint8_t i=0; i < locator_length; i++) {
@@ -238,6 +250,9 @@ struct StepSequencer : PageComponent {
         // step on/off?
         if (step_on) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_ON);
+#if defined(USE_UONE_BOARD)
+          uCtrl.dout->write(idx+9, HIGH);
+#endif
         } else {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_OFF);
         }
@@ -250,11 +265,17 @@ struct StepSequencer : PageComponent {
         // step current?
         if (curr_step == i && _playing) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED);
+#if defined(USE_UONE_BOARD)
+          uCtrl.dout->write(idx+9, step_on ? LOW : HIGH);
+#endif
         }
     
         // step selected?
         if (selected_step == i && selected && selected_line >= 2) {
            uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED, true);
+#if defined(USE_UONE_BOARD)
+           uCtrl.dout->write(idx+9, uCtrl.dout->blink() ? LOW : HIGH);
+#endif
         }
     
         uCtrl.oled->print(step_asset, steps_line, idx+1);
@@ -298,6 +319,9 @@ struct StepSequencer : PageComponent {
           setF2("roll", AcidSequencer.rollOn(_selected_track, selected_step));
         }
       }
+
+      // debug
+      uCtrl.oled->print(selected_line, line+info_line_idx, 10);
       
     }
 
@@ -305,20 +329,18 @@ struct StepSequencer : PageComponent {
 
       switch (dir) {
         case UP:
-          if (full_size_view) {
-            bool locator_select = selected_step < 16  && selected_line >= 2 ? true : false;
+          if (full_size_view && selected_line != 1) {
             selected_step = selected_step >= 16 ? selected_step - 16 : step_size - (16 - selected_step);
             selected_locator = selected_step / (full_size_view ? step_size : 16);
-            selected_line = locator_select ? 1 : ceil((float)selected_step/16) + 1;
+            selected_line = ceil((float)selected_step/16) + 1;
           }
           break;
         case DOWN:
-          if (full_size_view) {
-            bool locator_select = selected_step + 16 >= step_size && selected_line >= 2 ? true : false;
+          if (full_size_view && selected_line != 1) {
             selected_step = (selected_step + 16) % step_size;
             //selected_step = (selected_step + 16) > step_size ? step_size - 1 : (selected_step + 16) % step_size;
             selected_locator = selected_step / (full_size_view ? step_size : 16);
-            selected_line = locator_select ? 1 : ceil((float)selected_step/16) + 1;
+            selected_line = ceil((float)selected_step/16) + 1;
           }
           break;
         case LEFT:
@@ -335,13 +357,17 @@ struct StepSequencer : PageComponent {
               selected_step -= 16;
             }
           // steps
-          } else if(selected_line >= 2) {
+          } else if(selected_line > 1) {
             if (selected_step == 0) {
               selected_step = step_size-1;
               selected_locator = locator_length-1;
             } else {
               --selected_step;
               selected_locator = selected_step / (full_size_view ? step_size : 16);
+            }
+            // update the selected line if is full_size_view
+            if (full_size_view && selected_line != 1) {
+              selected_line = (selected_step / 16) + 2;
             }
           }
           break;
@@ -357,13 +383,17 @@ struct StepSequencer : PageComponent {
               ++selected_locator;
               selected_step += 16;
             }
-          } else if(selected_line >= 2) {
+          } else if(selected_line > 1) {
             if (selected_step == step_size-1) {
               selected_step = 0;
               selected_locator = 0;
             } else {
               ++selected_step;
               selected_locator = selected_step / (full_size_view ? step_size : 16);
+            }
+            // update the selected line if is full_size_view
+            if (full_size_view && selected_line != 1) {
+              selected_line = (selected_step / 16) + 2;
             }
           }
           break;
@@ -442,7 +472,9 @@ struct StepSequencer : PageComponent {
       if (AcidSequencer.is303(_selected_track)) {
         if(selected_line >= 2) {
           // select step note
-          data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
+          //data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
+          // 3 octaves only, up, down and normal: C2 to B4
+          data = parseData(data, 36, 71, AcidSequencer.getStepData(_selected_track, selected_step));
           AcidSequencer.setStepData(_selected_track, selected_step, data);
           // update knob last note for preview note
           pot_last_note = data;
@@ -487,6 +519,15 @@ struct StepSequencer : PageComponent {
           AcidSequencer.setRoll(_selected_track, selected_step, !AcidSequencer.rollOn(_selected_track, selected_step));
         }
       }
+    }
+
+    void selectorButton(uint8_t nunmber) {
+      selected_locator = nunmber;
+    }
+
+    void stepButton(uint8_t number) {
+      uint8_t step = number + ((full_size_view && selected_line != 1 ? selected_line-2 : selected_locator) * 16);
+      AcidSequencer.rest(_selected_track, step, AcidSequencer.stepOn(_selected_track, step));
     }
     
 } stepSequencerComponent;

@@ -123,7 +123,11 @@ MidiCCControl filterComponent("filter", 74, TRACK_NUMBER_303),
               envelopeComponent("env mod", 12, TRACK_NUMBER_303), 
               decayComponent("decay", 75, TRACK_NUMBER_303), 
               accentComponent("accent", 16, TRACK_NUMBER_303);
-
+              // low memory! lower some drum steps maybe?
+              //tuningComponent("tuning", 104, TRACK_NUMBER_303),
+              //driveComponent("drive", 17, TRACK_NUMBER_303),
+              //volumeComponent("volume", 11, TRACK_NUMBER_303);
+  
 /*
 1   0x01    VCF BEND DOWN
 11  0x0B    MASTER LEVEL
@@ -185,6 +189,11 @@ void live_page_refresh(uint8_t subpage)
       uCtrl.page->component(decayComponent, 4, 2);
   
       uCtrl.page->component(accentComponent, 5, 1);
+      //uCtrl.page->component(tuningComponent, 5, 2);
+
+      //uCtrl.page->component(driveComponent, 6, 1);
+      //uCtrl.page->component(volumeComponent, 6, 2);
+      
     } else {
       uCtrl.page->component(bdDecayComponent, 3, 1, true);
       uCtrl.page->component(bdToneComponent, 3, 2);

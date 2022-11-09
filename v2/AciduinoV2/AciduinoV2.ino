@@ -55,14 +55,14 @@
 bool _playing = false;
 uint8_t _selected_track = 0;
 
-// generative engine
+// generative engine ui data
 uint8_t _generative_fill = 80;
 uint8_t _accent_probability = 50;
 uint8_t _roll_probability = 0;
 uint8_t _slide_probability = 30;
 uint8_t _tie_probability = 100;
-uint8_t _lower_note = 26;
-uint8_t _range_note = 23;
+uint8_t _lower_octave = 2;
+uint8_t _range_octave = 3;
 uint8_t _number_of_tones = 5;
 
 #if defined(USE_LITE_BOARD)

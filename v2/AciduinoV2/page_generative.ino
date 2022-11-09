@@ -13,7 +13,7 @@ void generativeFunction2()
 {
   // generate new sequence
   if (AcidSequencer.is303(_selected_track)) {
-    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _slide_probability, _tie_probability, _number_of_tones, _lower_note, _range_note);
+    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _slide_probability, _tie_probability, _number_of_tones, _lower_octave*12, _range_octave*12);
   } else {
     AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _roll_probability);
   }
@@ -80,8 +80,8 @@ void generative_page_refresh(uint8_t subpage)
       uCtrl.page->component(tieAmountComponent, 4, 1);
       uCtrl.page->component(tonesNumberComponent, 4, 2);
       
-      uCtrl.page->component(lowRangeComponent, 5, 1);
-      uCtrl.page->component(highRangeComponent, 5, 2);
+      uCtrl.page->component(lowOctaveComponent, 5, 1);
+      uCtrl.page->component(rangeOctaveComponent, 5, 2);
       // for 303(scale)
       uCtrl.page->component(scaleComponent, 6, 1);
     } else {

@@ -57,7 +57,7 @@ void Engine808::init()
     _sequencer[track].channel = track+TRACK_NUMBER_303;
     _sequencer[track].step_location = 0;
     _sequencer[track].mute = 0;
-    _sequencer[track].roll_type = 0;
+    _sequencer[track].roll_type = SUB_STEP_1;
 
 #ifdef GLOBAL_ACCENT
     for ( uint8_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {

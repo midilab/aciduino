@@ -33,11 +33,11 @@
 void HarmonizerClass::setTemperament(uint8_t temperament_id)
 {
 	uint8_t interval, interval_count, scale_pitch;
-  uint8_t temperament = _harmony_mode_table[temperament_id].temperament;
+	uint8_t temperament = _harmony_mode_table[temperament_id].temperament;
 
-  _temperament_id = temperament_id;
+	_temperament_id = temperament_id;
 	// newpitch start point for analisys... on I interval of temperament. aka: Tonic
-  scale_pitch = 0;
+	scale_pitch = 0;
 	interval = 0;
 
 	// 8 bits scale temperament check, the last bit are discarted

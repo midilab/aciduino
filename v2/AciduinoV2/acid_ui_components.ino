@@ -408,29 +408,27 @@ struct StepSequencer : PageComponent {
     void change(int16_t data) {
       
       if (data == DECREMENT || data == INCREMENT) {
-  
-        if(selected_line >= 2) {
-          // toggle on/off step with generic button 2(-1)
-          if (data == -1) {
-            AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
-          // tap button for preview and realtime record with generic button 1(-1)
-          } else {
-            // if its playing we record
-            // keep track to avoid changes on note while note on state
-            rec_step_in = curr_step+1;
-            rec_track = _selected_track;
-            rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
-            if (_playing) {
-              // for 303 we also set the note input via nav pot
-              if (AcidSequencer.is303(rec_track)) {
-                AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
-              }
-              // record note in!
-              AcidSequencer.rest(rec_track, rec_step_in, false);
+
+        // toggle on/off step with generic button 2(INCREMENT)
+        if (data == INCREMENT && selected_line != 1) {
+          AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
+        // tap button for preview and realtime record with generic button 1(DECREMENT)
+        } else {
+          // if its playing we record
+          // keep track to avoid changes on note while note on state
+          rec_step_in = curr_step+1;
+          rec_track = _selected_track;
+          rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
+          if (_playing) {
+            // for 303 we also set the note input via nav pot
+            if (AcidSequencer.is303(rec_track)) {
+              AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
             }
-            // send note preview
-            sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
+            // record note in!
+            AcidSequencer.rest(rec_track, rec_step_in, false);
           }
+          // send note preview
+          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
         }
 
       // secondary inc/dec or pot nav action
@@ -438,25 +436,44 @@ struct StepSequencer : PageComponent {
         
         // 303?
         if (AcidSequencer.is303(_selected_track)) {
+
+          uint8_t octave, note;
+        
+          octave = floor(AcidSequencer.getStepData(_selected_track, selected_step) / 12);
+          note = AcidSequencer.getStepData(_selected_track, selected_step) - (octave * 12);
+  
+          // shift sets octave
+          if (uCtrl.page->isShiftPressed()) {
+            data = parseData(data, 0, 10, octave);
+            pot_last_note = note + (data*12);
+          // no shift sets note
+          } else {
+            data = parseData(data, 0, 11, note);
+            pot_last_note = data + (octave*12);
+          }
+          
           if(selected_line >= 2) {
             // select step note
-            //data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
-            // 3 octaves only, up, down and normal: C2 to B4
-            data = parseData(data, 36, 71, AcidSequencer.getStepData(_selected_track, selected_step));
-            AcidSequencer.setStepData(_selected_track, selected_step, data);
-            // update knob last note for preview note
-            pot_last_note = data;
+            AcidSequencer.setStepData(_selected_track, selected_step, pot_last_note);
           }
         // 808
         } else {
-          // select voice
-          data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
-          AcidSequencer.setTrackVoice(_selected_track, data);
-          // select voice note[midi] or port[cv]
-          //data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-          //AcidSequencer.setTrackVoiceConfig(_selected_track, data);
-          // send note for preview while change data
-          //sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+
+          // shift sets voice config
+          if (uCtrl.page->isShiftPressed()) {
+            // select voice note[midi] or port[cv]
+            data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+            AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+            // send note for preview while change data
+            sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
+            sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
+          // no shift select voice
+          } else {
+            // select voice
+            data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
+            AcidSequencer.setTrackVoice(_selected_track, data);
+          }
+
         }
         
       }
@@ -666,31 +683,31 @@ struct TonesNumber : PageComponent {
     
 } tonesNumberComponent;
 
-struct LowRange : PageComponent {
+struct LowOctave : PageComponent {
   
     void view() {
-      genericOptionView("low", AcidSequencer.getNoteString(_lower_note), line, col, selected);
+      genericOptionView("octave", _lower_octave, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 127, _lower_note);
-      _lower_note = data;
+      data = parseData(data, 1, 11, _lower_octave);
+      _lower_octave = data-1;
     }
     
-} lowRangeComponent;
+} lowOctaveComponent;
 
-struct HighRange : PageComponent {
+struct RangeOctave : PageComponent {
   
     void view() {
-      genericOptionView("high", _range_note, line, col, selected);
+      genericOptionView("octaves", _range_octave, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 127, _range_note);
-      _range_note = data;
+      data = parseData(data, 1, 11, _range_octave);
+      _range_octave = data;
     }
     
-} highRangeComponent;
+} rangeOctaveComponent;
 
 struct AccentAmount : PageComponent {
   

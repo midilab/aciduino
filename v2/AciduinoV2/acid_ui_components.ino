@@ -63,7 +63,7 @@ struct MidiCCControl : PageComponent {
       genericOptionView(control_name, control_data[data_idx], line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       // incrementer 1, decrementer -1
       uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
       data = parseData(data, 0, 127, control_data[data_idx]);
@@ -132,7 +132,7 @@ struct TopBar : PageComponent {
       setF2(_playing ? "stop" : "play");
     }
     
-    void change(int8_t data) {
+    void change(int16_t data) {
       // incrementer, decrementer
       // inc and dec will fine update to 0.1 bpm
       uClock.setTempo(uClock.getTempo()+(data * 0.1));
@@ -321,7 +321,7 @@ struct StepSequencer : PageComponent {
       }
 
       // debug
-      uCtrl.oled->print(selected_line, line+info_line_idx, 10);
+      //uCtrl.oled->print(selected_line, line+info_line_idx, 10);
       
     }
 
@@ -405,36 +405,68 @@ struct StepSequencer : PageComponent {
       
     }
     
-    void change(int8_t data) {
-      if(selected_line >= 2) {
-        // toggle on/off step with generic button 2(+1)
-        if (data > 0) {
-          AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
-        // tap button for preview and realtime record with generic button 1(-1)
-        } else {
-          // if its playing we record
-          // keep track to avoid changes on note while note on state
-          rec_step_in = curr_step+1;
-          rec_track = _selected_track;
-          rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
-          if (_playing) {
-            // for 303 we also set the note input via nav pot
-            if (AcidSequencer.is303(rec_track)) {
-              AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
+    void change(int16_t data) {
+      
+      if (data == DECREMENT || data == INCREMENT) {
+  
+        if(selected_line >= 2) {
+          // toggle on/off step with generic button 2(-1)
+          if (data == -1) {
+            AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
+          // tap button for preview and realtime record with generic button 1(-1)
+          } else {
+            // if its playing we record
+            // keep track to avoid changes on note while note on state
+            rec_step_in = curr_step+1;
+            rec_track = _selected_track;
+            rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
+            if (_playing) {
+              // for 303 we also set the note input via nav pot
+              if (AcidSequencer.is303(rec_track)) {
+                AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
+              }
+              // record note in!
+              AcidSequencer.rest(rec_track, rec_step_in, false);
             }
-            // record note in!
-            AcidSequencer.rest(rec_track, rec_step_in, false);
+            // send note preview
+            sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
           }
-          // send note preview
-          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
         }
+
+      // secondary inc/dec or pot nav action
+      } else {
+        
+        // 303?
+        if (AcidSequencer.is303(_selected_track)) {
+          if(selected_line >= 2) {
+            // select step note
+            //data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
+            // 3 octaves only, up, down and normal: C2 to B4
+            data = parseData(data, 36, 71, AcidSequencer.getStepData(_selected_track, selected_step));
+            AcidSequencer.setStepData(_selected_track, selected_step, data);
+            // update knob last note for preview note
+            pot_last_note = data;
+          }
+        // 808
+        } else {
+          // select voice
+          data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
+          AcidSequencer.setTrackVoice(_selected_track, data);
+          // select voice note[midi] or port[cv]
+          //data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
+          //AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+          // send note for preview while change data
+          //sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
+        }
+        
       }
+      
     }
 
-    void changeRelease(int8_t data) {
+    void changeRelease(int16_t data) {
       if(selected_line >= 2) {
         // preview note release for note off
-        if (data < 0) {
+        if (data == DECREMENT) {
           // if its playing we record
           if (_playing) {
             // for 303 we also set the note input via nav pot
@@ -466,32 +498,7 @@ struct StepSequencer : PageComponent {
         }
       }
     }
-
-    void pot(uint16_t data) {      
-      // 303?
-      if (AcidSequencer.is303(_selected_track)) {
-        if(selected_line >= 2) {
-          // select step note
-          //data = parseData(data, 0, 127, AcidSequencer.getStepData(_selected_track, selected_step));
-          // 3 octaves only, up, down and normal: C2 to B4
-          data = parseData(data, 36, 71, AcidSequencer.getStepData(_selected_track, selected_step));
-          AcidSequencer.setStepData(_selected_track, selected_step, data);
-          // update knob last note for preview note
-          pot_last_note = data;
-        }
-      // 808
-      } else {
-        // select voice
-        data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
-        AcidSequencer.setTrackVoice(_selected_track, data);
-        // select voice note[midi] or port[cv]
-        //data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-        //AcidSequencer.setTrackVoiceConfig(_selected_track, data);
-        // send note for preview while change data
-        //sendNote(data, AcidSequencer.getTrackChannel(_selected_track));
-      }
-    }
-
+    
     void function1() {
       if (selected_line == 1) {
         // mute track(subtrack for 808)
@@ -538,63 +545,44 @@ struct TrackLength : PageComponent {
       genericOptionView("lenght", AcidSequencer.getTrackLength(_selected_track), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, 1, AcidSequencer.getTrackMaxLength(_selected_track), AcidSequencer.getTrackLength(_selected_track));
       AcidSequencer.setTrackLength(_selected_track, data);
     }
-    
-    void pot(uint16_t data) {
-      data = parseData(data, 1, AcidSequencer.getTrackMaxLength(_selected_track), AcidSequencer.getTrackLength(_selected_track));
-      AcidSequencer.setTrackLength(_selected_track, data);
-    }
-    
-    // F1
-    // global: selected changes the whole track length
-    // F2
-    // voice: selected changes only the voice length
-    // same for shift?
     
 } lengthComponent;
 
 struct SequenceShift : PageComponent {
+  
     void view() {
       genericOptionView("shift", AcidSequencer.getShiftPos(_selected_track), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, AcidSequencer.getTrackLength(_selected_track)*-1, AcidSequencer.getTrackLength(_selected_track), AcidSequencer.getShiftPos(_selected_track));
       AcidSequencer.setShiftPos(_selected_track, data);
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, AcidSequencer.getTrackLength(_selected_track)*-1, AcidSequencer.getTrackLength(_selected_track), AcidSequencer.getShiftPos(_selected_track));
-      AcidSequencer.setShiftPos(_selected_track, data);
-    }
 } shiftComponent;
 
 struct Transpose : PageComponent {
+  
     void view() {
       genericOptionView("transpose", AcidSequencer.getTranspose(_selected_track), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, -12, 12, AcidSequencer.getTranspose(_selected_track));
       AcidSequencer.setTranspose(_selected_track, data);
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, -12, 12, AcidSequencer.getTranspose(_selected_track));
-      AcidSequencer.setTranspose(_selected_track, data);
-    }
 } transposeComponent;
 
 struct RollType : PageComponent {
+  
     String options = "";
     void view() {
       uint8_t roll_type = AcidSequencer.getRollType(_selected_track);
@@ -607,47 +595,38 @@ struct RollType : PageComponent {
       // flam1, flam2, flam3, flam4, flam5, flam6. sub6, sub3, sub2?
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, 0, 6, AcidSequencer.getRollType(_selected_track));
       AcidSequencer.setRollType(_selected_track, data);
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 6, AcidSequencer.getRollType(_selected_track));
-      AcidSequencer.setRollType(_selected_track, data);
-    }
 } rollTypeComponent;
 
 // make a seq divider too!
 
 struct VoiceSelect : PageComponent {
+  
     void view() {
       genericOptionView("voice", AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       // create a getter for track voice size
       data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
       AcidSequencer.setTrackVoice(_selected_track, data);
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
-      AcidSequencer.setTrackVoice(_selected_track, data);
-    }
 } voiceSelectComponent;
 
 struct VoiceConfig : PageComponent {
+  
     void view() {
       genericOptionView("note", AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
@@ -655,71 +634,24 @@ struct VoiceConfig : PageComponent {
       sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
       sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
     }
-
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-      AcidSequencer.setTrackVoiceConfig(_selected_track, data);
-      // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
-    }
+    
 } voiceConfigComponent;
 
 struct TrackTune : PageComponent {
+  
     void view() {
       genericOptionView("tune", AcidSequencer.getTune(_selected_track) == 0 ? "off" : AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1), line, col, selected);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
-      //clearStackNote(_selected_track);
-      // off, C, C#, D, D#... B
+    void change(int16_t data) {
       // 0 = harmonizer off
       // 1 = C..., 12 = B
+      //clearStackNote(_selected_track);
       data = parseData(data, 0, 12, AcidSequencer.getTune(_selected_track));
       AcidSequencer.setTune(_selected_track, data);
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 12, AcidSequencer.getTune(_selected_track));
-      AcidSequencer.setTune(_selected_track, data);
-    }
-
 } tuneComponent;
-
-/*
-// generic global scope data control
-struct GeneralDataControl : PageComponent {
-
-    String control_name;
-    int8_t * control_data;
-    uint8_t control_min = 0;
-    uint8_t control_max = 0;
-
-    GeneralDataControl(String name, int8_t * control_data_ptr, uint8_t min, uint8_t max)
-    {
-      control_name = name;
-      control_data = control_data_ptr;
-      control_min = min;
-      control_max = max;
-    }
-    
-    void view() {
-      genericOptionView(control_name, control_data, line, col, selected);
-    }
-
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
-      data = parseData(data, control_min, control_max, *control_data);
-      *control_data = data;
-    }
-    
-    void pot(uint16_t data) {
-      data = parseData(data, control_min, control_max, *control_data);
-      *control_data = data;
-    }
-} tonesNumberComponent("tones", &_number_of_tones, 1, 7);
-*/
 
 struct TonesNumber : PageComponent {
 
@@ -727,111 +659,89 @@ struct TonesNumber : PageComponent {
       genericOptionView("tones", _number_of_tones, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 1, 7, _number_of_tones);
       _number_of_tones = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 1, 7, _number_of_tones);
-      _number_of_tones = data;
-    }
 } tonesNumberComponent;
 
 struct LowRange : PageComponent {
+  
     void view() {
       genericOptionView("low", AcidSequencer.getNoteString(_lower_note), line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 127, _lower_note);
       _lower_note = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 127, _lower_note);
-      _lower_note = data;
-    }
 } lowRangeComponent;
 
 struct HighRange : PageComponent {
+  
     void view() {
       genericOptionView("high", _range_note, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 127, _range_note);
       _range_note = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 127, _range_note);
-      _range_note = data;
-    }
 } highRangeComponent;
 
 struct AccentAmount : PageComponent {
+  
     void view() {
       genericOptionView("accent", _accent_probability, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 100, _accent_probability);
       _accent_probability = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 100, _accent_probability);
-      _accent_probability = data;
-    }
 } accentAmountComponent;
 
 struct SlideAmount : PageComponent {
+  
     void view() {
       genericOptionView("slide", _slide_probability, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 100, _slide_probability);
       _slide_probability = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 100, _slide_probability);
-      _slide_probability = data;
-    }
 } slideAmountComponent;
 
 struct TieAmount : PageComponent {
+  
     void view() {
       genericOptionView("tie", _tie_probability, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 100, _tie_probability);
       _tie_probability = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 100, _tie_probability);
-      _tie_probability = data;
-    }
 } tieAmountComponent;
 
 struct RollAmount : PageComponent {
+  
     void view() {
       genericOptionView("roll", _roll_probability, line, col, selected);
     }
 
-    void change(int8_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 100, _roll_probability);
       _roll_probability = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 0, 100, _roll_probability);
-      _roll_probability = data;
-    }
 } rollAmountComponent;
 
 struct TrackScale : PageComponent {
@@ -845,17 +755,7 @@ struct TrackScale : PageComponent {
       genericOptionView("scale", AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId()), line, col, selected, true);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
-      //clearStackNote(_selected_track);
-      // off, C, C#, D, D#... B
-      // 0 = harmonizer off
-      // 1 = C..., 12 = B
-      data = parseData(data, 0, 13, AcidSequencer.getTemperamentId());
-      AcidSequencer.setTemperament(data);
-    }
-    
-    void pot(uint16_t data) {
+    void change(int16_t data) {
       data = parseData(data, 0, 13, AcidSequencer.getTemperamentId());
       AcidSequencer.setTemperament(data);
     }
@@ -873,70 +773,10 @@ struct TrackFill : PageComponent {
       genericOptionView("fill", _generative_fill, line, col, selected, true);
     }
 
-    void change(int8_t data) {
-      // incrementer 1, decrementer -1
+    void change(int16_t data) {
       //clearStackNote(_selected_track);
       data = parseData(data, 1, 100, _generative_fill);
       _generative_fill = data;
     }
     
-    void pot(uint16_t data) {
-      data = parseData(data, 1, 100, _generative_fill);
-      _generative_fill = data;
-    }
 } fillComponent;
-
-
-/*
-void note_view()
-{
-  uint8_t steps_line = 3;
-  uint8_t curr_step = AcidSequencer.getCurrentStep(0);
-  uint8_t step_size = AcidSequencer.getTrackLength(0);
-  uint8_t idx = 0;
-
-  uCtrl.oled->print("  16  ", steps_line, 1, false, false); 
-  uCtrl.oled->display->drawBox(0, ((steps_line-1)*8)+1, 29, 6);  
-  uCtrl.oled->print("  32  ", steps_line, 7, false, false); 
-  uCtrl.oled->display->drawBox(30, ((steps_line-1)*8)+1, 29, 6);
-  uCtrl.oled->print("  48  ", steps_line, 13, false, false); 
-  uCtrl.oled->display->drawBox(60, ((steps_line-1)*8)+1, 29, 6);
-  uCtrl.oled->print("  64  ", steps_line, 19, false, false); 
-  uCtrl.oled->display->drawBox(90, ((steps_line-1)*8)+1, 30, 6);
-  steps_line++;
-  
-  for (uint8_t i=0; i < 16; i++) {
-    idx = i % 4;
-    if (idx == 0 && i != 0) {
-      steps_line++;
-    }
-    uCtrl.oled->print("  C3  ", steps_line, (idx*6)+1, false, false); 
-    if (curr_step == i) {
-      //uCtrl.oled->print("> C3  ", steps_line, (idx*6)+1, false, false); 
-      //uCtrl.oled->display->drawLine(0, (idx*5*6), 29, 6);  
-      uCtrl.oled->display->drawBox(idx*5*6, (steps_line-1)*8, 29, 8);  
-    }
-  } 
-
-  //uCtrl.oled->print("  16  ", steps_line+1, 9, false, false); 
-  //uCtrl.oled->display->drawBox(0, 49, 120, 6);
-
-  //uCtrl.oled->print("  16  ", steps_line+1, 3, false, false); 
-  //uCtrl.oled->display->drawBox(0, 49, 59, 6);  
-  //uCtrl.oled->print("  32  ", steps_line+1, 16, false, false); 
-  //uCtrl.oled->display->drawBox(61, 49, 59, 6);
-
-  //uCtrl.oled->print("  16  ", steps_line+1, 2, false, false); 
-  //uCtrl.oled->display->drawBox(0, 49, 39, 6);  
-  //uCtrl.oled->print("  32  ", steps_line+1, 10, false, false); 
-  //uCtrl.oled->display->drawBox(40, 49, 39, 6);
-  //uCtrl.oled->print("  48  ", steps_line+1, 18, false, false); 
-  //uCtrl.oled->display->drawBox(80, 49, 40, 6);
-  
-  
-  //uCtrl.oled->print("    ", steps_line+1, 1, false, true); 
-  //uCtrl.oled->print("    ", steps_line+1, 5, false, step_size > 16 ? true : false); 
-  //uCtrl.oled->print("    ", steps_line+1, 9, false, step_size > 32 ? true : false); 
-  //uCtrl.oled->print("    ", steps_line+1, 13, false, step_size > 48 ? true : false);   
-}
-*/

@@ -685,7 +685,7 @@ struct LowOctave : PageComponent {
 
     void change(int16_t data) {
       data = parseData(data, 1, 11, _lower_octave);
-      _lower_octave = data-1;
+      _lower_octave = data;
     }
     
 } lowOctaveComponent;

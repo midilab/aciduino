@@ -72,13 +72,6 @@ struct MidiCCControl : PageComponent {
       sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
     }
     
-    void pot(uint16_t data) {
-      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
-      data = parseData(data, 0, 127, control_data[data_idx]);
-      control_data[data_idx] = data;
-      // send data
-      sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
-    }
 };
 
 struct TopBar : PageComponent {
@@ -133,17 +126,18 @@ struct TopBar : PageComponent {
     }
     
     void change(int16_t data) {
-      // incrementer, decrementer
-      // inc and dec will fine update to 0.1 bpm
-      uClock.setTempo(uClock.getTempo()+(data * 0.1));
+      // primary incrementer or decrementer
+      if (data == DECREMENT || data == INCREMENT) {
+        // inc and dec will fine update to 0.1 bpm
+        uClock.setTempo(uClock.getTempo()+((data == DECREMENT ? -1 : 1) * 0.1));
+      // secondary inc/dec or pot nav action
+      } else {
+        data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
+        uClock.setTempo(data);
+      }
+
     }
 
-    void pot(uint16_t data) {
-      // incrementer, decrementer
-      data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
-      uClock.setTempo(data);
-    }
-    
     void function1() {
         uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
     }

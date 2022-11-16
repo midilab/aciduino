@@ -43,11 +43,11 @@ void genericOptionView(String title, String value, uint8_t line, uint8_t col, bo
 struct MidiCCControl : PageComponent {
 
     // generic controler for 303 and 808 controlers
-    String control_name;
+    const char * control_name;
     uint8_t control_cc = 0;
     uint8_t * control_data;
 
-    MidiCCControl(String name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
+    MidiCCControl(const char * name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
     {
       control_name = name;
       control_cc = cc;
@@ -592,7 +592,7 @@ struct Transpose : PageComponent {
 
 struct RollType : PageComponent {
   
-    String options = "";
+    String options;
     void view() {
       uint8_t roll_type = AcidSequencer.getRollType(_selected_track);
       if (roll_type <= FLAM_5) {

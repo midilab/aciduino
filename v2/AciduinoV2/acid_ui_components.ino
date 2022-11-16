@@ -45,15 +45,14 @@ struct MidiCCControl : PageComponent {
     // generic controler for 303 and 808 controlers
     String control_name;
     uint8_t control_cc = 0;
-    //uint8_t * control_data; // heap troubles here? why? debug it!
-    uint8_t control_data[2];
+    uint8_t * control_data;
 
     MidiCCControl(String name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
     {
       control_name = name;
       control_cc = cc;
-      //control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
-      for (uint8_t i; i < data_slot; i++) {
+      control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
+      for (uint8_t i=0; i < data_slot; i++) {
         control_data[i] = initial_value;
       }
     }
@@ -135,7 +134,6 @@ struct TopBar : PageComponent {
         data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
         uClock.setTempo(data);
       }
-
     }
 
     void function1() {

@@ -27,7 +27,6 @@
 
   compatible with uOne
 
-  create a #define to allow uOne 32 buttons and nav to work with same code base
 */
 //
 // BPM Clock support

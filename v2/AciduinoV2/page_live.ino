@@ -120,7 +120,8 @@ CC  Parameter
 void live_page_init()
 {
 #ifdef MIDI_CONTROLER
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+  //uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 1);
   // register midi controller options per track
   if (TRACK_NUMBER_303 > 0) {
     // max 16 controls!
@@ -183,16 +184,16 @@ void live_page_refresh(uint8_t subpage)
 {
   uCtrl.page->component(topBarComponent, 1, 1);
 
-  // all elements hooked to change sequence A/B
-
   if (subpage == 0) {
-    
-
-  } else if (subpage == 1) {
-    // pattern control subpage
+    // for now only midi cc contrl on live
+    // roadmap: subpage 1 will be a mute automation pattern style driven
 #ifdef MIDI_CONTROLER
     uCtrl.page->component(midiControllerComponent, 3, 1, true);
 #endif
+  } else if (subpage == 1) {
+//#ifdef MIDI_CONTROLER
+//    uCtrl.page->component(midiControllerComponent, 3, 1, true);
+//#endif
   }
   
 }

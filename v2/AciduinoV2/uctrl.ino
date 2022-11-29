@@ -118,7 +118,8 @@ void uCtrlSetup() {
   // 4 and 3 needs a swap, fix it on rev 0.2
   uCtrl.initCapTouch(6, 5, 3, 4);
   //uCtrl.touch->setThreshold(45);
-  uCtrl.touch->setThreshold(38);
+  uCtrl.touch->setThreshold(41);
+  //uCtrl.touch->setThreshold(38);
   uCtrl.touch->plug(A6);
   uCtrl.touch->plug(A7);
 #endif

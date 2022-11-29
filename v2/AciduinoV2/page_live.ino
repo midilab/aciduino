@@ -116,58 +116,66 @@ CC  Parameter
 87  RC DECAY
 88  RC LEVEL
 */
-#ifdef MIDI_CONTROLER
-// for 303 roland cloud
-MidiCCControl filterComponent("filter", 74, TRACK_NUMBER_303), 
-              resonanceComponent("reso.", 71, TRACK_NUMBER_303), 
-              envelopeComponent("env mod", 12, TRACK_NUMBER_303), 
-              decayComponent("decay", 75, TRACK_NUMBER_303), 
-              accentComponent("accent", 16, TRACK_NUMBER_303);
-              // low memory! lower some drum steps maybe?
-              //tuningComponent("tuning", 104, TRACK_NUMBER_303),
-              //driveComponent("drive", 17, TRACK_NUMBER_303),
-              //volumeComponent("volume", 11, TRACK_NUMBER_303);
-  
-/*
-1   0x01    VCF BEND DOWN
-11  0x0B    MASTER LEVEL
-17  0x11    DRIVE DEPTH
-18  0x12    DELAY TIME
-19  0x13    DELAY LEVEL
-64  0x40    HOLD PEDAL
-104 0x68 TUNING
-*/
-
-// for 808 roland cloud
-MidiCCControl bdDecayComponent("bd decay", 23, TRACK_NUMBER_808), 
-              bdToneComponent("bd tone", 21, TRACK_NUMBER_808), 
-              snSnappyComponent("sd snap", 26, TRACK_NUMBER_808), 
-              snToneComponent("sd tone", 25, TRACK_NUMBER_808);
-/*
-20  BD TUNE
-21  BD TONE
-22  BD COMP
-23  BD DECAY
-24  BD LEVEL 
-
- */
-#endif
 
 void live_page_init()
 {
-  //uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+#ifdef MIDI_CONTROLER
+  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+  // register midi controller options per track
+  if (TRACK_NUMBER_303 > 0) {
+    // max 16 controls!
+    midiControllerComponent.set303Control("filter", 74);
+    midiControllerComponent.set303Control("reso.", 71);
+    midiControllerComponent.set303Control("env mod", 12);
+    midiControllerComponent.set303Control("decay", 75);
+    midiControllerComponent.set303Control("accent", 16);
+    midiControllerComponent.set303Control("vcf bd.", 1);
+    midiControllerComponent.set303Control("drive", 17);
+    midiControllerComponent.set303Control("volume", 11);
+
+    midiControllerComponent.set303Control("delay t.", 18);
+    midiControllerComponent.set303Control("delay l.", 19);
+    midiControllerComponent.set303Control("tuning", 104);
+    //midiControllerComponent.set303Control("...", 1);
+    //midiControllerComponent.set303Control("...", 1);
+    //midiControllerComponent.set303Control("...", 1);
+    //midiControllerComponent.set303Control("...", 1);
+    //midiControllerComponent.set303Control("...", 1);
+  }
+  if (TRACK_NUMBER_808 > 0) {
+    // max 16 controls!
+    midiControllerComponent.set808Control("bd decay", 23);
+    midiControllerComponent.set808Control("bd tone", 21);
+    midiControllerComponent.set808Control("sd snap", 26);
+    midiControllerComponent.set808Control("sd tone", 25);
+    midiControllerComponent.set808Control("lt tune", 46);
+    midiControllerComponent.set808Control("mt tune", 49);
+    midiControllerComponent.set808Control("ht tune", 52);
+    midiControllerComponent.set808Control("rs tune", 55);
+
+    midiControllerComponent.set808Control("bd level", 24);
+    midiControllerComponent.set808Control("sd level", 29);
+    midiControllerComponent.set808Control("ch level", 63);
+    midiControllerComponent.set808Control("oh level", 82);
+    midiControllerComponent.set808Control("lt level", 48);
+    midiControllerComponent.set808Control("mt level", 51);
+    midiControllerComponent.set808Control("ht level", 54);
+    midiControllerComponent.set808Control("rs level", 57);
+  }
+#else
   // one subpage for now until we get the pattern feature setup. ableton grid like patterns select screen     
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 1);     
+  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 1);  
+#endif   
 }
 
 void live_page_create()
 {
-  //uCtrl.dout->writeAll(LOW); 
+  uCtrl.dout->writeAll(LOW); 
 }
 
 void live_page_destroy()
 {
-  //uCtrl.dout->writeAll(LOW);
+  uCtrl.dout->writeAll(LOW);
 }
 
 // called each cycle interaction of interface object for UI refresh
@@ -178,33 +186,13 @@ void live_page_refresh(uint8_t subpage)
   // all elements hooked to change sequence A/B
 
   if (subpage == 0) {
-    // add div control? 32, 16, 8
-#ifdef MIDI_CONTROLER
-    if (AcidSequencer.is303(_selected_track)) {
-      // midi control subpage?
-      uCtrl.page->component(filterComponent, 3, 1, true);
-      uCtrl.page->component(resonanceComponent, 3, 2);
-  
-      uCtrl.page->component(envelopeComponent, 4, 1);
-      uCtrl.page->component(decayComponent, 4, 2);
-  
-      uCtrl.page->component(accentComponent, 5, 1);
-      //uCtrl.page->component(tuningComponent, 5, 2);
+    
 
-      //uCtrl.page->component(driveComponent, 6, 1);
-      //uCtrl.page->component(volumeComponent, 6, 2);
-      
-    } else {
-      uCtrl.page->component(bdDecayComponent, 3, 1, true);
-      uCtrl.page->component(bdToneComponent, 3, 2);
-  
-      uCtrl.page->component(snSnappyComponent, 4, 1);
-      uCtrl.page->component(snToneComponent, 4, 2);
-    }
-#endif
   } else if (subpage == 1) {
     // pattern control subpage
-
+#ifdef MIDI_CONTROLER
+    uCtrl.page->component(midiControllerComponent, 3, 1, true);
+#endif
   }
   
 }

@@ -35,43 +35,133 @@ void genericOptionView(String title, String value, uint8_t line, uint8_t col, bo
   uCtrl.oled->print(value, line, col+value_col, selected);
 }
 
-// generic midi cc control object for 2 channels data
-// 2x 303
-// 2x 808
-// always guard it behind a if (AcidSequencer.is303(_selected_track)) {
-// to avoid array index access crash
-struct MidiCCControl : PageComponent {
-
-    // generic controler for 303 and 808 controlers
+// generic controler for 303 and 808 devices
+typedef struct
+{
     const char * control_name;
     uint8_t control_cc = 0;
-    uint8_t * control_data;
+    uint8_t control_data[TRACK_NUMBER_303];
+} MIDI_CTRL_DATA_303;
 
-    MidiCCControl(const char * name, uint8_t cc, uint8_t data_slot = 1, uint8_t initial_value = 0)
+typedef struct
+{
+    const char * control_name;
+    uint8_t control_cc = 0;
+    uint8_t control_data[TRACK_NUMBER_808];
+} MIDI_CTRL_DATA_808;
+
+struct MidiCCControl : PageComponent {
+
+    uint8_t selected_map = 0;
+    uint8_t ctrl_selected = 0;
+
+    // layout:
+    // max 16 controls per track
+    // (4 x 2) x 2
+    // f1 = A (select A map)
+    // f2 = B (select B map)
+    MIDI_CTRL_DATA_303 control_map_303[16];
+    uint8_t ctrl_size_303 = 0;
+
+    MIDI_CTRL_DATA_808 control_map_808[16];
+    uint8_t ctrl_size_808 = 0;
+    
+    MidiCCControl()
     {
-      control_name = name;
-      control_cc = cc;
-      control_data = (uint8_t*) malloc(sizeof(uint8_t) * data_slot);
-      for (uint8_t i=0; i < data_slot; i++) {
-        control_data[i] = initial_value;
-      }
+      // we want this component to be 4 lines max and 2 grids navigable object
+      line_size = 4;
+      grid_size = 2;
+      // enable more complex nav by updating selector pointer of page component
+      update_selector = true;
     }
     
     void view() {
       uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
-      genericOptionView(control_name, control_data[data_idx], line, col, selected);
+      uint8_t ctrl_map_init = selected_map == 0 ? 0 : 8;
+      uint8_t ctrl_counter = 0;
+      ctrl_selected = selected_line-1 + (selected_grid == 2 ? 4 : 0);
+      ctrl_selected += selected_map > 0 ? 8 : 0;
+
+      // print controls
+      for (uint8_t i=ctrl_map_init; i < ctrl_map_init+8; i++) {
+        // process 303 controlelrs?
+        if (AcidSequencer.is303(_selected_track)) {
+          if (i >= ctrl_size_303) {
+            // breaks with no selected element? fix it!
+            if (ctrl_selected >= ctrl_size_303) {
+              selected_grid = floor((selected_map > 0 ? ctrl_size_303-1-8 : ctrl_size_303-1)/4)+1;
+              selected_line = ((selected_map > 0 ? ctrl_size_303-1-8 : ctrl_size_303-1)%4)+1;
+            }
+            break;
+          }
+          genericOptionView(control_map_303[i].control_name, control_map_303[i].control_data[data_idx], line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+        // process 808 controlelrs?
+        } else {
+          if (i >= ctrl_size_808) {
+            // breaks with no selected element? fix it!
+            if (ctrl_selected >= ctrl_size_808) {
+              selected_grid = floor((selected_map > 0 ? ctrl_size_808-1-8 : ctrl_size_808-1)/4)+1;
+              selected_line = ((selected_map > 0 ? ctrl_size_808-1-8 : ctrl_size_808-1)%4)+1;
+            }
+            break;
+          }
+          genericOptionView(control_map_808[i].control_name, control_map_808[i].control_data[data_idx], line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+        }
+        ++ctrl_counter;
+      }
+
+      setF1("A", selected_map == 0 ? true : false);
+      setF2("B", selected_map == 1 ? true : false);
     }
 
     void change(int16_t data) {
       // incrementer 1, decrementer -1
       uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
-      data = parseData(data, 0, 127, control_data[data_idx]);
-      control_data[data_idx] = data;
-      // send data
-      sendMidiCC(control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
+      // process 303 controlelrs?
+      if (AcidSequencer.is303(_selected_track)) {
+        data = parseData(data, 0, 127, control_map_303[ctrl_selected].control_data[data_idx]);
+        control_map_303[ctrl_selected].control_data[data_idx] = data;
+        // send data
+        sendMidiCC(control_map_303[ctrl_selected].control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
+      } else {
+        data = parseData(data, 0, 127, control_map_808[ctrl_selected].control_data[data_idx]);
+        control_map_808[ctrl_selected].control_data[data_idx] = data;
+        // send data
+        sendMidiCC(control_map_808[ctrl_selected].control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
+      }
     }
     
-};
+    void function1() {
+      selected_map = 0;
+    }
+
+    void function2() {
+      selected_map = 1;
+    }
+
+    void set303Control(const char * name, uint8_t cc, uint8_t initial_value = 0) {
+      if (ctrl_size_303 >= 16)
+        return;
+      control_map_303[ctrl_size_303].control_name = name;
+      control_map_303[ctrl_size_303].control_cc = cc;
+      for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
+        control_map_303[ctrl_size_303].control_data[i] = initial_value;
+      }
+      ++ctrl_size_303;
+    }
+
+    void set808Control(const char * name, uint8_t cc, uint8_t initial_value = 0) {
+      if (ctrl_size_808 >= 16)
+        return;
+      control_map_808[ctrl_size_808].control_name = name;
+      control_map_808[ctrl_size_808].control_cc = cc;
+      for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
+        control_map_808[ctrl_size_808].control_data[i] = initial_value;
+      }
+      ++ctrl_size_808;
+    }
+
+} midiControllerComponent;
 
 struct TopBar : PageComponent {
 

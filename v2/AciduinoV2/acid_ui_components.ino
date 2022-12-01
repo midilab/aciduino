@@ -24,7 +24,7 @@ void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, ui
 
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
-// used byu a lot of simple components
+// used by a lot of simple components
 void genericOptionView(String title, String value, uint8_t line, uint8_t col, bool selected, bool large = false)
 {
   const uint8_t view_size = 12;
@@ -72,7 +72,7 @@ struct MidiCCControl : PageComponent {
       line_size = 4;
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
-      update_selector = true;
+      update_selector_view = true;
     }
     
     void view() {
@@ -637,6 +637,41 @@ struct StepSequencer : PageComponent {
     }
     
 } stepSequencerComponent;
+
+struct MutePatternControl : PageComponent {
+
+    // layout:
+    // mute automation pattern style driven
+    // 4x16 grid style:
+    // last 4 grids are mute automation clip change/status
+    // 12 grids are for mute elements(on 808 max 12, for 303 1 big mute slot)
+
+    MutePatternControl()
+    {
+      // we want this component to be 4 lines max and 16 grids navigable object
+      line_size = 4;
+      grid_size = 16;
+      // enable more complex nav by updating selector pointer of page component
+      update_selector = true;
+    }
+    
+    void view() {
+      
+    }
+
+    void change(int16_t data) {
+      
+    }
+    
+    void function1() {
+      
+    }
+
+    void function2() {
+      
+    }
+
+} mutePatternComponent;
 
 struct TrackLength : PageComponent {
 

@@ -69,7 +69,7 @@ The interface presents you simple schema to navigate and interact with you acidu
 
 **Step Sequencer Pot, Shift + Pot**  
 303: Pot Changes notes, Shift + Pot Changes octave   
-808: Pot Changes voice, Fhift + Pot Changes voice config(midi cc or cv port)  
+808: Pot Changes voice, Shift + Pot Changes voice config(midi cc or cv port)  
 
 ### Roadmap
 

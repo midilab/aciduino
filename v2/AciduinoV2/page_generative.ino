@@ -10,12 +10,12 @@ void generativeFunction1()
 }
 
 void generativeFunction2()
-{
+{ 
   // generate new sequence
   if (AcidSequencer.is303(_selected_track)) {
-    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _slide_probability, _tie_probability, _number_of_tones, _lower_octave*12, _range_octave*12);
+    AcidSequencer.acidRandomize(_selected_track, generative_303[_selected_track].generative_fill, generative_303[_selected_track].accent_probability, generative_303[_selected_track].slide_probability, generative_303[_selected_track].tie_probability, generative_303[_selected_track].number_of_tones, generative_303[_selected_track].lower_octave*12, generative_303[_selected_track].range_octave*12);
   } else {
-    AcidSequencer.acidRandomize(_selected_track, _generative_fill, _accent_probability, _roll_probability);
+    AcidSequencer.acidRandomize(_selected_track, generative_808[_selected_track-TRACK_NUMBER_303].generative_fill, generative_808[_selected_track-TRACK_NUMBER_303].accent_probability, generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
   }
 }
 

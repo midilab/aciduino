@@ -920,12 +920,12 @@ struct TrackTune : PageComponent {
 struct TonesNumber : PageComponent {
 
     void view() {
-      genericOptionView("tones", _number_of_tones, line, col, selected);
+      genericOptionView("tones", generative_303[_selected_track].number_of_tones, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 7, _number_of_tones);
-      _number_of_tones = data;
+      data = parseData(data, 1, 7, generative_303[_selected_track].number_of_tones);
+      generative_303[_selected_track].number_of_tones = data;
     }
     
 } tonesNumberComponent;
@@ -933,12 +933,12 @@ struct TonesNumber : PageComponent {
 struct LowOctave : PageComponent {
   
     void view() {
-      genericOptionView("octave", _lower_octave, line, col, selected);
+      genericOptionView("octave", generative_303[_selected_track].lower_octave, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 11, _lower_octave);
-      _lower_octave = data;
+      data = parseData(data, 1, 11, generative_303[_selected_track].lower_octave);
+      generative_303[_selected_track].lower_octave = data;
     }
     
 } lowOctaveComponent;
@@ -946,12 +946,12 @@ struct LowOctave : PageComponent {
 struct RangeOctave : PageComponent {
   
     void view() {
-      genericOptionView("octaves", _range_octave, line, col, selected);
+      genericOptionView("octaves", generative_303[_selected_track].range_octave, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 11, _range_octave);
-      _range_octave = data;
+      data = parseData(data, 1, 11, generative_303[_selected_track].range_octave);
+      generative_303[_selected_track].range_octave = data;
     }
     
 } rangeOctaveComponent;
@@ -959,25 +959,27 @@ struct RangeOctave : PageComponent {
 struct AccentAmount : PageComponent {
   
     void view() {
-      genericOptionView("accent", _accent_probability, line, col, selected);
+      uint8_t accent_probability = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].accent_probability : generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      genericOptionView("accent", accent_probability, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, _accent_probability);
-      _accent_probability = data;
+      uint8_t * accent_probability = AcidSequencer.is303(_selected_track) ? &generative_303[_selected_track].accent_probability : &generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      data = parseData(data, 0, 100, *accent_probability);
+      *accent_probability = data;
     }
-    
+
 } accentAmountComponent;
 
 struct SlideAmount : PageComponent {
   
     void view() {
-      genericOptionView("slide", _slide_probability, line, col, selected);
+      genericOptionView("slide", generative_303[_selected_track].slide_probability, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, _slide_probability);
-      _slide_probability = data;
+      data = parseData(data, 0, 100, generative_303[_selected_track].slide_probability);
+      generative_303[_selected_track].slide_probability = data;
     }
     
 } slideAmountComponent;
@@ -985,12 +987,12 @@ struct SlideAmount : PageComponent {
 struct TieAmount : PageComponent {
   
     void view() {
-      genericOptionView("tie", _tie_probability, line, col, selected);
+      genericOptionView("tie", generative_303[_selected_track].tie_probability, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, _tie_probability);
-      _tie_probability = data;
+      data = parseData(data, 0, 100, generative_303[_selected_track].tie_probability);
+      generative_303[_selected_track].tie_probability = data;
     }
     
 } tieAmountComponent;
@@ -998,12 +1000,12 @@ struct TieAmount : PageComponent {
 struct RollAmount : PageComponent {
   
     void view() {
-      genericOptionView("roll", _roll_probability, line, col, selected);
+      genericOptionView("roll", generative_808[_selected_track-TRACK_NUMBER_303].roll_probability, line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, _roll_probability);
-      _roll_probability = data;
+      data = parseData(data, 0, 100, generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
+      generative_808[_selected_track-TRACK_NUMBER_303].roll_probability = data;
     }
     
 } rollAmountComponent;
@@ -1034,13 +1036,15 @@ struct TrackFill : PageComponent {
     }
     
     void view() {
-      genericOptionView("fill", _generative_fill, line, col, selected, true);
+      uint8_t generative_fill = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].generative_fill : generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      genericOptionView("fill", generative_fill, line, col, selected, true);
     }
 
     void change(int16_t data) {
       //clearStackNote(_selected_track);
-      data = parseData(data, 1, 100, _generative_fill);
-      _generative_fill = data;
+      uint8_t * generative_fill = AcidSequencer.is303(_selected_track) ? &generative_303[_selected_track].generative_fill : &generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      data = parseData(data, 1, 100, *generative_fill);
+      *generative_fill = data;
     }
     
 } fillComponent;

@@ -55,14 +55,26 @@ bool _playing = false;
 uint8_t _selected_track = 0;
 
 // generative engine ui data
-uint8_t _generative_fill = 80;
-uint8_t _accent_probability = 50;
-uint8_t _roll_probability = 0;
-uint8_t _slide_probability = 30;
-uint8_t _tie_probability = 100;
-uint8_t _lower_octave = 2;
-uint8_t _range_octave = 3;
-uint8_t _number_of_tones = 5;
+typedef struct
+{
+  uint8_t generative_fill = 80;
+  uint8_t accent_probability = 50;
+  uint8_t slide_probability = 30;
+  uint8_t tie_probability = 100;
+  uint8_t lower_octave = 2;
+  uint8_t range_octave = 3;
+  uint8_t number_of_tones = 5;
+} GENERATIVE_303_DATA; 
+
+typedef struct
+{
+  uint8_t generative_fill = 80;
+  uint8_t accent_probability = 50;
+  uint8_t roll_probability = 0;
+} GENERATIVE_808_DATA; 
+
+GENERATIVE_303_DATA generative_303[TRACK_NUMBER_303];
+GENERATIVE_808_DATA generative_808[TRACK_NUMBER_808];
 
 #if defined(USE_LITE_BOARD)
 

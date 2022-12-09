@@ -3,25 +3,6 @@
 // all UI components are programmed as PageComponent to be reused on different pages
 //
 
-// used by page module for themed function button display
-void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
-{
-  // menu action
-  uCtrl.oled->print(f1, 8, 1+((14-strlen(f1))/2)); 
-  uCtrl.oled->print(f2, 8, 14+((14-strlen(f2))/2)); 
-  // state variation
-  if (f1_state == 1) {
-    uCtrl.oled->display->drawBox(0, 57, 63, 7);
-  }
-  if (f2_state == 1) {
-    uCtrl.oled->display->drawBox(64, 57, 64, 7);
-  }
-  // horizontal line
-  uCtrl.oled->display->drawBox(0, 56, 128, 1);
-  // vertical separator
-  //uCtrl.oled->display->drawBox(64, 59, 1, 5);
-}
-
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
 // used by a lot of simple components
@@ -238,6 +219,183 @@ struct TopBar : PageComponent {
     }
 } topBarComponent;
 
+// pattern data for mute automation grid
+typedef struct
+{
+  uint16_t map_303 = 0xFFFF;
+  uint16_t map_808[TRACK_NUMBER_808] = {0xFFFF};
+} MUTE_PATTERN;
+
+// the control knob will handle midi cc for the last selected midi cc of selected track inside this component
+struct MutePatternControl : PageComponent {
+    
+    // layout:
+    // mute automation pattern style driven
+    // 4x16 grid style:
+    // last 4 grids are mute automation clip change/status
+    // 12 grids are for mute elements(on 808 max 12, for 303 1 big mute slot)
+    // f1 = << (...)
+    // f2 = >> (...)
+    // this will be extended in the future to allow more patterns to be used, 4 for now!
+    MUTE_PATTERN mute_pattern[4];
+    uint8_t current_pattern = 0;
+    uint8_t selected_pattern = 0;
+    uint8_t selected_mute_chn = 0;
+    
+    MutePatternControl()
+    {
+      // we want this component to be 4 lines max and 16 grids navigable object
+      line_size = 4;
+      grid_size = 2;
+      // enable more complex nav by updating selector pointer of page component
+      update_selector = true;
+    }
+    
+    void view() {
+
+      // update voice info for 808
+      //...
+
+      // mute pattern
+      for (uint8_t i=0; i < 4; i++) {
+        // mute grid
+        // 303
+        if (AcidSequencer.is303(_selected_track)) {
+          // print as not muted
+          uCtrl.oled->drawBox(y+(i*8), x, 6, 86, i+1 == selected_line ? true : false);
+          // if muted then just empty the box for ui feedback
+          if (!GET_BIT(mute_pattern[i].map_303, _selected_track)) {
+            uCtrl.oled->drawBox(y+(i*8)+1, x+1, 4, 84, i+1 == selected_line ? true : false);
+          }
+        // 808
+        } else {
+          uint8_t block_size = ceil(86.00 / VOICE_MAX_SIZE_808);
+          for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
+            uCtrl.oled->drawBox(y+(i*8), x+(j*block_size), 6, block_size-2, i+1 == selected_line && j == selected_mute_chn ? true : false);
+            if (!GET_BIT(mute_pattern[i].map_808[_selected_track-TRACK_NUMBER_303], j)) {
+              uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
+            }
+          }
+        }
+
+        // pattern selector status
+        uCtrl.oled->print(i+1, line+i, 22, i+1 == selected_line ? true : false);
+        if (current_pattern == i)
+          uCtrl.oled->print("<", line+i, 25);
+      }
+
+      // track info
+      if (AcidSequencer.is303(_selected_track)) {
+        //if (AcidSequencer.stepOn(_selected_track, AcidSequencer.getCurrentStep(_selected_track)) && _playing) {
+        //  uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, AcidSequencer.getCurrentStep(_selected_track))), line+4, 1);
+        //}
+      // 808
+      } else {
+        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+4, 1);
+      }
+      
+      setF1("<<");
+      setF2(">>");
+    }
+
+    void nav(uint8_t dir) {
+
+      switch (dir) {
+        case LEFT:
+            if (selected_mute_chn == 0) {
+              selected_mute_chn = AcidSequencer.is303(_selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
+            } else {
+              --selected_mute_chn;
+            }      
+            if (!AcidSequencer.is303(_selected_track)) {
+              AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
+            }
+          break;
+        case RIGHT:
+            if (selected_mute_chn == VOICE_MAX_SIZE_808-1) {
+              selected_mute_chn = 0;
+            } else {
+              ++selected_mute_chn;
+            }
+            if (!AcidSequencer.is303(_selected_track)) {
+              AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
+            }
+          break;
+      }
+      
+    }
+    
+    void change(int16_t data) {
+      // INCREMENT -1
+      // DECREMENT -2
+      // INCREMENT_SECONDARY -3
+      // DECREMENT_SECONDARY -4
+      uint8_t pattern = selected_line-1;
+      if (data == INCREMENT) {
+        if (AcidSequencer.is303(_selected_track)) {
+          SET_BIT(mute_pattern[pattern].map_303, _selected_track);
+        } else {
+          SET_BIT(mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], selected_mute_chn);
+        }
+        // selected is same as current? update tracks mute state
+        if (pattern == current_pattern)
+          changePattern(current_pattern);
+      } else if (data == DECREMENT) {
+        if (AcidSequencer.is303(_selected_track)) {
+          CLR_BIT(mute_pattern[pattern].map_303, _selected_track);
+        } else {
+          CLR_BIT(mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], selected_mute_chn);
+        }
+        if (pattern == current_pattern)
+          changePattern(current_pattern);
+      }
+    }
+    
+    void function1() {
+      current_pattern = --current_pattern % 4;
+      changePattern(current_pattern);
+    }
+
+    void function2() {
+      current_pattern = ++current_pattern % 4;
+      changePattern(current_pattern);
+    }
+
+    void changePattern(uint8_t pattern) {
+      // apply mute schema to 303s
+      for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
+        AcidSequencer.setMute(i, !GET_BIT(mute_pattern[pattern].map_303, i));
+      }
+
+      // apply mute schema to 808s
+      for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
+        for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
+          AcidSequencer.setMute(i+TRACK_NUMBER_303, j, !GET_BIT(mute_pattern[pattern].map_808[i], j));
+        }
+      }
+    }
+
+    void updateCurrentMuteState(uint8_t track, uint8_t voice = 0)
+    {
+      if (AcidSequencer.is303(track)) {
+        if (AcidSequencer.getMute(track)) {
+          CLR_BIT(mute_pattern[current_pattern].map_303, track);
+        } else {
+          SET_BIT(mute_pattern[current_pattern].map_303, track);
+        }
+      } else {
+        if (AcidSequencer.getMute(track, AcidSequencer.getTrackVoice(track))) {
+          CLR_BIT(mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+        } else {
+          SET_BIT(mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+        }
+        // update to selected voice too
+        selected_mute_chn = voice;
+      }
+    }
+    
+} mutePatternComponent;
+
 struct StepSequencer : PageComponent {
 
     // step sequencer theme editor
@@ -383,7 +541,7 @@ struct StepSequencer : PageComponent {
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("mute", AcidSequencer.getMute(_selected_track));
+          setF1("mute", AcidSequencer.is303(_selected_track) ? AcidSequencer.getMute(_selected_track) : AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
           // you can only paste if the selected selector is cleared otherwise it will shows copy
           setF2("clear");
       // Steps
@@ -600,8 +758,15 @@ struct StepSequencer : PageComponent {
     
     void function1() {
       if (selected_line == 1) {
-        // mute track(subtrack for 808)
-        AcidSequencer.setMute(_selected_track, !AcidSequencer.getMute(_selected_track));
+        // mute track(voice for 808)
+        if (AcidSequencer.is303(_selected_track)) {
+          AcidSequencer.setMute(_selected_track, !AcidSequencer.getMute(_selected_track));
+          // keep mutePatternComponent updated for current mute state
+          mutePatternComponent.updateCurrentMuteState(_selected_track);
+        } else {
+          AcidSequencer.setMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track), !AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
+          mutePatternComponent.updateCurrentMuteState(_selected_track, AcidSequencer.getTrackVoice(_selected_track));
+        }
       } else if (selected_line >= 2) {
         // 303 and 808 uses the same accent button f1
         AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
@@ -637,41 +802,6 @@ struct StepSequencer : PageComponent {
     }
     
 } stepSequencerComponent;
-
-struct MutePatternControl : PageComponent {
-
-    // layout:
-    // mute automation pattern style driven
-    // 4x16 grid style:
-    // last 4 grids are mute automation clip change/status
-    // 12 grids are for mute elements(on 808 max 12, for 303 1 big mute slot)
-
-    MutePatternControl()
-    {
-      // we want this component to be 4 lines max and 16 grids navigable object
-      line_size = 4;
-      grid_size = 16;
-      // enable more complex nav by updating selector pointer of page component
-      update_selector = true;
-    }
-    
-    void view() {
-      
-    }
-
-    void change(int16_t data) {
-      
-    }
-    
-    void function1() {
-      
-    }
-
-    void function2() {
-      
-    }
-
-} mutePatternComponent;
 
 struct TrackLength : PageComponent {
 
@@ -914,3 +1044,55 @@ struct TrackFill : PageComponent {
     }
     
 } fillComponent;
+
+// general functions
+
+// used by page module for themed function button display
+void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, uint8_t f2_state)
+{
+  // menu action
+  uCtrl.oled->print(f1, 8, 1+((14-strlen(f1))/2)); 
+  uCtrl.oled->print(f2, 8, 14+((14-strlen(f2))/2)); 
+  // state variation
+  if (f1_state == 1) {
+    uCtrl.oled->display->drawBox(0, 57, 63, 7);
+  }
+  if (f2_state == 1) {
+    uCtrl.oled->display->drawBox(64, 57, 64, 7);
+  }
+  // horizontal line
+  uCtrl.oled->display->drawBox(0, 56, 128, 1);
+  // vertical separator
+  //uCtrl.oled->display->drawBox(64, 59, 1, 5);
+}
+
+void playStop()
+{
+  if (_playing)
+    uClock.stop();
+  else
+    uClock.start();
+}
+
+void tempoSetup()
+{
+  uCtrl.page->selectComponent(topBarComponent);
+}
+
+void previousTrack()
+{
+  if (_selected_track == 0) {
+    _selected_track = AcidSequencer.getTrackNumber() - 1;
+  } else {
+    --_selected_track;
+  }
+}
+
+void nextTrack()
+{
+  if (_selected_track == AcidSequencer.getTrackNumber() - 1) {
+    _selected_track = 0;
+  } else {
+    ++_selected_track;
+  }
+}

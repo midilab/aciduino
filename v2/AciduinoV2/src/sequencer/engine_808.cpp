@@ -340,14 +340,14 @@ void Engine808::setTrackLength(uint8_t track, uint16_t length)
   ATOMIC(_sequencer[track].voice[_voice].step_length = length);  
 }
 
-void Engine808::setMute(uint8_t track, uint8_t mute)
+void Engine808::setMute(uint8_t track, uint8_t voice, uint8_t mute)
 {
-  ATOMIC(_sequencer[track].voice[_voice].mute = mute);  
+  ATOMIC(_sequencer[track].voice[voice].mute = mute);  
 }
 
-uint8_t Engine808::getMute(uint8_t track)
+uint8_t Engine808::getMute(uint8_t track, uint8_t voice)
 {
-  return _sequencer[track].voice[_voice].mute;
+  return _sequencer[track].voice[voice].mute;
 }
 
 void Engine808::setShiftPos(uint8_t track, int8_t shift)

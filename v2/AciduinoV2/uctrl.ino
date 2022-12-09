@@ -2,36 +2,6 @@
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8X8_PIN_NONE);
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
-void playStop()
-{
-  if (_playing)
-    uClock.stop();
-  else
-    uClock.start();
-}
-
-void tempoSetup()
-{
-  uCtrl.page->selectComponent(topBarComponent);
-}
-
-void previousTrack()
-{
-  if (_selected_track == 0) {
-    _selected_track = AcidSequencer.getTrackNumber() - 1;
-  } else {
-    --_selected_track;
-  }
-}
-
-void nextTrack()
-{
-  if (_selected_track == AcidSequencer.getTrackNumber() - 1) {
-    _selected_track = 0;
-  } else {
-    ++_selected_track;
-  }
-}
 
 void uCtrlSetup() {
   // uCtrl initial setup

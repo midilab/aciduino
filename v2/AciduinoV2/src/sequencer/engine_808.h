@@ -125,8 +125,8 @@ class Engine808 : public Engine
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
-      void setMute(uint8_t track, uint8_t mute);
-      uint8_t getMute(uint8_t track);
+      void setMute(uint8_t track, uint8_t voice, uint8_t mute);
+      uint8_t getMute(uint8_t track, uint8_t voice);
       void clearStepData(uint8_t track, uint8_t voice);
       void clearTrack(uint8_t track, uint8_t mode = 1);
       void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);

@@ -88,8 +88,6 @@ class AcidSequencerClass
       uint8_t getTrackMaxLength(uint8_t track);
       uint8_t getTrackLength(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
-      void setMute(uint8_t track, uint8_t mute);
-      uint8_t getMute(uint8_t track);
       void clearTrack(uint8_t track);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1 = 0, uint8_t param_2 = 0, uint8_t param_3 = 0, uint8_t param_4 = 0, uint8_t param_5 = 0, uint8_t param_6 = 0);
       bool is303(uint8_t track);
@@ -103,6 +101,8 @@ class AcidSequencerClass
       void setTie(uint8_t track, uint8_t step, bool state);
       bool slideOn(uint8_t track, uint8_t step);
       bool tieOn(uint8_t track, uint8_t step);
+      void setMute(uint8_t track, uint8_t mute);
+      uint8_t getMute(uint8_t track);
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
@@ -117,6 +117,8 @@ class AcidSequencerClass
       uint8_t getTrackVoice(uint8_t track);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
+      void setMute(uint8_t track, uint8_t voice, uint8_t mute);
+      uint8_t getMute(uint8_t track, uint8_t voice);
       const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
 
       // main callback outputs... CV ouput for next release please!

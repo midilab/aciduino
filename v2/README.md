@@ -2,9 +2,9 @@
 
 Cheap Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
 
-The first interation of aciduino v2 is based on [Teensy LC](https://www.pjrc.com/store/teensylc.html) and its a lite version of what aciduino can do. 
+The first interation of aciduino v2 can run on ARM's [Teensy](https://www.pjrc.com/store/teensylc.html) and Mega 2560. 
 
-By using uCtrl library we can easily extend this second version of aciduino to other arduinos compatible boards, like AVRs ones.
+By using uCtrl library we can easily extend this second version of aciduino to other arduinos compatible boards.
 
 The second version of aciduino makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) library as submodule, so just remember to init submodules just after clone the repo.
 
@@ -19,6 +19,8 @@ phuture@acidlab:~$ git submodule update --init --recursive
 ![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2-avr_mega_bb.png)
 
 Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
 

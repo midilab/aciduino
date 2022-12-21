@@ -1,18 +1,20 @@
 uint8_t _bpm_blink_timer = 1;
 
+#if defined(USE_BPM_LED)
 void handle_bpm_led(uint32_t tick)
 {
   // BPM led indicator
   if ( !(tick % (96)) || (tick == 1) ) {  // first compass step will flash longer
     _bpm_blink_timer = 8;
-    uCtrl.dout->write(1, HIGH, 1);
+    uCtrl.dout->write(BPM_LED, HIGH, 1);
   } else if ( !(tick % (24)) ) {   // each quarter led on
-    uCtrl.dout->write(1, HIGH, 1);
+    uCtrl.dout->write(BPM_LED, HIGH, 1);
   } else if ( !(tick % _bpm_blink_timer) ) { // get led off
-    uCtrl.dout->write(1, LOW, 1);
+    uCtrl.dout->write(BPM_LED, LOW, 1);
     _bpm_blink_timer = 1;
   }
 }
+#endif
 
 void uClockSetup()
 {
@@ -48,7 +50,7 @@ void ClockOut96PPQN(uint32_t tick)
   sendMidiClock();
   // sequencer tick
   AcidSequencer.on96PPQN(tick);
-#if defined(USE_LITE_BOARD)
+#if defined(USE_BPM_LED)
   // led clock monitor
   handle_bpm_led(tick);
 #endif
@@ -68,8 +70,8 @@ void onClockStop()
   // clear all tracks stack note
   AcidSequencer.clearStackNote();
   _playing = false;
-#if defined(USE_LITE_BOARD)
+#if defined(USE_BPM_LED)
   // force to turn bpm led off
-  uCtrl.dout->write(1, LOW);
+  uCtrl.dout->write(BPM_LED, LOW);
 #endif
 }

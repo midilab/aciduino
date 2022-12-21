@@ -73,7 +73,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
 
 void step_sequencer_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {  
-#if defined(USE_UONE_BOARD)
+#if defined(USE_PUSH_24) || defined(USE_PUSH_32) || defined(USE_TOUCH_32)
   // step array buttons handling
   if (value == LOW) return;
   

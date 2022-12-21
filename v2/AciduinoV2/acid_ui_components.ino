@@ -3,11 +3,34 @@
 // all UI components are programmed as PageComponent to be reused on different pages
 //
 
+// generative engine ui data
+typedef struct
+{
+  uint8_t generative_fill = 80;
+  uint8_t accent_probability = 50;
+  uint8_t slide_probability = 30;
+  uint8_t tie_probability = 100;
+  uint8_t lower_octave = 2;
+  uint8_t range_octave = 3;
+  uint8_t number_of_tones = 5;
+} GENERATIVE_303_DATA; 
+
+typedef struct
+{
+  uint8_t generative_fill = 80;
+  uint8_t accent_probability = 50;
+  uint8_t roll_probability = 0;
+} GENERATIVE_808_DATA; 
+
+GENERATIVE_303_DATA generative_303[TRACK_NUMBER_303];
+GENERATIVE_808_DATA generative_808[TRACK_NUMBER_808];
+
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
 // used by a lot of simple components
-void genericOptionView(String title, String value, uint8_t line, uint8_t col, bool selected, bool large = false)
+void genericOptionView(const char * title_char, String value, uint8_t line, uint8_t col, bool selected, bool large = false)
 {
+  String title(title_char);
   const uint8_t view_size = 12;
   uint8_t x=(col-1)*5, y=(line-1)*8;
   uint8_t value_col = large ? (view_size*2)-value.length()+1 : view_size-value.length();
@@ -75,7 +98,7 @@ struct MidiCCControl : PageComponent {
             }
             break;
           }
-          genericOptionView(control_map_303[i].control_name, control_map_303[i].control_data[data_idx], line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+          genericOptionView(control_map_303[i].control_name, String(control_map_303[i].control_data[data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
         // process 808 controlelrs?
         } else {
           if (i >= ctrl_size_808) {
@@ -86,7 +109,7 @@ struct MidiCCControl : PageComponent {
             }
             break;
           }
-          genericOptionView(control_map_808[i].control_name, control_map_808[i].control_data[data_idx], line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+          genericOptionView(control_map_808[i].control_name, String(control_map_808[i].control_data[data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
         }
         ++ctrl_counter;
       }
@@ -244,7 +267,7 @@ struct MutePatternControl : PageComponent {
     
     MutePatternControl()
     {
-      // we want this component to be 4 lines max and 16 grids navigable object
+      // we want this component to be 4 lines max and 2 grids navigable object
       line_size = 4;
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
@@ -252,10 +275,7 @@ struct MutePatternControl : PageComponent {
     }
     
     void view() {
-
-      // update voice info for 808
-      //...
-
+      
       // mute pattern
       for (uint8_t i=0; i < 4; i++) {
         // mute grid
@@ -454,15 +474,15 @@ struct StepSequencer : PageComponent {
       // force it again in case track length change
       line_size = full_size_view ? ceil((float)step_size/16) + 1 : 2;
 
-#if defined(USE_UONE_BOARD)
+#if defined(USE_LED_8) || defined(USE_LED_16) || defined(USE_LED_24)
       // locator leds
       uCtrl.dout->writeAll(LOW);
       if (locator_current !=  selected_locator || !selected) {
-        uCtrl.dout->write(locator_current+1, HIGH); 
+        uCtrl.dout->write(locator_current+SELECTOR_LED_1, HIGH); 
       }
       // selected locator and selected componet?
       if ((selected_line == 1 || selected_line == 2) && selected) {
-        uCtrl.dout->write(selected_locator+1, uCtrl.dout->blink() ? LOW : HIGH);
+        uCtrl.dout->write(selected_locator+SELECTOR_LED_1, uCtrl.dout->blink() ? LOW : HIGH);
       }
 #endif
       
@@ -490,8 +510,8 @@ struct StepSequencer : PageComponent {
         // step on/off?
         if (step_on) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_ON);
-#if defined(USE_UONE_BOARD)
-          uCtrl.dout->write(idx+9, HIGH);
+#if defined(USE_LED_16) || defined(USE_LED_24)
+          uCtrl.dout->write(idx+STEP_LED_1, HIGH);
 #endif
         } else {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_OFF);
@@ -505,16 +525,16 @@ struct StepSequencer : PageComponent {
         // step current?
         if (curr_step == i && _playing) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED);
-#if defined(USE_UONE_BOARD)
-          uCtrl.dout->write(idx+9, step_on ? LOW : HIGH);
+#if defined(USE_LED_16) || defined(USE_LED_24)
+          uCtrl.dout->write(idx+STEP_LED_1, step_on ? LOW : HIGH);
 #endif
         }
     
         // step selected?
         if (selected_step == i && selected && selected_line >= 2) {
            uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED, true);
-#if defined(USE_UONE_BOARD)
-           uCtrl.dout->write(idx+9, uCtrl.dout->blink() ? LOW : HIGH);
+#if defined(USE_LED_16) || defined(USE_LED_24)
+           uCtrl.dout->write(idx+STEP_LED_1, uCtrl.dout->blink() ? LOW : HIGH);
 #endif
         }
     
@@ -806,7 +826,7 @@ struct StepSequencer : PageComponent {
 struct TrackLength : PageComponent {
 
     void view() {
-      genericOptionView("lenght", AcidSequencer.getTrackLength(_selected_track), line, col, selected);
+      genericOptionView("lenght", String(AcidSequencer.getTrackLength(_selected_track)), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -820,7 +840,7 @@ struct TrackLength : PageComponent {
 struct SequenceShift : PageComponent {
   
     void view() {
-      genericOptionView("shift", AcidSequencer.getShiftPos(_selected_track), line, col, selected);
+      genericOptionView("shift", String(AcidSequencer.getShiftPos(_selected_track)), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -834,7 +854,7 @@ struct SequenceShift : PageComponent {
 struct Transpose : PageComponent {
   
     void view() {
-      genericOptionView("transpose", AcidSequencer.getTranspose(_selected_track), line, col, selected);
+      genericOptionView("transpose", String(AcidSequencer.getTranspose(_selected_track)), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -872,7 +892,7 @@ struct RollType : PageComponent {
 struct VoiceSelect : PageComponent {
   
     void view() {
-      genericOptionView("voice", AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line, col, selected);
+      genericOptionView("voice", String(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track))), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -887,7 +907,7 @@ struct VoiceSelect : PageComponent {
 struct VoiceConfig : PageComponent {
   
     void view() {
-      genericOptionView("note", AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line, col, selected);
+      genericOptionView("note", String(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track))), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -904,7 +924,7 @@ struct VoiceConfig : PageComponent {
 struct TrackTune : PageComponent {
   
     void view() {
-      genericOptionView("tune", AcidSequencer.getTune(_selected_track) == 0 ? "off" : AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1), line, col, selected);
+      genericOptionView("tune", AcidSequencer.getTune(_selected_track) == 0 ? String("off") : String(AcidSequencer.getNoteString(AcidSequencer.getTune(_selected_track)-1)), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -920,7 +940,7 @@ struct TrackTune : PageComponent {
 struct TonesNumber : PageComponent {
 
     void view() {
-      genericOptionView("tones", generative_303[_selected_track].number_of_tones, line, col, selected);
+      genericOptionView("tones", String(generative_303[_selected_track].number_of_tones), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -933,7 +953,7 @@ struct TonesNumber : PageComponent {
 struct LowOctave : PageComponent {
   
     void view() {
-      genericOptionView("octave", generative_303[_selected_track].lower_octave, line, col, selected);
+      genericOptionView("octave", String(generative_303[_selected_track].lower_octave), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -946,7 +966,7 @@ struct LowOctave : PageComponent {
 struct RangeOctave : PageComponent {
   
     void view() {
-      genericOptionView("octaves", generative_303[_selected_track].range_octave, line, col, selected);
+      genericOptionView("octaves", String(generative_303[_selected_track].range_octave), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -960,7 +980,7 @@ struct AccentAmount : PageComponent {
   
     void view() {
       uint8_t accent_probability = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].accent_probability : generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
-      genericOptionView("accent", accent_probability, line, col, selected);
+      genericOptionView("accent", String(accent_probability), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -974,7 +994,7 @@ struct AccentAmount : PageComponent {
 struct SlideAmount : PageComponent {
   
     void view() {
-      genericOptionView("slide", generative_303[_selected_track].slide_probability, line, col, selected);
+      genericOptionView("slide", String(generative_303[_selected_track].slide_probability), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -987,7 +1007,7 @@ struct SlideAmount : PageComponent {
 struct TieAmount : PageComponent {
   
     void view() {
-      genericOptionView("tie", generative_303[_selected_track].tie_probability, line, col, selected);
+      genericOptionView("tie", String(generative_303[_selected_track].tie_probability), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -1000,7 +1020,7 @@ struct TieAmount : PageComponent {
 struct RollAmount : PageComponent {
   
     void view() {
-      genericOptionView("roll", generative_808[_selected_track-TRACK_NUMBER_303].roll_probability, line, col, selected);
+      genericOptionView("roll", String(generative_808[_selected_track-TRACK_NUMBER_303].roll_probability), line, col, selected);
     }
 
     void change(int16_t data) {
@@ -1018,7 +1038,7 @@ struct TrackScale : PageComponent {
     }
     
     void view() {
-      genericOptionView("scale", AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId()), line, col, selected, true);
+      genericOptionView("scale", String(AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId())), line, col, selected, true);
     }
 
     void change(int16_t data) {
@@ -1037,7 +1057,7 @@ struct TrackFill : PageComponent {
     
     void view() {
       uint8_t generative_fill = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].generative_fill : generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
-      genericOptionView("fill", generative_fill, line, col, selected, true);
+      genericOptionView("fill", String(generative_fill), line, col, selected, true);
     }
 
     void change(int16_t data) {

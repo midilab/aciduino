@@ -1,3 +1,6 @@
+#if defined(TEENSYDUINO)
+
+// Teensy only platform
 // To give your project a unique name, this code must be
 // placed into a .c file (its own tab).  It can not be in
 // a .cpp file or your main sketch (the .ino file).
@@ -17,3 +20,5 @@ struct usb_string_descriptor_struct usb_string_product_name = {
         3,
         MIDI_NAME
 };
+
+#endif

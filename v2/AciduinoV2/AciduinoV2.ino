@@ -1,3 +1,31 @@
+/*!
+ *  @file       AciduinoV2.ino
+ *  Project     Aciduino V2
+ *  @brief      Roland 303 and 808 step sequencer clone
+ *  @version    2.0.0
+ *  @author     Romulo Silva
+ *  @date       11/01/22
+ *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE. 
+ */
+
 /* 
  
   Aciduino v2
@@ -25,7 +53,6 @@
 
   shift+ page button 1 tempo setup
 
-  compatible with uOne
 
 */
 //
@@ -49,87 +76,6 @@
 //#define USE_UART_MIDI
 // want a usb midi port?
 #define USE_USB_MIDI
-
-// globals
-bool _playing = false;
-uint8_t _selected_track = 0;
-
-// generative engine ui data
-typedef struct
-{
-  uint8_t generative_fill = 80;
-  uint8_t accent_probability = 50;
-  uint8_t slide_probability = 30;
-  uint8_t tie_probability = 100;
-  uint8_t lower_octave = 2;
-  uint8_t range_octave = 3;
-  uint8_t number_of_tones = 5;
-} GENERATIVE_303_DATA; 
-
-typedef struct
-{
-  uint8_t generative_fill = 80;
-  uint8_t accent_probability = 50;
-  uint8_t roll_probability = 0;
-} GENERATIVE_808_DATA; 
-
-GENERATIVE_303_DATA generative_303[TRACK_NUMBER_303];
-GENERATIVE_808_DATA generative_808[TRACK_NUMBER_808];
-
-#if defined(USE_LITE_BOARD)
-
-typedef enum {
-  PREVIOUS_BUTTON = 1,
-  NEXT_BUTTON,
-  UP_BUTTON,
-  DOWN_BUTTON,
-  PAGE_BUTTON_1,
-  PAGE_BUTTON_2,
-  GENERIC_BUTTON_1,
-  GENERIC_BUTTON_2,
-  SHIFT_BUTTON,   
-} BUTTONS_INTERFACE_CONTROLS;
-
-#elif defined(USE_UONE_BOARD)
-
-typedef enum {
-  ENCODER_DEC = 1,
-  ENCODER_INC,
-  SHIFT_BUTTON, 
-  PAGE_BUTTON_1,
-  PAGE_BUTTON_2,
-  GENERIC_BUTTON_1,
-  GENERIC_BUTTON_2,  
-  NEXT_BUTTON,
-  UP_BUTTON,
-  DOWN_BUTTON,
-  PREVIOUS_BUTTON,
-  SELECTOR_BUTTON_1,
-  SELECTOR_BUTTON_2,
-  SELECTOR_BUTTON_3,
-  SELECTOR_BUTTON_4,
-  SELECTOR_BUTTON_5,
-  SELECTOR_BUTTON_6,
-  SELECTOR_BUTTON_7,
-  SELECTOR_BUTTON_8,
-  STEP_BUTTON_1,
-  STEP_BUTTON_2,
-  STEP_BUTTON_3,
-  STEP_BUTTON_4,  
-  STEP_BUTTON_5,
-  STEP_BUTTON_6,
-  STEP_BUTTON_7,
-  STEP_BUTTON_8,  
-  STEP_BUTTON_9,
-  STEP_BUTTON_10,
-  STEP_BUTTON_11,
-  STEP_BUTTON_12,  
-  STEP_BUTTON_13,
-  STEP_BUTTON_14,
-  STEP_BUTTON_15,
-  STEP_BUTTON_16,  
-} BUTTONS_INTERFACE_CONTROLS;
-#endif
 
 void setup() {
   // setup uctrl hardware/interface

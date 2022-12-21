@@ -1,6 +1,13 @@
 #ifdef USE_UART_MIDI
 #include <MIDI.h>
 // UART MIDI port 1
+struct MidiDefaultSettings : public midi::DefaultSettings
+{
+    static const unsigned SysExMaxSize = 16; // Accept SysEx messages up to 1024 bytes long.
+    static const bool UseRunningStatus = false; // My devices seem to be ok with it.
+};
+
+// initing midi devices
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
 #endif
 

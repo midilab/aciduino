@@ -24,6 +24,8 @@ TB-303 and TR-808 sequencer with Oled. The modular design allows you to extend i
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
 
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2-avr_mega_bb.png)
+
 Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
 
 A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.

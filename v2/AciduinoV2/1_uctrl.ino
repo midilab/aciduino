@@ -1,3 +1,31 @@
+//
+// Display device
+//
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+//
+// Midi device
+//
+struct MidiDefaultSettings : public midi::DefaultSettings
+{
+    static const unsigned SysExMaxSize = 16; // Accept SysEx messages up to 1024 bytes long.
+    static const bool UseRunningStatus = false; // My devices seem to be ok with it.
+};
+#if defined(TEENSYDUINO)
+  #if defined(USB_MIDI)
+    #define MIDI1         usbMIDI
+    MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+  #else
+    MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
+  #endif
+#elif defined(ARDUINO_ARCH_AVR)  
+  // initing midi devices
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
+  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
+  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
+#endif
 
 typedef enum {
   
@@ -109,7 +137,7 @@ void uCtrlSetup() {
   // Please check you oled model to correctly init him
   //
   uCtrl.initOled(&u8g2);
-#if defined(USE_PROTOBOARD) || defined(ARDUINO_ARCH_AVR)
+#if defined(USE_PROTOBOARD)
   uCtrl.oled->flipDisplay(1); 
 #endif
   uCtrl.oled->print("booting", 4, 1);
@@ -174,7 +202,7 @@ void uCtrlSetup() {
   uCtrl.din->encoder(ENCODER_DEC, ENCODER_INC);
 #endif
 
-#if defined(USE_PROTOBOARD)
+#if defined(USE_PROTOBOARD) && defined(TEENSYDUINO)
   // little hack to make the shift protoboard work, ground our gnd button pin 2 to avoid floating noises around...
   pinMode(2, OUTPUT);
   digitalWrite(2, LOW);
@@ -218,9 +246,11 @@ void uCtrlSetup() {
   #if defined(USE_PROTOBOARD)
     // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
     uCtrl.ain->invertRead(true);
-    // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
-    pinMode(22, OUTPUT);
-    digitalWrite(22, LOW);
+    #if defined(TEENSYDUINO)
+      // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
+      pinMode(22, OUTPUT);
+      digitalWrite(22, LOW);
+    #endif
   #endif
 #endif
 
@@ -230,11 +260,42 @@ void uCtrlSetup() {
 #if defined(USE_TOUCH_32)
   uCtrl.oled->print(">init ctouch...", 8, 1);
   uCtrl.initCapTouch(TOUCH_CTRL_PIN1, TOUCH_CTRL_PIN2, TOUCH_CTRL_PIN3, TOUCH_CTRL_PIN4);
-  //uCtrl.touch->setThreshold(45);
-  uCtrl.touch->setThreshold(41);
-  //uCtrl.touch->setThreshold(38);
+  //uCtrl.touch->setThreshold(41);
+  uCtrl.touch->setThreshold(90);
   uCtrl.touch->plug(TOUCH_MUX_COMM1);
   uCtrl.touch->plug(TOUCH_MUX_COMM2);
+#endif
+
+  //
+  // MIDI Module
+  //
+#if defined(USE_MIDI)
+  uCtrl.oled->print(">init midi...", 8, 1);  
+  uCtrl.initMidi();
+  // initing midi port 1
+  #if defined(MIDI1)
+  uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
+  #endif
+  // initing midi port 2
+  #if defined(MIDI2)
+  uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
+  #endif
+  // 2
+  #if defined(MIDI3)
+  uCtrl.midi->plug(&MIDI3); // MIDI PORT 3: UART MIDI 1
+  #endif
+  // 3
+  #if defined(MIDI4)
+  uCtrl.midi->plug(&MIDI4); // MIDI PORT 4: UART MIDI 2
+  #endif
+  uCtrl.midi->setMidiInputCallback(midiInputHandler);
+  //uCtrl.midi->setMidiOutputCallback(midiOutputHandler);
+
+  // uCtrl realtime deals
+  // process midi at 250 microseconds speed
+  uCtrl.setOn250usCallback(midiHandleSync);
+  // process sequencer at 1 milisecond speed
+  uCtrl.setOn1msCallback(midiHandle);
 #endif
 
   //

@@ -1,130 +1,92 @@
-#ifdef USE_UART_MIDI
-#include <MIDI.h>
-// UART MIDI port 1
-struct MidiDefaultSettings : public midi::DefaultSettings
-{
-    static const unsigned SysExMaxSize = 16; // Accept SysEx messages up to 1024 bytes long.
-    static const bool UseRunningStatus = false; // My devices seem to be ok with it.
-};
 
-// initing midi devices
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
-#endif
+// midi handler
+uctrl::protocol::midi::MIDI_MESSAGE msg;
+uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
 
-// External clock handlers
-void onExternalClock()
-{
-  if (uClock.getMode() == uClock.EXTERNAL_CLOCK)
-    uClock.clockMe();
-}
+uint8_t port = 1;
 
-void onExternalStart()
+// All midi interface registred thru uCtrl get incomming data thru callback
+void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {
-  if (uClock.getMode() == uClock.EXTERNAL_CLOCK)
-    uClock.start();
-}
-
-void onExternalStop()
-{
-  if (uClock.getMode() == uClock.EXTERNAL_CLOCK)
-    uClock.stop();
-}
-
-void midiSetup()
-{
-#ifdef USE_USB_MIDI
-  usbMIDI.begin();
-  usbMIDI.setHandleClock(onExternalClock);
-  usbMIDI.setHandleStart(onExternalStart);
-  usbMIDI.setHandleStop(onExternalStop);
-#endif
-#ifdef USE_UART_MIDI
-  MIDI1.begin();
-  MIDI1.setHandleClock(onExternalClock);
-  MIDI1.setHandleStart(onExternalStart);
-  MIDI1.setHandleStop(onExternalStop);
-#endif
+  // control goes thru selected track(no matter what channel)
+  if ( uClock.getMode() == uClock.EXTERNAL_CLOCK ) {
+    // external tempo control
+    switch (msg->type) {
+        case uctrl::protocol::midi::Clock:
+          uClock.clockMe();
+          return;
+ 
+        case uctrl::protocol::midi::Start:
+          uClock.start();
+          return;
+  
+        case uctrl::protocol::midi::Stop:
+          uClock.stop();
+          return;
+    }  
+  }
 }
 
 // used by AcidSequencer object as callback to spill midi messages out
-void midiOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
+void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel)
 {
-#ifdef USE_USB_MIDI
-  usbMIDI.send(msg_type, byte1, byte2, channel+1, 0);
-#endif
-#ifdef USE_UART_MIDI
-  MIDI1.send(msg_type, byte1, byte2, channel+1);
-#endif
+  msg.type = msg_type == NOTE_ON ? uctrl::protocol::midi::NoteOn : uctrl::protocol::midi::NoteOff;
+  msg.data1 = byte1;
+  msg.data2 = byte2;
+  msg.channel = channel;
+  uCtrl.midi->write(&msg, port, 1);
 }
 
 // 3 realtime messages used by uClock object inside interruption
 void sendMidiClock() {
-#ifdef USE_USB_MIDI
-  usbMIDI.sendRealTime(usbMIDI.Clock);
-#endif
-#ifdef USE_UART_MIDI
-  MIDI1.sendRealTime(midi::Clock);
-#endif
+  msg_interrupt.type = uctrl::protocol::midi::Clock;
+  uCtrl.midi->writeAllPorts(&msg_interrupt, 1);
 }
 
 void sendMidiStart() {
-#ifdef USE_USB_MIDI
-  usbMIDI.sendRealTime(usbMIDI.Start);
-#endif
-#ifdef USE_UART_MIDI
-  MIDI1.sendRealTime(midi::Start);
-#endif
+  msg.type = uctrl::protocol::midi::Start;
+  uCtrl.midi->writeAllPorts(&msg, 0);  
 }
 
 void sendMidiStop() {
-#ifdef USE_USB_MIDI
-  usbMIDI.sendRealTime(usbMIDI.Stop);
-#endif
-#ifdef USE_UART_MIDI
-  MIDI1.sendRealTime(midi::Stop);
-#endif
+  msg.type = uctrl::protocol::midi::Stop;
+  uCtrl.midi->writeAllPorts(&msg, 0);
 }
 
 // called outside interruption by user request on PageComponent
 // ATOMIC all of them!
 void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
-#ifdef USE_USB_MIDI
-  ATOMIC(usbMIDI.sendControlChange(cc, value, channel+1))
-#endif
-#ifdef USE_UART_MIDI
-  ATOMIC(MIDI1.sendControlChange(cc, value, channel+1))
-#endif
+  msg.type = uctrl::protocol::midi::ControlChange;
+  msg.data1 = cc;
+  msg.data2 = value;
+  msg.channel = channel;
+  uCtrl.midi->write(&msg, port, 0);
 }
 
 void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
-#ifdef USE_USB_MIDI
+  msg.data1 = note;
+  msg.data2 = velocity;
+  msg.channel = channel;
+  
   if (velocity == 0) {
-    ATOMIC(usbMIDI.sendNoteOff(note, 0, channel+1))
+    msg.type = uctrl::protocol::midi::NoteOff;
   } else {
-    ATOMIC(usbMIDI.sendNoteOn(note, velocity, channel+1))
+    msg.type = uctrl::protocol::midi::NoteOn;
   }
-#endif
-#ifdef USE_UART_MIDI
-  if (velocity == 0) {
-    ATOMIC(MIDI1.sendNoteOff(note, 0, channel+1))
-  } else {
-    ATOMIC(MIDI1.sendNoteOn(note, velocity, channel+1))
+
+   uCtrl.midi->write(&msg, port, 0);
+}
+
+void midiHandle() {
+  while (uCtrl.midi->read(2)) {
   }
-#endif
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
-void midiInputHandle() {
-#ifdef USE_USB_MIDI
-  while (usbMIDI.read()) {
+void midiHandleSync() {
+  while (uCtrl.midi->read(1)) {
   }
-#endif
-#ifdef USE_UART_MIDI
-  while (MIDI1.read()) {
-  }
-#endif
 }
-
 /*
 void sendPreviewNote(uint8_t step)
 {

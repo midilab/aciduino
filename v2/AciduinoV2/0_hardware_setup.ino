@@ -1,7 +1,3 @@
-// Display device
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8X8_PIN_NONE);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-
 //
 // Pinout configuration
 //
@@ -22,8 +18,8 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 #if defined (USE_CUSTOM_PINOUT)
 
   // going to use changer encoder?
-  //#define NAV_ENCODER_DEC_PIN       24
-  //#define NAV_ENCODER_INC_PIN       25
+  #define NAV_ENCODER_DEC_PIN       24
+  #define NAV_ENCODER_INC_PIN       25
   
   #define NAV_SHIFT_PIN             4
   
@@ -146,7 +142,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
   // on 3.2+ there are no digital port only analog :(
   #define NAV_ENCODER_DEC_PIN       A10
   #define NAV_ENCODER_INC_PIN       A11
-  // swap per A6, A7? make nav encoder dec=20(A6) inc=21(A7)
+  // swap per A6, A7? make nav encoder dec=20(A6) inc=21(A7) on rev 0.2 uone
 
   #define NAV_SHIFT_PIN             23
 

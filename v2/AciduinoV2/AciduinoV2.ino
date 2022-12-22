@@ -72,10 +72,6 @@
 
 // want a acid midi controller?
 #define MIDI_CONTROLER
-// want a uart serial midi port?
-//#define USE_UART_MIDI
-// want a usb midi port?
-#define USE_USB_MIDI
 
 void setup() {
   // setup uctrl hardware/interface
@@ -83,7 +79,7 @@ void setup() {
   // clock system
   uClockSetup();
   // the acid sequencer
-  AcidSequencer.setMidiOutputCallback(midiOutHandler);
+  AcidSequencer.setMidiOutputCallback(midiSequencerOutHandler);
   //AcidSequencer.setCVOutputCallback();
 }
 

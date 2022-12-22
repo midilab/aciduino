@@ -1,4 +1,3 @@
-
 #ifndef __U_CTRL_MODULES_H__
 #define __U_CTRL_MODULES_H__
 
@@ -39,6 +38,14 @@
 #endif
 
 // DO NOT EDIT ANYTHING BELLOW!
+
+//
+// MIDI
+//
+#define USE_MIDI
+#if defined(TEENSYDUINO) && defined(USB_MIDI)
+  #define USE_USB_MIDI
+#endif
 
 //
 // setup Oled
@@ -83,6 +90,9 @@
 //
 #if defined(USE_CHANGER_POT) || defined (USE_POT_8) || defined (USE_POT_16)
   #define USE_AIN
+  #if defined (USE_POT_8) || defined (USE_POT_16)
+    #define USE_AIN_4051
+  #endif
 #endif
 
 //
@@ -92,12 +102,6 @@
   #define USE_CAP_TOUCH
 #endif
 
-//
-// setup Midi
-//
-//#define USE_MIDI
-
-//
 // setup Cv/Gate
 //
 //#define USE_CV_GATE

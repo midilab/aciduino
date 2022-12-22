@@ -190,7 +190,7 @@ struct TopBar : PageComponent {
       // track number and type
       //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
       uCtrl.oled->print("T", 1, 1); 
-      uCtrl.oled->print(_selected_track+1, 1, 2); 
+      uCtrl.oled->print(String(_selected_track+1), 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4); 
 
@@ -299,7 +299,7 @@ struct MutePatternControl : PageComponent {
         }
 
         // pattern selector status
-        uCtrl.oled->print(i+1, line+i, 22, i+1 == selected_line ? true : false);
+        uCtrl.oled->print(String(i+1), line+i, 22, i+1 == selected_line ? true : false);
         if (current_pattern == i)
           uCtrl.oled->print("<", line+i, 25);
       }

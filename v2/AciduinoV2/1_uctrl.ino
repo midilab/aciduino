@@ -137,7 +137,7 @@ void uCtrlSetup() {
   // Please check you oled model to correctly init him
   //
   uCtrl.initOled(&u8g2);
-#if defined(USE_PROTOBOARD)
+#if defined(USE_PROTOBOARD) || defined(USE_MEGA_SHIELD)
   uCtrl.oled->flipDisplay(1); 
 #endif
   uCtrl.oled->print("booting", 4, 1);
@@ -273,11 +273,9 @@ void uCtrlSetup() {
   uCtrl.oled->print(">init midi...", 8, 1);  
   uCtrl.initMidi();
   // initing midi port 1
-  #if defined(MIDI1)
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
-  #endif
   // initing midi port 2
-  #if defined(MIDI2)
+  #if defined(USB_MIDI) || defined(ARDUINO_ARCH_AVR)
   uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
   #endif
   // 2

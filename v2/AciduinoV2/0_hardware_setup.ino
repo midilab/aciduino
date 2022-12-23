@@ -136,12 +136,12 @@
 
   // going to use changer encoder?
   // teensy lc
-  //#define NAV_ENCODER_DEC_PIN       24
-  //#define NAV_ENCODER_INC_PIN       25
+  #define NAV_ENCODER_DEC_PIN       24
+  #define NAV_ENCODER_INC_PIN       25
   // teensy 3.2+
-  // on 3.2+ there are no digital port only analog :(
-  #define NAV_ENCODER_DEC_PIN       A10
-  #define NAV_ENCODER_INC_PIN       A11
+  // on 3.2+ there are no digital port only analog at 24 and 25 pins :(
+  //#define NAV_ENCODER_DEC_PIN       A10
+  //#define NAV_ENCODER_INC_PIN       A11
   // swap per A6, A7? make nav encoder dec=20(A6) inc=21(A7) on rev 0.2 uone
 
   #define NAV_SHIFT_PIN             23

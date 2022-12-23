@@ -59,6 +59,8 @@ struct MidiCCControl : PageComponent {
     uint8_t selected_map = 0;
     uint8_t ctrl_selected = 0;
 
+    uint8_t last_selected_track = 0;
+
     // layout:
     // max 16 controls per track
     // (4 x 2) x 2
@@ -85,6 +87,7 @@ struct MidiCCControl : PageComponent {
       uint8_t ctrl_counter = 0;
       ctrl_selected = selected_line-1 + (selected_grid == 2 ? 4 : 0);
       ctrl_selected += selected_map > 0 ? 8 : 0;
+      last_selected_track = _selected_track;
 
       // print controls
       for (uint8_t i=ctrl_map_init; i < ctrl_map_init+8; i++) {
@@ -119,20 +122,7 @@ struct MidiCCControl : PageComponent {
     }
 
     void change(int16_t data) {
-      // incrementer 1, decrementer -1
-      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
-      // process 303 controlelrs?
-      if (AcidSequencer.is303(_selected_track)) {
-        data = parseData(data, 0, 127, control_map_303[ctrl_selected].control_data[data_idx]);
-        control_map_303[ctrl_selected].control_data[data_idx] = data;
-        // send data
-        sendMidiCC(control_map_303[ctrl_selected].control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
-      } else {
-        data = parseData(data, 0, 127, control_map_808[ctrl_selected].control_data[data_idx]);
-        control_map_808[ctrl_selected].control_data[data_idx] = data;
-        // send data
-        sendMidiCC(control_map_808[ctrl_selected].control_cc, data, AcidSequencer.getTrackChannel(_selected_track));
-      }
+      sendCCData(data, ctrl_selected, _selected_track);
     }
     
     void function1() {
@@ -143,6 +133,26 @@ struct MidiCCControl : PageComponent {
       selected_map = 1;
     }
 
+    void sendCCData(int16_t data, uint8_t ctrl, uint8_t track) {
+      uint8_t data_idx = AcidSequencer.is303(track) ? track : track - TRACK_NUMBER_303;
+      // process 303 controlelrs?
+      if (AcidSequencer.is303(track)) {
+        data = parseData(data, 0, 127, control_map_303[ctrl].control_data[data_idx]);
+        control_map_303[ctrl].control_data[data_idx] = data;
+        // send data
+        sendMidiCC(control_map_303[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track));
+      } else {
+        data = parseData(data, 0, 127, control_map_808[ctrl].control_data[data_idx]);
+        control_map_808[ctrl].control_data[data_idx] = data;
+        // send data
+        sendMidiCC(control_map_808[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track));
+      }
+    }
+
+    void sendLastCCData(int16_t data) {
+      sendCCData(data, ctrl_selected, last_selected_track);
+    }
+    
     void set303Control(const char * name, uint8_t cc, uint8_t initial_value = 0) {
       if (ctrl_size_303 >= 16)
         return;
@@ -368,6 +378,10 @@ struct MutePatternControl : PageComponent {
         }
         if (pattern == current_pattern)
           changePattern(current_pattern);
+      // secondary inc/dec or pot nav action
+      } else {
+        // redirect to the last used control on midi controller
+        midiControllerComponent.sendLastCCData(data);
       }
     }
     

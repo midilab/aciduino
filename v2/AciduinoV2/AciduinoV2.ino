@@ -76,7 +76,7 @@
 void setup() {
   // setup uctrl hardware/interface
   uCtrlSetup();
-  // clock system
+  // setup clock system
   uClockSetup();
   // the acid sequencer
   AcidSequencer.setMidiOutputCallback(midiSequencerOutHandler);
@@ -84,5 +84,6 @@ void setup() {
 }
 
 void loop() {
+  // let uCtrl do his job
   uCtrl.run();
 }

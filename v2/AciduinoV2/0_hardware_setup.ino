@@ -65,6 +65,33 @@
     
     // going to use changer pot?
     #define CHANGER_POT_PIN           A9
+
+  //
+  // ESP32 family
+  //
+  #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+
+    // the blue led
+    #define LED_BUILTIN               2
+
+    // going to use changer encoder?
+    //#define NAV_ENCODER_DEC_PIN       5
+    //#define NAV_ENCODER_INC_PIN       18
+    
+    #define NAV_SHIFT_PIN             12
+    
+    #define NAV_FUNCTION1_PIN         14
+    #define NAV_FUNCTION2_PIN         27
+    #define NAV_GENERAL1_PIN          33
+    #define NAV_GENERAL2_PIN          32
+    #define NAV_RIGHT_PIN             35
+    #define NAV_UP_PIN                34
+    #define NAV_DOWN_PIN              39
+    #define NAV_LEFT_PIN              36
+    
+    // going to use changer pot?
+    // GPIO 0 - ADC2_1
+    #define CHANGER_POT_PIN           0
   
   //
   // ARDUINO_ARCH_AVR Mega 2560 generic

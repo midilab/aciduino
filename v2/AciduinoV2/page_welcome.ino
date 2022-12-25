@@ -7,6 +7,11 @@ int freeRam() {
   char top;
   return &top - reinterpret_cast<char*>(sbrk(0));
 }
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+int freeRam () 
+{
+  return ESP.getFreeHeap(); 
+}
 #elif defined(ARDUINO_ARCH_AVR)
 int freeRam () 
 {

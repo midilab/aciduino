@@ -3,7 +3,7 @@
 uctrl::protocol::midi::MIDI_MESSAGE msg;
 uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
 
-uint8_t port = 1;
+uint8_t _port = 1;
 
 // All midi interface registred thru uCtrl get incomming data thru callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
@@ -28,13 +28,13 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
 }
 
 // used by AcidSequencer object as callback to spill midi messages out
-void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel)
+void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
 {
   msg.type = msg_type == NOTE_ON ? uctrl::protocol::midi::NoteOn : uctrl::protocol::midi::NoteOff;
   msg.data1 = byte1;
   msg.data2 = byte2;
   msg.channel = channel;
-  uCtrl.midi->write(&msg, port, 1);
+  uCtrl.midi->write(&msg, port+1, 1);
 }
 
 // 3 realtime messages used by uClock object inside interruption
@@ -60,7 +60,7 @@ void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
   msg.data1 = cc;
   msg.data2 = value;
   msg.channel = channel;
-  uCtrl.midi->write(&msg, port, 0);
+  uCtrl.midi->write(&msg, _port, 0);
 }
 
 void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
@@ -74,9 +74,10 @@ void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
     msg.type = uctrl::protocol::midi::NoteOn;
   }
 
-   uCtrl.midi->write(&msg, port, 0);
+   uCtrl.midi->write(&msg, _port, 0);
 }
 
+// a port to read midi notes 1ms
 void midiHandle() {
   while (uCtrl.midi->read(2)) {
   }

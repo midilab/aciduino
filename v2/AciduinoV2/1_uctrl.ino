@@ -19,6 +19,9 @@ struct MidiDefaultSettings : public midi::DefaultSettings
   #else
     MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
   #endif
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32) 
+  // initing midi devices
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
 #elif defined(ARDUINO_ARCH_AVR)  
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
@@ -148,6 +151,7 @@ void uCtrlSetup() {
   //
   uCtrl.oled->print(">init din...", 8, 1);  
 #if defined(USE_PUSH_8) || defined(USE_PUSH_24) || defined(USE_PUSH_32)
+  // going with shiftregister and SPI?
   uCtrl.initDin(&SPI, PUSH_LATCH_PIN);
 #else
   uCtrl.initDin();
@@ -275,7 +279,7 @@ void uCtrlSetup() {
   // initing midi port 1
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
   // initing midi port 2
-  #if defined(USB_MIDI) || defined(ARDUINO_ARCH_AVR)
+  #if defined(MIDI2)
   uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
   #endif
   // 2
@@ -293,7 +297,7 @@ void uCtrlSetup() {
   // process midi at 250 microseconds speed
   uCtrl.setOn250usCallback(midiHandleSync);
   // process sequencer at 1 milisecond speed
-  uCtrl.setOn1msCallback(midiHandle);
+  //uCtrl.setOn1msCallback(midiHandle);
 #endif
 
   //

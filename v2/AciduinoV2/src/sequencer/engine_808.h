@@ -129,11 +129,11 @@ class Engine808 : public Engine
       uint8_t getMute(uint8_t track, uint8_t voice);
       void clearStepData(uint8_t track, uint8_t voice);
       void clearTrack(uint8_t track, uint8_t mode = 1);
-      void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
-      uint8_t getTrackVoice(uint8_t track = 0);
+      void setTrackVoice(uint8_t track, uint8_t voice = 0);
+      uint8_t getTrackVoice(uint8_t track);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
-      const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
+      const char * getTrackVoiceName(uint8_t track, uint8_t voice = 0);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability);
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);

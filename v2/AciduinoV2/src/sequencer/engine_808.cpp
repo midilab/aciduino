@@ -360,7 +360,7 @@ int8_t Engine808::getShiftPos(uint8_t track)
   return _sequencer[track].voice[_voice].shift;
 }
 
-void Engine808::setTrackVoice(uint8_t track = 0, uint8_t voice = 0)
+void Engine808::setTrackVoice(uint8_t track, uint8_t voice)
 {
   _voice = voice;  
 }
@@ -380,7 +380,7 @@ void Engine808::setTrackVoiceConfig(uint8_t track, uint8_t note)
   ATOMIC(_sequencer[track].voice[_voice].note = note);
 }
 
-const char * Engine808::getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0)
+const char * Engine808::getTrackVoiceName(uint8_t track, uint8_t voice)
 {
   return (const char *)_sequencer[track].voice[voice].name;  
 }

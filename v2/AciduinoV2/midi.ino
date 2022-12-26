@@ -77,6 +77,7 @@ void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
    uCtrl.midi->write(&msg, _port, 0);
 }
 
+// a port to read midi notes 1ms
 void midiHandle() {
   while (uCtrl.midi->read(2)) {
   }

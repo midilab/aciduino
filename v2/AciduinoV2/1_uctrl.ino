@@ -279,7 +279,7 @@ void uCtrlSetup() {
   // initing midi port 1
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
   // initing midi port 2
-  #if defined(USB_MIDI) || defined(ARDUINO_ARCH_AVR)
+  #if defined(MIDI2)
   uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
   #endif
   // 2
@@ -297,7 +297,7 @@ void uCtrlSetup() {
   // process midi at 250 microseconds speed
   uCtrl.setOn250usCallback(midiHandleSync);
   // process sequencer at 1 milisecond speed
-  uCtrl.setOn1msCallback(midiHandle);
+  //uCtrl.setOn1msCallback(midiHandle);
 #endif
 
   //

@@ -22,8 +22,6 @@ phuture@acidlab:~$ git submodule update --init --recursive
 
 ![Image of aciduino mega on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2-avr_mega_bb.png)
 
-![Image of aciduino esp32 wroom on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2-esp32_bb.png)
-
 Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
 
 A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.

@@ -79,39 +79,15 @@ void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {
 
 // a port to read midi notes 1ms
 void midiHandle() {
-  while (uCtrl.midi->read(2)) {
-  }
+  //while (uCtrl.midi->read(2)) {
+  //}
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
 void midiHandleSync() {
+// avoid use midi sync input for esp32 since it triggering watchdog for resets
+#if !defined(ARDUINO_ARCH_ESP32) || !defined(ESP32)
   while (uCtrl.midi->read(1)) {
   }
+#endif
 }
-/*
-void sendPreviewNote(uint8_t step)
-{
-  unsigned long milliTime, preMilliTime;
-  uint8_t note;
-
-  // enable or disable harmonizer
-  if ( _harmonize == 1 ) {
-    note = harmonizer(_sequencer[_selected_track].data.step[step].note);
-  } else {
-    note = _sequencer[_selected_track].data.step[step].note;
-  }
-  ATOMIC(sendMidiMessage(NOTE_ON, note, _sequencer[_selected_track].data.step[step].accent ? ACCENT_VELOCITY : NOTE_VELOCITY, _sequencer[_selected_track].channel))
-
-  // avoid delay() call because of uClock timmer1 usage
-  //delay(200);
-  preMilliTime = millis();
-  while ( true ) {
-    milliTime = millis();
-    if (abs(milliTime - preMilliTime) >= 200) {
-      break;
-    }
-  }
-  
-  ATOMIC(sendMidiMessage(NOTE_OFF, note, 0, _sequencer[_selected_track].channel))
-}
- */

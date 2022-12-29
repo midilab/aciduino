@@ -44,6 +44,19 @@
 // on generative add the option to generate new accent only
 #include "engine_808.h"
 
+//
+// multicore archs
+//
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+  portMUX_TYPE _acidEngine808TimerMux = portMUX_INITIALIZER_UNLOCKED;
+	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine808TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine808TimerMux);
+//
+// singlecore archs
+//
+#else
+	#define ATOMIC(X) noInterrupts(); X; interrupts();
+#endif
+
 void Engine808::setTrackChannel(uint8_t track, uint8_t channel)
 {
   //ATOMIC(_sequencer[track].channel = channel);
@@ -56,6 +69,7 @@ void Engine808::init()
 
     _sequencer[track].channel = track+TRACK_NUMBER_303;
     _sequencer[track].step_location = 0;
+    _sequencer[track].step_length = STEP_MAX_SIZE_808;
     _sequencer[track].mute = 0;
     _sequencer[track].roll_type = SUB_STEP_1;
 
@@ -100,9 +114,9 @@ void Engine808::onStepCall(uint32_t tick)
     if ( _sequencer[track].mute == true ) {
       continue;
     }
-
+    
     // get global step location.
-    _sequencer[track].step_location = uint32_t(tick + _sequencer[track].shift) % _sequencer[track].step_length;
+    _sequencer[track].step_location = (tick + _sequencer[track].shift) % _sequencer[track].step_length;
 
     // walk thru all track voices
     for (uint8_t voice = 0; voice < VOICE_MAX_SIZE_808; voice++) {

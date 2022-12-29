@@ -35,6 +35,19 @@
 
 #include "engine_303.h"
 
+//
+// multicore archs
+//
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+  portMUX_TYPE _acidEngine303TimerMux = portMUX_INITIALIZER_UNLOCKED;
+	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine303TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine303TimerMux);
+//
+// singlecore archs
+//
+#else
+	#define ATOMIC(X) noInterrupts(); X; interrupts();
+#endif
+
 void Engine303::setTrackChannel(uint8_t track, uint8_t channel)
 {
   ATOMIC(_sequencer[track].channel = channel);

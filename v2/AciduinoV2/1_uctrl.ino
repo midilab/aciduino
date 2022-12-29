@@ -22,6 +22,7 @@ struct MidiDefaultSettings : public midi::DefaultSettings
 #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32) 
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
 #elif defined(ARDUINO_ARCH_AVR)  
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
@@ -341,69 +342,3 @@ void uCtrlSetup() {
   // 
   uCtrl.page->setPage(1);
 }
-
-/* mega shiled and uCtrl16
- *  
-  uCtrl.oled->print(">init ram...", 8, 1);  
-  //
-  // External RAM Module
-  //
-  //uCtrl.initRam(LC1024_SPI, 48); // 
-  //uCtrl.initRam(LC1024_BITBANG, 48, 42, 43, 44); //
-  uCtrl.initRam(&SPI, 48);
-
-  uCtrl.oled->print(">init sdcard...", 8, 1);  
-  //
-  // SdCard Module
-  //
-  //uCtrl.initSdCard(SOFT_SPI, 7, 40, 38, 39); // 
-  //uCtrl.initSdC(NATIVE_SPI, 7); // 
-  uCtrl.initSdCard(&SPI, 7);  
-  //uCtrl.initSdCard(1, 7);  // spi1
-  //uCtrl.initSdCard(1, 24); // spi3
-
-  uCtrl.oled->print(">init ain...", 8, 1);  
-  //
-  // AIN Module
-  //
-  //uCtrl.initAin(SINGLE, A4); // initing of a single digital port on D2
-  //uCtrl.initAin(MUX_4051, 8, 10, 12); // initing of a 8 digital input ports via shift register 165 on A0
-  uCtrl.initAin(0, 45, 47, 49);
-  //uCtrl.ain->plug(0, A0);
-  uCtrl.ain->plug(0, A1);
-
-  uCtrl.oled->print(">init din...", 8, 1);  
-  //
-  // DIN Module
-  //
-  uCtrl.initDin(&SPI, 9);
-  uCtrl.din->plug(1);
-
-  uCtrl.oled->print(">init dout...", 8, 1);  
-  //
-  // DOUT Module
-  //
-  uCtrl.initDout(&SPI, 8);
-  uCtrl.dout->plug(1);
-  
-  //uCtrl.dout->write(13, HIGH);
-  // Turn off all leds of connected PUSH8 modules
-  // write and auto flush data
-  uCtrl.dout->writeAll(LOW, 0);
-
-  uCtrl.oled->print(">init midi...", 8, 1);  
-  //
-  // MIDI Module
-  //
-  uCtrl.initMidi();
-  // initing midi port 1
-  uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
-  // initing midi port 2
-  uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
-  // 2
-  uCtrl.midi->plug(&MIDI3); // MIDI PORT 3: UART MIDI 1
-  // 3
-  uCtrl.midi->plug(&MIDI4); // MIDI PORT 4: UART MIDI 2
-  uCtrl.midi->setMidiInputCallback(midiInputHandler);
-  uCtrl.midi->setMidiOutputCallback(midiOutputHandler);
-*/

@@ -39,8 +39,6 @@
 #define SET_BIT(a,n) (a |=  (1ULL<<n))
 #define CLR_BIT(a,n) (a &= ~(1ULL<<n))
 
-#define ATOMIC(X) noInterrupts(); X; interrupts();
-
 class Engine
 {
   protected:

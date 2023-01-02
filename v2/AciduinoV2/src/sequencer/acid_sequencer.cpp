@@ -244,7 +244,7 @@ bool AcidSequencerClass::is303(uint8_t track)
   return false;
 }
 
-uint8_t AcidSequencerClass::getTrackMaxLength(uint8_t track)
+uint16_t AcidSequencerClass::getTrackMaxLength(uint8_t track)
 {
   // 303 request
   if(track < TRACK_NUMBER_303)
@@ -254,7 +254,7 @@ uint8_t AcidSequencerClass::getTrackMaxLength(uint8_t track)
   return STEP_MAX_SIZE_808;
 }
 
-uint8_t AcidSequencerClass::getTrackLength(uint8_t track)
+uint16_t AcidSequencerClass::getTrackLength(uint8_t track)
 {
   // 303 request
   if(track < TRACK_NUMBER_303)

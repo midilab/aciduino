@@ -60,7 +60,7 @@ void Engine303::init()
 
     _sequencer[track].channel = track;
     _sequencer[track].data.shift = 0;
-    _sequencer[track].data.step_length = STEP_MAX_SIZE_303;
+    _sequencer[track].data.step_length = STEP_MAX_SIZE_303-1;
     _sequencer[track].data.transpose = 0;
     _sequencer[track].data.tune = 0;
     _sequencer[track].step_location = 0;
@@ -100,7 +100,7 @@ void Engine303::setTie(uint8_t track, uint8_t step, bool state)
 
 bool Engine303::stepOn(uint8_t track, uint8_t step)
 {
-  //int8_t relative_step = uint8_t(step - _sequencer[track].data.shift) % _sequencer[track].data.step_length;
+  //int8_t relative_step = uint8_t(step - _sequencer[track].data.shift) % _sequencer[track].data.step_length+1;
   return !_sequencer[track].data.step[step].rest;
 }
 
@@ -209,16 +209,16 @@ void Engine303::clearTrack(uint8_t track)
   ATOMIC(_sequencer[track].mute = false);
 }
 
-uint8_t Engine303::getTrackLength(uint8_t track)
+uint16_t Engine303::getTrackLength(uint8_t track)
 {
-  static uint8_t length;
-  ATOMIC(length = _sequencer[track].data.step_length) 
+  static uint16_t length;
+  ATOMIC(length = _sequencer[track].data.step_length+1) 
   return length;
 }
 
 void Engine303::setTrackLength(uint8_t track, uint16_t length)
 {
-  ATOMIC(_sequencer[track].data.step_length = length);  
+  ATOMIC(_sequencer[track].data.step_length = length-1);  
 }
 
 void Engine303::setMute(uint8_t track, uint8_t mute)
@@ -313,7 +313,7 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
 void Engine303::onStepCall(uint32_t tick) 
 {
   uint8_t step, next_step;
-  uint16_t length;
+  uint16_t length, step_length;
   int8_t note;
 
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
@@ -333,8 +333,9 @@ void Engine303::onStepCall(uint32_t tick)
       // check for slide or tie event ahead of _sequencer[track].step_location
       step = _sequencer[track].step_location;
       next_step = step;
-      for ( uint8_t i = 1; i < _sequencer[track].data.step_length; i++  ) {
-        next_step = ++next_step % _sequencer[track].data.step_length;
+      step_length = _sequencer[track].data.step_length + 1;
+      for ( uint8_t i = 1; i < step_length; i++  ) {
+        next_step = ++next_step % step_length;
         if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
           length = NOTE_LENGTH_303 + 5;
           break;

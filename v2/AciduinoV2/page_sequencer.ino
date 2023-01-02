@@ -46,26 +46,14 @@ void step_sequencer_page_refresh(uint8_t subpage)
       uCtrl.page->component(voiceConfigComponent, 4, 1);
       uCtrl.page->component(rollTypeComponent, 4, 2);
     }
-
-    // seq divider!
     
     // step edit
     uCtrl.page->component(stepSequencerComponent, 5, 1);
   } else if (subpage == 1) {
     // set step sequencer mode view as full size view
     stepSequencerComponent.setViewMode(true);
-    // generative
-    // ...
-    // 303
-    // low range, high range
-    // tones num
-    // notes num
 
-    // 808
-    
-    // _bjorklund size(length?), _bjorklund (fill)
-    // 
-
+    // step edit full view mode
     uCtrl.page->component(stepSequencerComponent, 2, 1, true);
   }
   

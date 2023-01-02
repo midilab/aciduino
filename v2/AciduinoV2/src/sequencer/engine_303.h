@@ -55,7 +55,7 @@ typedef struct
 {
   SEQUENCER_STEP_DATA_303 step[STEP_MAX_SIZE_303];
   int8_t shift;
-  uint8_t step_length;
+  uint16_t step_length;
   uint8_t tune;
   int8_t transpose;
 } SEQUENCER_TRACK_DATA_303;
@@ -87,7 +87,7 @@ class Engine303 : public Engine
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
-      uint8_t getTrackLength(uint8_t track);
+      uint16_t getTrackLength(uint8_t track);
       uint8_t getTrackChannel(uint8_t track);
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);

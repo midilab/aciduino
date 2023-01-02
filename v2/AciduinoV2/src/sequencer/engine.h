@@ -59,7 +59,7 @@ class Engine
     virtual void setTrackChannel(uint8_t track, uint8_t channel) {}
 
     virtual void setTrackLength(uint8_t track, uint16_t length) {}
-    virtual uint8_t getTrackLength(uint8_t track) {}
+    virtual uint16_t getTrackLength(uint8_t track) {}
 
     virtual void rest(uint8_t track, uint8_t step, bool state) {}
 

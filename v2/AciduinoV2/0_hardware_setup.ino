@@ -18,8 +18,8 @@
 #if defined (USE_CUSTOM_PINOUT)
 
   // going to use changer encoder?
-  #define NAV_ENCODER_DEC_PIN       24
-  #define NAV_ENCODER_INC_PIN       25
+  //#define NAV_ENCODER_DEC_PIN       24
+  //#define NAV_ENCODER_INC_PIN       25
   
   #define NAV_SHIFT_PIN             4
   
@@ -28,7 +28,7 @@
   #define NAV_GENERAL1_PIN          3
   #define NAV_GENERAL2_PIN          5
   #define NAV_RIGHT_PIN             15
-  #define NAV_UP_PIN                14
+  #define NAV_UP_PIN                17
   #define NAV_DOWN_PIN              9
   #define NAV_LEFT_PIN              16
   
@@ -59,7 +59,7 @@
     #define NAV_GENERAL1_PIN          3
     #define NAV_GENERAL2_PIN          5
     #define NAV_RIGHT_PIN             15
-    #define NAV_UP_PIN                17
+    #define NAV_UP_PIN                14
     #define NAV_DOWN_PIN              9
     #define NAV_LEFT_PIN              16
     

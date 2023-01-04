@@ -48,7 +48,7 @@ Controls your acid machines midi parameters per track.
 ## Midi Clock
 Tight and solid MIDI clock to drive your gears clock needs or receive midi sync signal.
 
-### uMODULAR uOne and Aciduino V2
+# uMODULAR uOne and Aciduino V2
 
 One of the uMODULAR projects to run your Aciduino V2, soon avaliable.
 

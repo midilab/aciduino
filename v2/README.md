@@ -82,7 +82,7 @@ The interface presents you simple schema to navigate and interact with you acidu
 - copy/paste  
 - getbyvalue pot on midi controller  
 
-### uMODULAR uOne
+# uMODULAR uOne
 
 One of the uMODULAR projects to run your Aciduino V2, soon avaliable.
 

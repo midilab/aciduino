@@ -1,12 +1,12 @@
 # Aciduino V2
 
-Cheap Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
+Put your DIY super powers to the test building your own Roland's TB-303 and/or TB-808 step sequencer! An Arduino based clone project specially hacked with corrosive features to improve live performances! Save your money building this classic synthesizer clone faster than a blink of an eye.
 
-The first interation of aciduino v2 can run on ARM's [Teensy](https://www.pjrc.com/store/teensylc.html) and Mega 2560. 
+This version is multi-arch that allows differents micro-controllers to be used on the build, rigth now supports Arduino Mega, any Teensy >= 3.2 and a experimental and ongoing support to ESP32.
 
-By using uCtrl library we can easily extend this second version of aciduino to other arduinos compatible boards.
+Aciduino V2 is also the first official uModular app, wich makes use of uModular schematics and libraries [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock).
 
-The second version of aciduino makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) library as submodule, so just remember to init submodules just after clone the repo.
+Since this version makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) libraries as submodule, so just remember to init submodules just after clone the repo.
 
 ```console
 phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git
@@ -16,7 +16,7 @@ phuture@acidlab:~$ git submodule update --init --recursive
 
 ## How does it looks like?
 
-![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)
 
 ![Image of aciduino teensy on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
 
@@ -76,10 +76,12 @@ The interface presents you simple schema to navigate and interact with you acidu
 ### Roadmap
 
 - midi in rec input  
-- mute pattern automation patterns for live page  
 - pattern grid for live page  
 - 808 fill groups 1-4  
 - save to epprom or sdcard  
 - copy/paste  
-- undo for generative  
 - getbyvalue pot on midi controller  
+
+### uMODULAR uOne
+
+One of the uModular projects to run your Aciduino V2, soon avaliable for sell.

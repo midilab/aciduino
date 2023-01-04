@@ -20,7 +20,7 @@ TB-303 only sequencer.
 
 TB-303 and TR-808 sequencer with Oled. The modular design allows you to extend it with more knobs or buttons/leds on another protoboard.
 
-![Image of aciduino on protoboard and uone](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduinov2-lite-uone.jpg)
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
 

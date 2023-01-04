@@ -7,11 +7,6 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 //
 // Midi device
 //
-struct MidiDefaultSettings : public midi::DefaultSettings
-{
-    static const unsigned SysExMaxSize = 16; // Accept SysEx messages up to 1024 bytes long.
-    static const bool UseRunningStatus = false; // My devices seem to be ok with it.
-};
 #if defined(TEENSYDUINO)
   #if defined(USB_MIDI)
     #define MIDI1         usbMIDI

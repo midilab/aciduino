@@ -10,7 +10,7 @@ int freeRam() {
 #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 int freeRam () 
 {
-  return ESP.getFreeHeap(); 
+  return 0; //ESP.getFreeHeap(); 
 }
 #elif defined(ARDUINO_ARCH_AVR)
 int freeRam () 

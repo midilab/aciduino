@@ -146,9 +146,9 @@
   
   // Extension modules
   // PUSH 
-  #define PUSH_LATCH_PIN            18
+  #define PUSH_LATCH_PIN            9
   // LED
-  #define LED_LATCH_PIN             17
+  #define LED_LATCH_PIN             8
   // POT
   #define POT_CTRL_PIN1             45
   #define POT_CTRL_PIN2             47

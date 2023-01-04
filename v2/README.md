@@ -84,4 +84,8 @@ The interface presents you simple schema to navigate and interact with you acidu
 
 ### uMODULAR uOne
 
-One of the uModular projects to run your Aciduino V2, soon avaliable for sell.
+One of the uMODULAR projects to run your Aciduino V2, soon avaliable.
+
+![Image of aciduino on uone front](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_umodular.jpg)
+
+![Image of aciduino on uone back](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_back.jpeg)

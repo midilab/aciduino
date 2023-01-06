@@ -187,7 +187,10 @@ uint8_t Engine303::getCurrentStep(uint8_t track)
 
 uint8_t Engine303::getTrackChannel(uint8_t track)
 {
-  return _sequencer[track].channel;
+  static uint8_t channel;
+  ATOMIC(channel = _sequencer[track].channel) 
+  return channel;
+  //return _sequencer[track].channel;
 }
 
 void Engine303::clearStepData(uint8_t track, uint8_t rest)

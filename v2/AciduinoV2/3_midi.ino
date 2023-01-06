@@ -55,12 +55,20 @@ void sendMidiStop() {
 
 // called outside interruption by user request on PageComponent
 // ATOMIC all of them!
-void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel) {
-  msg.type = uctrl::protocol::midi::ControlChange;
-  msg.data1 = cc;
-  msg.data2 = value;
-  msg.channel = channel;
-  uCtrl.midi->write(&msg, _port, 0);
+void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t interrupted = 0) {
+  if (interrupted) {
+    msg_interrupt.type = uctrl::protocol::midi::ControlChange;
+    msg_interrupt.data1 = cc;
+    msg_interrupt.data2 = value;
+    msg_interrupt.channel = channel;
+    uCtrl.midi->write(&msg_interrupt, _port, interrupted);
+  } else {
+    msg.type = uctrl::protocol::midi::ControlChange;
+    msg.data1 = cc;
+    msg.data2 = value;
+    msg.channel = channel;
+    uCtrl.midi->write(&msg, _port, interrupted);
+  }
 }
 
 void sendNote(uint8_t note, uint8_t channel, uint8_t velocity) {

@@ -134,19 +134,19 @@ struct MidiCCControl : PageComponent {
       selected_map = 1;
     }
 
-    void sendCCData(int16_t data, uint8_t ctrl, uint8_t track) {
+    void sendCCData(int16_t data, uint8_t ctrl, uint8_t track, uint8_t interrupted = 0) {
       uint8_t data_idx = AcidSequencer.is303(track) ? track : track - TRACK_NUMBER_303;
       // process 303 controlelrs?
       if (AcidSequencer.is303(track)) {
         data = parseData(data, 0, 127, control_map_303[ctrl].control_data[data_idx]);
         control_map_303[ctrl].control_data[data_idx] = data;
         // send data
-        sendMidiCC(control_map_303[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track));
+        sendMidiCC(control_map_303[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track), interrupted);
       } else {
         data = parseData(data, 0, 127, control_map_808[ctrl].control_data[data_idx]);
         control_map_808[ctrl].control_data[data_idx] = data;
         // send data
-        sendMidiCC(control_map_808[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track));
+        sendMidiCC(control_map_808[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track), interrupted);
       }
     }
 

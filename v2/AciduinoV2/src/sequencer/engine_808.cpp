@@ -57,11 +57,6 @@
 	#define ATOMIC(X) noInterrupts(); X; interrupts();
 #endif
 
-void Engine808::setTrackChannel(uint8_t track, uint8_t channel)
-{
-  //ATOMIC(_sequencer[track].channel = channel);
-}
-
 void Engine808::init()
 {
   // initing sequencer memory data
@@ -311,6 +306,11 @@ uint8_t Engine808::getCurrentStep(uint8_t track)
 uint8_t Engine808::getTrackChannel(uint8_t track)
 {
   return _sequencer[track].channel;
+}
+
+void Engine808::setTrackChannel(uint8_t track, uint8_t channel)
+{
+  ATOMIC(_sequencer[track].channel = channel);
 }
 
 void Engine808::clearStepData(uint8_t track, uint8_t voice)

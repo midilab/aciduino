@@ -254,6 +254,8 @@ void uCtrlSetup() {
       digitalWrite(22, LOW);
     #endif
   #endif
+  // raise the average reads for pot for better stability
+  uCtrl.ain->setAvgReads(8);
 #endif
 
   //

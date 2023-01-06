@@ -1,7 +1,6 @@
 
 void live_page_init()
 {
-#ifdef MIDI_CONTROLER
   uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
   // register midi controller options per track
   if (TRACK_NUMBER_303 > 0) {
@@ -43,11 +42,7 @@ void live_page_init()
     midiControllerComponent.set808Control("mt level", 51);
     midiControllerComponent.set808Control("ht level", 54);
     midiControllerComponent.set808Control("rs level", 57);
-  }
-#else
-  // one subpage for now until we get the pattern feature setup. ableton grid like patterns select screen     
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 1);  
-#endif   
+  }  
 }
 
 void live_page_create()
@@ -68,9 +63,7 @@ void live_page_refresh(uint8_t subpage)
   if (subpage == 0) {
     uCtrl.page->component(mutePatternComponent, 3, 1, true);
   } else if (subpage == 1) {
-#ifdef MIDI_CONTROLER
     uCtrl.page->component(midiControllerComponent, 3, 1, true);
-#endif
   }
   
 }

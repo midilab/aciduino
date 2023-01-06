@@ -70,9 +70,6 @@
 //
 #include "src/sequencer/acid_sequencer.h"
 
-// want a acid midi controller?
-#define MIDI_CONTROLER
-
 void setup() {
   // setup uctrl hardware/interface
   uCtrlSetup();

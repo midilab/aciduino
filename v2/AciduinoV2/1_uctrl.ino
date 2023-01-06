@@ -240,6 +240,8 @@ void uCtrlSetup() {
   #if defined (USE_POT_16)
   uCtrl.ain->plug(POT_MUX_COMM2);
   #endif
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
 #elif defined(USE_CHANGER_POT)
   uCtrl.initAin();
   uCtrl.ain->plug(CHANGER_POT_PIN);
@@ -269,7 +271,6 @@ void uCtrlSetup() {
   //
   // MIDI Module
   //
-#if defined(USE_MIDI)
   uCtrl.oled->print(">init midi...", 8, 1);  
   uCtrl.initMidi();
   // initing midi port 1
@@ -294,7 +295,6 @@ void uCtrlSetup() {
   uCtrl.setOn250usCallback(midiHandleSync);
   // process sequencer at 1 milisecond speed
   //uCtrl.setOn1msCallback(midiHandle);
-#endif
 
   //
   // SdCard Module

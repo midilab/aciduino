@@ -211,9 +211,10 @@ void Engine303::clearTrack(uint8_t track)
 
 uint16_t Engine303::getTrackLength(uint8_t track)
 {
-  static uint16_t length;
-  ATOMIC(length = _sequencer[track].data.step_length+1) 
-  return length;
+  //static uint16_t length;
+  //ATOMIC(length = _sequencer[track].data.step_length+1) 
+  //return length;
+  return _sequencer[track].data.step_length+1;
 }
 
 void Engine303::setTrackLength(uint8_t track, uint16_t length)

@@ -344,9 +344,10 @@ void Engine808::clearTrack(uint8_t track, uint8_t mode)
 
 uint16_t Engine808::getTrackLength(uint8_t track)
 {
-    static uint16_t length;
-    ATOMIC(length = _sequencer[track].voice[_voice].step_length) 
-    return length;
+  //static uint16_t length;
+  //ATOMIC(length = _sequencer[track].voice[_voice].step_length) 
+  //return length;
+  return _sequencer[track].voice[_voice].step_length;
 }
 
 void Engine808::setTrackLength(uint8_t track, uint16_t length)

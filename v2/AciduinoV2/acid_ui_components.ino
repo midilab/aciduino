@@ -66,6 +66,7 @@ struct MidiCCControl : PageComponent {
     // (4 x 2) x 2
     // f1 = A (select A map)
     // f2 = B (select B map)
+    // shift changes f1 and f2 to clear  |  learn/POTID
     MIDI_CTRL_DATA_303 control_map_303[16];
     uint8_t ctrl_size_303 = 0;
 
@@ -176,6 +177,12 @@ struct MidiCCControl : PageComponent {
     }
 
 } midiControllerComponent;
+
+// used by ain in case any POT_X registred
+void midiControllerHandle(uint8_t port, uint16_t value, uint8_t interrupted) {
+  // redirect to the last used control on midi controller
+  midiControllerComponent.sendCCData((int16_t)value, port-1, _selected_track);
+}
 
 struct TopBar : PageComponent {
 
@@ -502,7 +509,7 @@ struct StepSequencer : PageComponent {
 #endif
       
       // step locators
-      uint8_t bar_size = locator_length > 1 ? 128 / locator_length : 0;
+      uint8_t bar_size = 128 / locator_length;
       for (uint8_t i=0; i < locator_length; i++) {
         uCtrl.oled->drawBox(y+(locator_current == i ? 3 : 4), x+(bar_size*i)+2, (locator_current == i ? 3 : 1), bar_size-4, (selected_locator == i && (selected_line == 1 || selected_line >= 2) && selected));
       }

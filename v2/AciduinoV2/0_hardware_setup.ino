@@ -28,7 +28,7 @@
   #define NAV_GENERAL1_PIN          3
   #define NAV_GENERAL2_PIN          5
   #define NAV_RIGHT_PIN             15
-  #define NAV_UP_PIN                17
+  #define NAV_UP_PIN                14
   #define NAV_DOWN_PIN              9
   #define NAV_LEFT_PIN              16
   
@@ -36,7 +36,12 @@
   #define CHANGER_POT_PIN           A9
 
   // any module pinout extension?
-  //...
+  // POT 16
+  #define POT_CTRL_PIN1             45
+  #define POT_CTRL_PIN2             47
+  #define POT_CTRL_PIN3             49
+  #define POT_MUX_COMM1             A0
+  #define POT_MUX_COMM2             A1
 
 //
 // PROTOBOARD pinout for teensy and mega
@@ -84,10 +89,10 @@
     #define NAV_FUNCTION2_PIN         27
     #define NAV_GENERAL1_PIN          33
     #define NAV_GENERAL2_PIN          32
-    #define NAV_RIGHT_PIN             35
-    #define NAV_UP_PIN                34
-    #define NAV_DOWN_PIN              39
-    #define NAV_LEFT_PIN              36
+    #define NAV_RIGHT_PIN             5
+    #define NAV_UP_PIN                18
+    #define NAV_DOWN_PIN              19
+    #define NAV_LEFT_PIN              23
     
     // going to use changer pot?
     // GPIO 0 - ADC2_1

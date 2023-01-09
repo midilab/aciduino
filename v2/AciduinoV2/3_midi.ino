@@ -95,8 +95,8 @@ void midiHandle() {
 void midiHandleSync() {
 // avoid use midi sync input for esp32 since it triggering watchdog for resets
 #if !defined(ARDUINO_ARCH_ESP32) || !defined(ESP32)
-  while (uCtrl.midi->read(1)) {
-  }
-  //uCtrl.midi->read(1);
+  //while (uCtrl.midi->read(1)) {
+  //}
+  uCtrl.midi->read(1);
 #endif
 }

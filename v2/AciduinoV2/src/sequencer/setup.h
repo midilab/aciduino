@@ -3,7 +3,7 @@
 
 // setup how many 303 and 808s you need
 // 303 its indexed as 0 to TRACK_NUMBER_303-1, so 808 follows the index
-#define TRACK_NUMBER_303        2
+#define TRACK_NUMBER_303        4
 #define TRACK_NUMBER_808        1
 
 //

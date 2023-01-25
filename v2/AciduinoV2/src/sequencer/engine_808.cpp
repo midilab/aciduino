@@ -351,9 +351,19 @@ void Engine808::setMute(uint8_t track, uint8_t voice, uint8_t mute)
   ATOMIC(_sequencer[track].voice[voice].mute = mute);  
 }
 
+void Engine808::setMute(uint8_t track, uint8_t mute)
+{
+  ATOMIC(_sequencer[track].mute = mute);  
+}
+
 uint8_t Engine808::getMute(uint8_t track, uint8_t voice)
 {
   return _sequencer[track].voice[voice].mute;
+}
+
+uint8_t Engine808::getMute(uint8_t track)
+{
+  return _sequencer[track].mute;
 }
 
 void Engine808::setShiftPos(uint8_t track, int8_t shift)

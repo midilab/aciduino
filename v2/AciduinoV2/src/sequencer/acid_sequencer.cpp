@@ -303,6 +303,9 @@ void AcidSequencerClass::setMute(uint8_t track, uint8_t mute)
   // 303 request
   if(track < TRACK_NUMBER_303)
     _engine303.setMute(track, mute);  
+  // 808 request?
+  else
+    _engine808.setMute(track-TRACK_NUMBER_303, mute);
 }
 
 void AcidSequencerClass::setMute(uint8_t track, uint8_t voice, uint8_t mute)
@@ -317,6 +320,9 @@ uint8_t AcidSequencerClass::getMute(uint8_t track)
   // 303 request
   if(track < TRACK_NUMBER_303)
     return _engine303.getMute(track);
+  // 808 request?
+  else
+    return _engine808.getMute(track-TRACK_NUMBER_303);
 }
 
 uint8_t AcidSequencerClass::getMute(uint8_t track, uint8_t voice)

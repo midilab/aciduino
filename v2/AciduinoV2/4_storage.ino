@@ -102,13 +102,28 @@ bool loadPattern(uint8_t pattern, int8_t track = -1)
   if (track != -1) {
     uint16_t pattern_track_address = pattern_address + (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (TRACK_NUMBER_303-track)));
     // load only a track patttern
+    AcidSequencer.setMute(track, true);
+    AcidSequencer.clearStackNote(track);
     uCtrl.storage->load(AcidSequencer.getPatternData(track), (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_track_address);
+    AcidSequencer.setMute(track, false);
   } else {
     // load the whole pattern for all tracks
+    // mute all before load into memory(its volatile! here a mute is enongth)
+    for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
+      AcidSequencer.setMute(i, true);
+    }
+    // clear all floating notes around
+    AcidSequencer.clearStackNote();
+    
     // get 303 whole pattern data first
     uCtrl.storage->load(AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
     // then 808 whole pattern data last
     uCtrl.storage->load(AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+
+    // unmute all loaded fresh and new pattern
+    for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
+      AcidSequencer.setMute(i, false);
+    }
   }
 }
 

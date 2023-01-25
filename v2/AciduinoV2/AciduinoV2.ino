@@ -75,9 +75,8 @@ void setup() {
   uCtrlSetup();
   // setup clock system
   uClockSetup();
-  // the acid sequencer
-  AcidSequencer.setMidiOutputCallback(midiSequencerOutHandler);
-  //AcidSequencer.setCVOutputCallback();
+  // init the sequencer
+  initSequencer();
 }
 
 void loop() {

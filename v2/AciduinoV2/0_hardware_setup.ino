@@ -2,7 +2,7 @@
 // Pinout configuration
 //
 // Pre-defined released schematic pinout
-// for protoboard teensy 3.2+, protoboard avr mega, uOne and mega shield
+// for protoboard teensy >= 3.2, protoboard avr mega, uOne and mega shield
 //
 // if you need change pinout, please do
 // it under USE_CUSTOM_PINOUT definitions

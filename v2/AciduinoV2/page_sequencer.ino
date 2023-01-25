@@ -5,12 +5,12 @@ void step_sequencer_page_init()
 
 void step_sequencer_page_create()
 {
-  //uCtrl.dout->writeAll(LOW); 
+  uCtrl.dout->writeAll(LOW); 
 }
 
 void step_sequencer_page_destroy()
 {
-  //uCtrl.dout->writeAll(LOW);
+  uCtrl.dout->writeAll(LOW);
 }
 
 // called each cycle interaction of interface object for UI refresh

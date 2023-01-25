@@ -11,6 +11,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
   #if defined(USB_MIDI)
     #define MIDI1         usbMIDI
     MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+    #define USE_MIDI2
   #else
     MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
   #endif
@@ -18,12 +19,16 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
   //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+  //#define USE_MIDI2
 #elif defined(ARDUINO_ARCH_AVR)  
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
+  #define USE_MIDI2
   //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
+  //#define USE_MIDI3
   //MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
+  //#define USE_MIDI4
 #endif
 
 typedef enum {
@@ -141,6 +146,13 @@ void uCtrlSetup() {
 #endif
   uCtrl.oled->print("booting", 4, 1);
   uCtrl.oled->print("please wait...", 5, 1); 
+
+  //
+  // Storage setup
+  //
+  uCtrl.oled->print(">init storage...", 8, 1);
+  uCtrl.initStorage();  
+  //uCtrl.initStorage(&SPI, 7);
 
   //
   // DIN Module
@@ -278,25 +290,23 @@ void uCtrlSetup() {
   // initing midi port 1
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
   // initing midi port 2
-  #if defined(MIDI2)
+  #if defined(USE_MIDI2)
   uCtrl.midi->plug(&MIDI2); // MIDI PORT 2: SERIAL TTY MIDI
   #endif
   // 2
-  #if defined(MIDI3)
+  #if defined(USE_MIDI3)
   uCtrl.midi->plug(&MIDI3); // MIDI PORT 3: UART MIDI 1
   #endif
   // 3
-  #if defined(MIDI4)
+  #if defined(USE_MIDI4)
   uCtrl.midi->plug(&MIDI4); // MIDI PORT 4: UART MIDI 2
   #endif
   uCtrl.midi->setMidiInputCallback(midiInputHandler);
-  //uCtrl.midi->setMidiOutputCallback(midiOutputHandler);
-
   // uCtrl realtime deals
   // process midi at 250 microseconds speed
   uCtrl.setOn250usCallback(midiHandleSync);
-  // process sequencer at 1 milisecond speed
-  //uCtrl.setOn1msCallback(midiHandle);
+  // process midi input at 1ms speed
+  uCtrl.setOn1msCallback(midiHandle);
 
   //
   // SdCard Module
@@ -307,10 +317,12 @@ void uCtrlSetup() {
   // Page Module for UI
   //
   uCtrl.initPage();
-  welcome_page_init();
+  // syst | seqr | gene | ptrn | midi
+  system_page_init();
   step_sequencer_page_init();
   generative_page_init();
-  live_page_init();
+  pattern_page_init();
+  midi_page_init();
   // component UI interface setup
 #if defined(USE_CHANGER_ENCODER)
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
@@ -320,7 +332,7 @@ void uCtrlSetup() {
 #endif
   // shift button callback setup
   // slave/master tempo set
-  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, tempoSetup);
+  //uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, tempoSetup);
   // play/stop tempo
   uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_2, playStop);
   // previous track

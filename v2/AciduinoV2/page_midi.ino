@@ -1,7 +1,8 @@
 
-void live_page_init()
+void midi_page_init()
 {
-  uCtrl.page->set("live", live_page_create, live_page_destroy, live_page_refresh, live_page_digital_input, live_page_analog_input, 2);
+  uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, midi_page_analog_input, 2);     
+
   // register midi controller options per track
   if (TRACK_NUMBER_303 > 0) {
     // max 16 controls!
@@ -45,35 +46,37 @@ void live_page_init()
   }  
 }
 
-void live_page_create()
+void midi_page_create()
 {
-  uCtrl.dout->writeAll(LOW); 
+  // lets hook the components f1 anf f2 functions for generative page only
+  //
+  //uCtrl.page->setFunctionHook(f1_page, f2_page, generativeFunction1, generativeFunction2);
 }
 
-void live_page_destroy()
+void midi_page_destroy()
 {
-  uCtrl.dout->writeAll(LOW);
+  // clear our hook
+  //uCtrl.page->clearFunctionHook();
 }
 
 // called each cycle interaction of interface object for UI refresh
-void live_page_refresh(uint8_t subpage)
+void midi_page_refresh(uint8_t subpage)
 {
   uCtrl.page->component(topBarComponent, 1, 1);
 
   if (subpage == 0) {
-    uCtrl.page->component(mutePatternComponent, 3, 1, true);
-  } else if (subpage == 1) {
     uCtrl.page->component(midiControllerComponent, 3, 1, true);
+  } else if (subpage == 1) {
+    // midi efx subpage. LFOs and other goodies. soon...
   }
-  
 }
 
-void live_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
+void midi_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {  
   // step array buttons handling?
 }
 
-void live_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)
+void midi_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {
   // special fixed pots for interaction like generative ones
 }

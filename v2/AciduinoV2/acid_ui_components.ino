@@ -3,28 +3,6 @@
 // all UI components are programmed as PageComponent to be reused on different pages
 //
 
-// generative engine ui data
-typedef struct
-{
-  uint8_t generative_fill = 80;
-  uint8_t accent_probability = 50;
-  uint8_t slide_probability = 30;
-  uint8_t tie_probability = 100;
-  uint8_t lower_octave = 2;
-  uint8_t range_octave = 3;
-  uint8_t number_of_tones = 5;
-} GENERATIVE_303_DATA; 
-
-typedef struct
-{
-  uint8_t generative_fill = 80;
-  uint8_t accent_probability = 50;
-  uint8_t roll_probability = 0;
-} GENERATIVE_808_DATA; 
-
-GENERATIVE_303_DATA generative_303[TRACK_NUMBER_303];
-GENERATIVE_808_DATA generative_808[TRACK_NUMBER_808];
-
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
 // used by a lot of simple components
@@ -45,6 +23,7 @@ typedef struct
     const char * control_name;
     uint8_t control_cc = 0;
     uint8_t control_data[TRACK_NUMBER_303];
+    int8_t pot_map[TRACK_NUMBER_303] = {-1};
 } MIDI_CTRL_DATA_303;
 
 typedef struct
@@ -52,6 +31,7 @@ typedef struct
     const char * control_name;
     uint8_t control_cc = 0;
     uint8_t control_data[TRACK_NUMBER_808];
+    int8_t pot_map[TRACK_NUMBER_808] = {-1};
 } MIDI_CTRL_DATA_808;
 
 struct MidiCCControl : PageComponent {
@@ -60,6 +40,8 @@ struct MidiCCControl : PageComponent {
     uint8_t ctrl_selected = 0;
 
     uint8_t last_selected_track = 0;
+
+    bool learn = false;
 
     // layout:
     // max 16 controls per track
@@ -80,8 +62,17 @@ struct MidiCCControl : PageComponent {
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
       update_selector_view = true;
+      // initing pot_map for learn refrence
+      for (uint8_t i=0; i < 16; i++) {
+        for (uint8_t j=0; j < TRACK_NUMBER_303; j++) {
+          control_map_303[i].pot_map[j] = -1;
+        }
+        for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
+          control_map_808[i].pot_map[j] = -1;
+        }
+      }
     }
-    
+
     void view() {
       uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
       uint8_t ctrl_map_init = selected_map == 0 ? 0 : 8;
@@ -118,8 +109,23 @@ struct MidiCCControl : PageComponent {
         ++ctrl_counter;
       }
 
-      setF1("A", selected_map == 0 ? true : false);
-      setF2("B", selected_map == 1 ? true : false);
+      // shift 
+      if (uCtrl.page->isShiftPressed() || learn == true) {
+        updateControlMap();
+        int8_t pot_map = AcidSequencer.is303(_selected_track) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
+        if (pot_map == -1) {
+          setF1("learn", learn == true ? true : false);
+        } else {
+          // clear pot_map
+          //setF1(String(String("clear") + String(pot_map)).c_str());
+          setF1("clear");
+        }
+        setF2("");
+      // no shift 
+      } else {
+        setF1("A", selected_map == 0 ? true : false);
+        setF2("B", selected_map == 1 ? true : false);
+      }
     }
 
     void change(int16_t data) {
@@ -127,11 +133,31 @@ struct MidiCCControl : PageComponent {
     }
     
     void function1() {
-      selected_map = 0;
+      // shift 
+      if (uCtrl.page->isShiftPressed() || learn == true) {
+        // learn!
+        // lock all other pots
+        // set waiting learn flag
+        uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
+        int8_t pot_map = AcidSequencer.is303(_selected_track) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
+        if (pot_map == -1) {
+          learn = true;
+        } else {
+          // clear pot_map
+          clearCtrl(ctrl_selected);
+        }
+      } else {
+        selected_map = 0;
+      }
     }
 
     void function2() {
-      selected_map = 1;
+      // shift 
+      if (uCtrl.page->isShiftPressed()) {
+        // ... reserved for play
+      } else {
+        selected_map = 1;
+      }
     }
 
     void sendCCData(int16_t data, uint8_t ctrl, uint8_t track, uint8_t interrupted = 0) {
@@ -141,12 +167,12 @@ struct MidiCCControl : PageComponent {
         data = parseData(data, 0, 127, control_map_303[ctrl].control_data[data_idx]);
         control_map_303[ctrl].control_data[data_idx] = data;
         // send data
-        sendMidiCC(control_map_303[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track), interrupted);
+        sendMidiCC(control_map_303[ctrl].control_cc, data, _track_output_setup[track].channel, _track_output_setup[track].port, interrupted);
       } else {
         data = parseData(data, 0, 127, control_map_808[ctrl].control_data[data_idx]);
         control_map_808[ctrl].control_data[data_idx] = data;
         // send data
-        sendMidiCC(control_map_808[ctrl].control_cc, data, AcidSequencer.getTrackChannel(track), interrupted);
+        sendMidiCC(control_map_808[ctrl].control_cc, data, _track_output_setup[track].channel, _track_output_setup[track].port, interrupted);
       }
     }
 
@@ -176,12 +202,59 @@ struct MidiCCControl : PageComponent {
       ++ctrl_size_808;
     }
 
+    void learnCtrl(uint8_t port)
+    {
+      uint8_t data_idx = AcidSequencer.is303(_selected_track) ? _selected_track : _selected_track - TRACK_NUMBER_303;
+      if (learn == true) {
+          _control_map_global[port].ctrl = ctrl_selected;
+          _control_map_global[port].track = _selected_track;
+          if (AcidSequencer.is303(_selected_track)) {
+            control_map_303[ctrl_selected].pot_map[data_idx] = port;
+          } else {
+            control_map_808[ctrl_selected].pot_map[data_idx] = port;
+          }
+          learn = false;
+      }
+    }
+
+    void clearCtrl(uint8_t port)
+    {
+      if (AcidSequencer.is303(_selected_track)) {
+        _control_map_global[control_map_303[port].pot_map[_selected_track]].ctrl = -1;  
+        control_map_303[port].pot_map[_selected_track] = -1;
+      } else {
+        _control_map_global[control_map_808[port].pot_map[_selected_track]].ctrl = -1;  
+        control_map_808[port].pot_map[_selected_track-TRACK_NUMBER_303] = -1;
+      }
+    }
+
+    void updateControlMap() {
+      // update track control reference for pot map global
+      for (uint8_t i=0; i < 16; i++) {
+        if (_control_map_global[i].ctrl != -1) {
+          if (_control_map_global[i].track < TRACK_NUMBER_303) {
+            control_map_303[_control_map_global[i].ctrl].pot_map[_control_map_global[i].track] = i;
+          } else {
+            control_map_808[_control_map_global[i].ctrl].pot_map[_control_map_global[i].track-TRACK_NUMBER_303] = i;
+          }
+        }
+      }
+    }
+    
 } midiControllerComponent;
 
 // used by ain in case any POT_X registred
 void midiControllerHandle(uint8_t port, uint16_t value, uint8_t interrupted) {
-  // redirect to the last used control on midi controller
-  midiControllerComponent.sendCCData((int16_t)value, port-1, _selected_track);
+  --port;
+  // check for learn request
+  midiControllerComponent.learnCtrl(port);
+  
+  // anything into global learn map table?
+  if (_control_map_global[port].ctrl != -1) {
+    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, interrupted);
+  } else {
+    midiControllerComponent.sendCCData((int16_t)value, port, _selected_track, interrupted);
+  }
 }
 
 struct TopBar : PageComponent {
@@ -190,10 +263,11 @@ struct TopBar : PageComponent {
     // 8px by 8px, row major, little endian
     const uint8_t SUBPAGE[8] = {0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00};
     const uint8_t SUBPAGE_SELECTED[8] = {0x00, 0x00, 0x3c, 0x3c, 0x3c, 0x3c, 0x00, 0x00};
+    const uint8_t PLAYING[8] = {0x00, 0x06, 0x1e, 0x7e, 0x7e, 0x1e, 0x06, 0x00};
     
     TopBar() {
       // not overried by hook callback of a page
-      no_hook = true;
+      //no_hook = true;
       // no directly navigation thru here
       no_nav = true;
     }
@@ -210,7 +284,31 @@ struct TopBar : PageComponent {
       uCtrl.oled->print(String(_selected_track+1), 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
       uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4); 
+/*
+      uCtrl.oled->display->drawBox(0, 0, 15, 8);
+      //uCtrl.oled->drawBox();
+      if (_selected_track < 9) {
+        uCtrl.oled->print("T0", 1, 1); 
+        uCtrl.oled->print(String(_selected_track+1), 1, 3); 
+      } else {
+        uCtrl.oled->print("T", 1, 1); 
+        uCtrl.oled->print(String(_selected_track+1), 1, 2); 
+      }
+ */
+/*
+      // current pattern
+      uint8_t placement = 8;
+      uCtrl.oled->print("P", 1, placement);
+      uCtrl.oled->display->drawBox(((placement-1)*5)-2, 0, 8, 8);
+      uCtrl.oled->print("1", 1, placement+2);
 
+      // page/subpage
+      placement = 12;
+      uCtrl.oled->print(uCtrl.page->getPageName(), 1, placement);
+      uCtrl.oled->display->drawBox(((placement-1)*5)-2, 0, 23, 8);
+      uCtrl.oled->print(String(selected_subpage+1), 1, placement+5);
+*/
+       
       // page/subpage 
       uCtrl.oled->print(uCtrl.page->getPageName(), 1, 9);
       uCtrl.oled->display->drawBox(39, 0, 22, 8);
@@ -223,18 +321,24 @@ struct TopBar : PageComponent {
       }
       
       // bpm display and setup
-      uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);    
+      //uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
-      uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
+      uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21);
+      if (_playing) {
+        uCtrl.oled->print(PLAYING, 1, 19);
+      } else {
+        uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);  
+      }
 
       // top bar big line 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
       
       // f1 and f2
-      setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
-      setF2(_playing ? "stop" : "play");
+      //setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
+      //setF2(_playing ? "stop" : "play");
     }
-    
+
+    /*
     void change(int16_t data) {
       // primary incrementer or decrementer
       if (data == DECREMENT || data == INCREMENT) {
@@ -246,9 +350,10 @@ struct TopBar : PageComponent {
         uClock.setTempo(data);
       }
     }
+    */
 
     void function1() {
-        uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
+        //uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
     }
 
     void function2() {
@@ -258,13 +363,6 @@ struct TopBar : PageComponent {
           uClock.start();
     }
 } topBarComponent;
-
-// pattern data for mute automation grid
-typedef struct
-{
-  uint16_t map_303 = 0xFFFF;
-  uint16_t map_808[TRACK_NUMBER_808] = {0xFFFF};
-} MUTE_PATTERN;
 
 // the control knob will handle midi cc for the last selected midi cc of selected track inside this component
 struct MutePatternControl : PageComponent {
@@ -277,10 +375,15 @@ struct MutePatternControl : PageComponent {
     // f1 = << (...)
     // f2 = >> (...)
     // this will be extended in the future to allow more patterns to be used, 4 for now!
-    MUTE_PATTERN mute_pattern[4];
+
     uint8_t current_pattern = 0;
     uint8_t selected_pattern = 0;
     uint8_t selected_mute_chn = 0;
+    uint8_t element_index = 0;
+    uint8_t selected_track_ref = 0;
+    const uint8_t max_elements = TRACK_NUMBER_303 + (TRACK_NUMBER_808 * VOICE_MAX_SIZE_808);
+    const uint8_t max_elements_per_grid = 11;
+    const uint8_t block_size = ceil(86.00 / max_elements_per_grid);
     
     MutePatternControl()
     {
@@ -289,27 +392,45 @@ struct MutePatternControl : PageComponent {
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
       update_selector = true;
+
+      // force initializatiron of mute pattern data
+      for (uint8_t i=0; i < 4; i++) {
+        for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
+          _mute_pattern[i].map_808[j] = 0xFFFF;
+        }
+      }
     }
     
     void view() {
+      // update selected mute block based on selected track(fast nav using track change)
+      if (_selected_track < TRACK_NUMBER_303) {
+        selected_mute_chn = _selected_track;
+        element_index = 0;
+      } else {
+        if (selected_track_ref != _selected_track) {
+          selected_mute_chn = 0;
+          element_index = ((_selected_track - TRACK_NUMBER_303) * VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
+          selected_track_ref = _selected_track;
+        }
+      }
       
       // mute pattern
       for (uint8_t i=0; i < 4; i++) {
+        
         // mute grid
-        // 303
-        if (AcidSequencer.is303(_selected_track)) {
-          // print as not muted
-          uCtrl.oled->drawBox(y+(i*8), x, 6, 86, i+1 == selected_line ? true : false);
-          // if muted then just empty the box for ui feedback
-          if (!GET_BIT(mute_pattern[i].map_303, _selected_track)) {
-            uCtrl.oled->drawBox(y+(i*8)+1, x+1, 4, 84, i+1 == selected_line ? true : false);
-          }
-        // 808
-        } else {
-          uint8_t block_size = ceil(86.00 / VOICE_MAX_SIZE_808);
-          for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
-            uCtrl.oled->drawBox(y+(i*8), x+(j*block_size), 6, block_size-2, i+1 == selected_line && j == selected_mute_chn ? true : false);
-            if (!GET_BIT(mute_pattern[i].map_808[_selected_track-TRACK_NUMBER_303], j)) {
+        for (uint8_t j=0; j < max_elements_per_grid; j++) {
+          // default block base
+          uCtrl.oled->drawBox(y+(i*8), x+(j*block_size), 6, block_size-2, i+1 == selected_line && j == selected_mute_chn ? true : false);
+          
+          // 303
+          if (AcidSequencer.is303(j+element_index)) {
+            if (!GET_BIT(_mute_pattern[i].map_303, j+element_index)) {
+              uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
+            }
+          // 808
+          } else {
+            uint8_t map_ref = (j+element_index-TRACK_NUMBER_303);
+            if (!GET_BIT(_mute_pattern[i].map_808[map_ref/VOICE_MAX_SIZE_808], map_ref%VOICE_MAX_SIZE_808)) {
               uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
             }
           }
@@ -319,13 +440,17 @@ struct MutePatternControl : PageComponent {
         uCtrl.oled->print(String(i+1), line+i, 22, i+1 == selected_line ? true : false);
         if (current_pattern == i)
           uCtrl.oled->print("<", line+i, 25);
+          
       }
 
       // track info
+      //uCtrl.oled->print(String(_selected_track+1), line+4, 1);
       if (AcidSequencer.is303(_selected_track)) {
         //if (AcidSequencer.stepOn(_selected_track, AcidSequencer.getCurrentStep(_selected_track)) && _playing) {
         //  uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, AcidSequencer.getCurrentStep(_selected_track))), line+4, 1);
         //}
+        //uCtrl.oled->print("303", line+4, 1);
+        //uCtrl.oled->print(String(_selected_track+1), line+4, 7);
       // 808
       } else {
         uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+4, 1);
@@ -336,27 +461,50 @@ struct MutePatternControl : PageComponent {
     }
 
     void nav(uint8_t dir) {
-
+      uint8_t map_ref;
       switch (dir) {
         case LEFT:
             if (selected_mute_chn == 0) {
-              selected_mute_chn = AcidSequencer.is303(_selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
+              if (element_index != 0) {
+                --element_index;
+              } else {
+                //selected_mute_chn = AcidSequencer.is303(_selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
+              }
             } else {
               --selected_mute_chn;
             }      
-            if (!AcidSequencer.is303(_selected_track)) {
-              AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
+            
+            map_ref = selected_mute_chn + element_index;
+            if (map_ref < TRACK_NUMBER_303) {
+              _selected_track = map_ref;
+            } else {
+              _selected_track = ((map_ref - TRACK_NUMBER_303) / VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
+              // selected_mute_channel_rel = map_ref%VOICE_MAX_SIZE_808;
+              AcidSequencer.setTrackVoice(_selected_track, (map_ref-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
+              //AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
             }
+            selected_track_ref = _selected_track;
           break;
         case RIGHT:
             if (selected_mute_chn == VOICE_MAX_SIZE_808-1) {
-              selected_mute_chn = 0;
+              //selected_mute_chn = 0;
+              if (max_elements_per_grid + element_index < max_elements) {
+                ++element_index;
+              }
             } else {
               ++selected_mute_chn;
             }
-            if (!AcidSequencer.is303(_selected_track)) {
-              AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
+
+            map_ref = selected_mute_chn + element_index;
+            if (map_ref < TRACK_NUMBER_303) {
+              _selected_track = map_ref;
+            } else {
+              _selected_track = ((map_ref - TRACK_NUMBER_303) / VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
+              // selected_mute_channel_rel = map_ref%VOICE_MAX_SIZE_808;
+              AcidSequencer.setTrackVoice(_selected_track, (map_ref-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
+              //AcidSequencer.setTrackVoice(_selected_track, selected_mute_chn);
             }
+            selected_track_ref = _selected_track;
           break;
       }
       
@@ -370,18 +518,18 @@ struct MutePatternControl : PageComponent {
       uint8_t pattern = selected_line-1;
       if (data == INCREMENT) {
         if (AcidSequencer.is303(_selected_track)) {
-          SET_BIT(mute_pattern[pattern].map_303, _selected_track);
+          SET_BIT(_mute_pattern[pattern].map_303, _selected_track);
         } else {
-          SET_BIT(mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], selected_mute_chn);
+          SET_BIT(_mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
         }
         // selected is same as current? update tracks mute state
         if (pattern == current_pattern)
           changePattern(current_pattern);
       } else if (data == DECREMENT) {
         if (AcidSequencer.is303(_selected_track)) {
-          CLR_BIT(mute_pattern[pattern].map_303, _selected_track);
+          CLR_BIT(_mute_pattern[pattern].map_303, _selected_track);
         } else {
-          CLR_BIT(mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], selected_mute_chn);
+          CLR_BIT(_mute_pattern[pattern].map_808[_selected_track-TRACK_NUMBER_303], (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
         }
         if (pattern == current_pattern)
           changePattern(current_pattern);
@@ -405,13 +553,13 @@ struct MutePatternControl : PageComponent {
     void changePattern(uint8_t pattern) {
       // apply mute schema to 303s
       for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
-        AcidSequencer.setMute(i, !GET_BIT(mute_pattern[pattern].map_303, i));
+        AcidSequencer.setMute(i, !GET_BIT(_mute_pattern[pattern].map_303, i));
       }
 
       // apply mute schema to 808s
       for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
         for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
-          AcidSequencer.setMute(i+TRACK_NUMBER_303, j, !GET_BIT(mute_pattern[pattern].map_808[i], j));
+          AcidSequencer.setMute(i+TRACK_NUMBER_303, j, !GET_BIT(_mute_pattern[pattern].map_808[i], j));
         }
       }
     }
@@ -420,15 +568,15 @@ struct MutePatternControl : PageComponent {
     {
       if (AcidSequencer.is303(track)) {
         if (AcidSequencer.getMute(track)) {
-          CLR_BIT(mute_pattern[current_pattern].map_303, track);
+          CLR_BIT(_mute_pattern[current_pattern].map_303, track);
         } else {
-          SET_BIT(mute_pattern[current_pattern].map_303, track);
+          SET_BIT(_mute_pattern[current_pattern].map_303, track);
         }
       } else {
         if (AcidSequencer.getMute(track, AcidSequencer.getTrackVoice(track))) {
-          CLR_BIT(mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+          CLR_BIT(_mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
         } else {
-          SET_BIT(mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+          SET_BIT(_mute_pattern[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
         }
         // update to selected voice too
         selected_mute_chn = voice;
@@ -436,6 +584,165 @@ struct MutePatternControl : PageComponent {
     }
     
 } mutePatternComponent;
+
+// TODO should goes to session data?
+uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
+
+// the control knob will handle midi cc for the last selected midi cc of selected track inside this component
+struct PatternControl : PageComponent {
+    
+    // layout:
+    // mute automation pattern style driven
+    // 4x16 grid style:
+    uint8_t current_pattern = 0;
+    uint8_t selected_pattern = 0;
+    uint8_t selected_track = 0;
+    uint8_t selected_track_ref = 0;
+    const uint8_t max_elements = TRACK_NUMBER_303 + TRACK_NUMBER_808;
+    const uint8_t max_elements_per_grid = max_elements < 11 ? max_elements : 11;
+    const uint8_t block_size = ceil(86.00 / max_elements_per_grid);
+    uint8_t track_index = 0;
+    uint8_t pattern_index = 0;
+    
+    PatternControl()
+    {
+      // we want this component to be 4 lines max and 2 grids navigable object
+      line_size = 6;
+      grid_size = 2;
+      // enable more complex nav by updating selector pointer of page component
+      update_selector = true;
+    }
+
+    void view() {
+      // update selected mute block based on selected track(fast nav using track change)
+      selected_track = _selected_track;
+      uint8_t line_count = 1;
+      
+      // patterns
+      for (uint8_t i=pattern_index; i < pattern_index+4; i++) {
+        
+        // pattern grid
+        for (uint8_t j=0; j < max_elements_per_grid; j++) {
+          // default block base
+          uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, line_count+1 == selected_line && j == selected_track ? true : false);
+          if (_pattern_grid[j+track_index] != i) {
+            uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, line_count+1 == selected_line && j == selected_track ? true : false);
+          }
+        }
+
+        // pattern name
+        uCtrl.oled->print("ptrn", line+line_count, 20, line_count+1 == selected_line ? true : false);
+        uCtrl.oled->print(String(i+1), line+line_count, 25, line_count+1 == selected_line ? true : false);
+
+        line_count++;
+      }
+
+      // shift goes to copy/paste function
+      if (uCtrl.page->isShiftPressed()) {
+        setF1("clear");
+        setF2("");
+      } else {
+        // shift f1 goes copy, if copy state then no shift f1 goes paste instead of clear
+        if (false) {
+          setF1("cancel");
+          setF2("paste");
+        } else {
+          setF1("copy");
+          setF2("save");
+        }
+        
+      }
+    }
+
+    void nav(uint8_t dir) {
+
+      switch (dir) {
+        case LEFT:
+            if (selected_track == 0) {
+              if (track_index != 0) {
+                --track_index;
+              } else {
+                //selected_track = AcidSequencer.is303(_selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
+              }
+            } else {
+              --selected_track;
+            }      
+            
+            _selected_track = selected_track + track_index;
+            selected_track_ref = _selected_track;
+          break;
+        case RIGHT:
+            if (selected_track < max_elements-1) {
+              ++selected_track;
+            }
+            /*
+            if (max_elements_per_grid + track_index < max_elements) {
+              ++track_index;
+            } else {
+              ++selected_track;
+            }*/
+
+            _selected_track = selected_track + track_index;
+            selected_track_ref = _selected_track;
+          break;
+        case UP:
+            if (selected_line == 1) {
+              if (pattern_index > 0) {
+                pattern_index--;
+              }
+              selected_line = 2;
+            }
+          break;
+        case DOWN:
+            if (selected_line == 6) {
+              if (pattern_index < EPRROM_PATTERN_AVAILABLE - 4) {
+                pattern_index++;
+              }
+              selected_line = 5;
+            }
+          break;
+      }
+    }
+    
+    void change(int16_t data) {
+      // INCREMENT -1 // changes whole pattern tracks
+      // DECREMENT -2 // changes only a pattern track
+      // INCREMENT_SECONDARY -3 // changes selected track
+      // DECREMENT_SECONDARY -4 // changes selected track
+      // POT // last used midi control
+      uint8_t pattern = selected_line-2+pattern_index;
+      if (data == INCREMENT) {
+        changePattern(pattern);
+      } else if (data == DECREMENT) {
+        changePattern(pattern, _selected_track);
+      }
+    }
+    
+    void function1() {
+      // copy/clear ... cancel
+    }
+
+    void function2() {
+      // save ... paste
+      uint8_t pattern = selected_line-2+pattern_index;
+      savePattern(pattern);
+    }
+
+    void changePattern(uint8_t pattern, int8_t track = -1) {
+      if (track == -1) {
+        // load all tracks pattern
+        loadPattern(pattern);
+        for (uint8_t i=0; i < max_elements; i++) {
+          _pattern_grid[i] = pattern;
+        }
+        return;
+      }
+      // loads only a track pattern
+      loadPattern(pattern, track);
+      _pattern_grid[track] = pattern;
+    }
+    
+} patternComponent;
 
 struct StepSequencer : PageComponent {
 
@@ -719,7 +1026,7 @@ struct StepSequencer : PageComponent {
             AcidSequencer.rest(rec_track, rec_step_in, false);
           }
           // send note preview
-          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
+          sendNote(rec_note, _track_output_setup[rec_track].channel, _track_output_setup[rec_track].port, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
         }
 
       // secondary inc/dec or pot nav action
@@ -756,8 +1063,8 @@ struct StepSequencer : PageComponent {
             data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
             AcidSequencer.setTrackVoiceConfig(_selected_track, data);
             // send note for preview while change data
-            sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
-            sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
+            sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, NOTE_VELOCITY_808);
+            sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, 0);
           // no shift select voice
           } else {
             // select voice
@@ -802,7 +1109,7 @@ struct StepSequencer : PageComponent {
             }
           }
           // send note off
-          sendNote(rec_note, AcidSequencer.getTrackChannel(rec_track), 0);
+          sendNote(rec_note, _track_output_setup[rec_track].channel, _track_output_setup[rec_track].port, 0);
         }
       }
     }
@@ -854,6 +1161,153 @@ struct StepSequencer : PageComponent {
     
 } stepSequencerComponent;
 
+struct TempoBpm : PageComponent {
+
+    void view() {
+      genericOptionView("tempo", String(uClock.getTempo(), 1), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      // primary incrementer or decrementer
+      if (data == DECREMENT || data == INCREMENT) {
+        // inc and dec will fine update to 0.1 bpm
+        uClock.setTempo(uClock.getTempo()+((data == DECREMENT ? -1 : 1) * 0.1));
+      // secondary inc/dec or pot nav action
+      } else {
+        data = parseData(data, 30, 180, (uint16_t)uClock.getTempo());
+        uClock.setTempo(data);
+      }
+    }
+
+} tempoBpmComponent;
+
+struct TempoClockSource : PageComponent {
+
+    void view() {
+      genericOptionView("clock", _midi_clock_port == 0 ? String("int") : String(String("midi") + _midi_clock_port), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, uCtrl.midi->sizeOf(), _midi_clock_port);
+      ATOMIC(_midi_clock_port = data)
+      if (_midi_clock_port > 0) {
+        uClock.setMode(uClock.EXTERNAL_CLOCK);
+      } else {
+        uClock.setMode(uClock.INTERNAL_CLOCK);
+      }
+    }
+
+} tempoClockSourceComponent;
+
+struct RecInputSource : PageComponent {
+    
+    void view() {
+      genericOptionView("rec", String(String("midi") + _midi_rec_port), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 1, uCtrl.midi->sizeOf(), _midi_rec_port);
+      ATOMIC(_midi_rec_port = data)
+    }
+
+} recInputComponent;
+
+struct RecMode : PageComponent {
+
+    uint8_t rec_mode = 0;
+
+    void view() {
+      genericOptionView("mode", rec_mode == 0 ? String("real") : String("step"), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, 1, rec_mode);
+      rec_mode = data;
+    }
+
+} recModeComponent;
+
+struct MidiChannelConfig : PageComponent {
+
+    void view() {
+      genericOptionView("channel", String(_track_output_setup[_selected_track].channel+1), line, col, selected);
+    }
+    
+    void change(int16_t data) {
+      data = parseData(data, 0, 15, _track_output_setup[_selected_track].channel);
+      ATOMIC(_track_output_setup[_selected_track].channel = data)
+    }
+
+} midiChannelConfigComponent;
+
+struct TrackOutputSelector : PageComponent {
+
+    void view() {
+      genericOptionView("out", String(String("midi") + (_track_output_setup[_selected_track].port+1)), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, uCtrl.midi->sizeOf()-1, _track_output_setup[_selected_track].port);
+      ATOMIC(_track_output_setup[_selected_track].port = data)
+    }
+
+} trackOutputSelectorComponent;
+
+struct SessionConfig : PageComponent {
+
+    void view() {
+      genericOptionView("session", String("epprom"), line, col, selected, true);
+
+      setF1("load");
+      setF2("save");
+    }
+    
+    void change(int16_t data) {
+      //data = parseData(data, 0, 15, _track_output_setup[_selected_track].channel);
+      //_track_output_setup[_selected_track].channel = data;
+    }
+
+    void function1() {
+      loadSession();
+    }
+
+    void function2() {
+      saveSession();
+    }
+
+} sessionConfigComponent;
+
+struct SystemResources : PageComponent {
+
+    uint8_t resource_id = 0;
+    
+    void view() {
+
+      switch(resource_id) {
+        case 0:
+          genericOptionView("free ram", String(freeRam()), line, col, selected, true);
+          break;
+        case 1:
+          genericOptionView("epprom", String(EPPROM_SIZE), line, col, selected, true);
+          break;
+        case 2:
+          //genericOptionView("session", String(String((EPPROM_SESSION_SIZE/(float)EEPROM.length())*100) + String("%")), line, col, selected, true);
+          genericOptionView("session", String(EPPROM_SESSION_SIZE), line, col, selected, true);
+          break;
+        case 3:
+          genericOptionView("pattern", String(EPRROM_PATTERN_AVAILABLE), line, col, selected, true);
+          break;
+      }
+      
+    }
+    
+    void change(int16_t data) {
+      data = parseData(data, 0, 3, resource_id);
+      resource_id = data;
+    }
+    
+} systemResourcesComponent;
+
 struct TrackLength : PageComponent {
 
     void view() {
@@ -867,6 +1321,7 @@ struct TrackLength : PageComponent {
     }
     
 } lengthComponent;
+
 
 struct SequenceShift : PageComponent {
   
@@ -946,8 +1401,8 @@ struct VoiceConfig : PageComponent {
       data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
       AcidSequencer.setTrackVoiceConfig(_selected_track, data);
       // send note for preview while change data
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), NOTE_VELOCITY_808);
-      sendNote(data, AcidSequencer.getTrackChannel(_selected_track), 0);
+      sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, NOTE_VELOCITY_808);
+      sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, 0);
     }
     
 } voiceConfigComponent;
@@ -971,12 +1426,12 @@ struct TrackTune : PageComponent {
 struct TonesNumber : PageComponent {
 
     void view() {
-      genericOptionView("tones", String(generative_303[_selected_track].number_of_tones), line, col, selected);
+      genericOptionView("tones", String(_generative_303[_selected_track].number_of_tones), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 7, generative_303[_selected_track].number_of_tones);
-      generative_303[_selected_track].number_of_tones = data;
+      data = parseData(data, 1, 7, _generative_303[_selected_track].number_of_tones);
+      _generative_303[_selected_track].number_of_tones = data;
     }
     
 } tonesNumberComponent;
@@ -984,12 +1439,12 @@ struct TonesNumber : PageComponent {
 struct LowOctave : PageComponent {
   
     void view() {
-      genericOptionView("octave", String(generative_303[_selected_track].lower_octave), line, col, selected);
+      genericOptionView("octave", String(_generative_303[_selected_track].lower_octave), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 11, generative_303[_selected_track].lower_octave);
-      generative_303[_selected_track].lower_octave = data;
+      data = parseData(data, 1, 11, _generative_303[_selected_track].lower_octave);
+      _generative_303[_selected_track].lower_octave = data;
     }
     
 } lowOctaveComponent;
@@ -997,12 +1452,12 @@ struct LowOctave : PageComponent {
 struct RangeOctave : PageComponent {
   
     void view() {
-      genericOptionView("octaves", String(generative_303[_selected_track].range_octave), line, col, selected);
+      genericOptionView("octaves", String(_generative_303[_selected_track].range_octave), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 11, generative_303[_selected_track].range_octave);
-      generative_303[_selected_track].range_octave = data;
+      data = parseData(data, 1, 11, _generative_303[_selected_track].range_octave);
+      _generative_303[_selected_track].range_octave = data;
     }
     
 } rangeOctaveComponent;
@@ -1010,12 +1465,12 @@ struct RangeOctave : PageComponent {
 struct AccentAmount : PageComponent {
   
     void view() {
-      uint8_t accent_probability = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].accent_probability : generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      uint8_t accent_probability = AcidSequencer.is303(_selected_track) ? _generative_303[_selected_track].accent_probability : _generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
       genericOptionView("accent", String(accent_probability), line, col, selected);
     }
 
     void change(int16_t data) {
-      uint8_t * accent_probability = AcidSequencer.is303(_selected_track) ? &generative_303[_selected_track].accent_probability : &generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      uint8_t * accent_probability = AcidSequencer.is303(_selected_track) ? &_generative_303[_selected_track].accent_probability : &_generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
       data = parseData(data, 0, 100, *accent_probability);
       *accent_probability = data;
     }
@@ -1025,12 +1480,12 @@ struct AccentAmount : PageComponent {
 struct SlideAmount : PageComponent {
   
     void view() {
-      genericOptionView("slide", String(generative_303[_selected_track].slide_probability), line, col, selected);
+      genericOptionView("slide", String(_generative_303[_selected_track].slide_probability), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, generative_303[_selected_track].slide_probability);
-      generative_303[_selected_track].slide_probability = data;
+      data = parseData(data, 0, 100, _generative_303[_selected_track].slide_probability);
+      _generative_303[_selected_track].slide_probability = data;
     }
     
 } slideAmountComponent;
@@ -1038,12 +1493,12 @@ struct SlideAmount : PageComponent {
 struct TieAmount : PageComponent {
   
     void view() {
-      genericOptionView("tie", String(generative_303[_selected_track].tie_probability), line, col, selected);
+      genericOptionView("tie", String(_generative_303[_selected_track].tie_probability), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, generative_303[_selected_track].tie_probability);
-      generative_303[_selected_track].tie_probability = data;
+      data = parseData(data, 0, 100, _generative_303[_selected_track].tie_probability);
+      _generative_303[_selected_track].tie_probability = data;
     }
     
 } tieAmountComponent;
@@ -1051,12 +1506,12 @@ struct TieAmount : PageComponent {
 struct RollAmount : PageComponent {
   
     void view() {
-      genericOptionView("roll", String(generative_808[_selected_track-TRACK_NUMBER_303].roll_probability), line, col, selected);
+      genericOptionView("roll", String(_generative_808[_selected_track-TRACK_NUMBER_303].roll_probability), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 0, 100, generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
-      generative_808[_selected_track-TRACK_NUMBER_303].roll_probability = data;
+      data = parseData(data, 0, 100, _generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
+      _generative_808[_selected_track-TRACK_NUMBER_303].roll_probability = data;
     }
     
 } rollAmountComponent;
@@ -1087,13 +1542,13 @@ struct TrackFill : PageComponent {
     }
     
     void view() {
-      uint8_t generative_fill = AcidSequencer.is303(_selected_track) ? generative_303[_selected_track].generative_fill : generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      uint8_t generative_fill = AcidSequencer.is303(_selected_track) ? _generative_303[_selected_track].generative_fill : _generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
       genericOptionView("fill", String(generative_fill), line, col, selected, true);
     }
 
     void change(int16_t data) {
       //clearStackNote(_selected_track);
-      uint8_t * generative_fill = AcidSequencer.is303(_selected_track) ? &generative_303[_selected_track].generative_fill : &generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      uint8_t * generative_fill = AcidSequencer.is303(_selected_track) ? &_generative_303[_selected_track].generative_fill : &_generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
       data = parseData(data, 1, 100, *generative_fill);
       *generative_fill = data;
     }

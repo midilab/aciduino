@@ -60,15 +60,18 @@ typedef struct
   int8_t transpose;
 } SEQUENCER_TRACK_DATA_303;
 // 32 bytes per 16 step + 2 bytes config = 34 bytes [STEP_MAX_SIZE_303=16]
+// 64 bytes per 32 steps ... = 66 bytes
 
 typedef struct
 {
   SEQUENCER_TRACK_DATA_303 data;
   uint8_t step_location;
-  uint8_t channel;
+  //uint8_t channel;
+  //uint8_t port;
   uint8_t mute;
   STACK_NOTE_DATA_303 stack[NOTE_STACK_SIZE_303];  
 } SEQUENCER_TRACK_303;
+// 3bytes per stack note. 9bytes total + 3bytes = 12bytes
 
 class Engine303 : public Engine
 {
@@ -88,7 +91,6 @@ class Engine303 : public Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint16_t getTrackLength(uint8_t track);
-      uint8_t getTrackChannel(uint8_t track);
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       uint8_t getTune(uint8_t track);
@@ -100,11 +102,13 @@ class Engine303 : public Engine
       uint8_t getMute(uint8_t track);
       void clearStepData(uint8_t track, uint8_t rest);
       void clearTrack(uint8_t track);
-      void setTrackChannel(uint8_t track, uint8_t channel);
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note);
+      void * getPatternData(uint8_t track);
+      uint16_t getPatternMemorySize();
+      uint16_t getPatternTrackSize();
 
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);

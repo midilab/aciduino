@@ -72,7 +72,11 @@ class AcidSequencerClass
       void clearStackNote(int8_t track = -1);
 
       // general interface for UI/Sequencer for 303 and 808 generic access
-      void setTrackChannel(uint8_t track, uint8_t channel);
+      void * getPatternData(uint8_t track);
+      uint16_t get303PatternMemorySize();
+      uint16_t get303PatternTrackSize();
+      uint16_t get808PatternMemorySize();
+      uint16_t get808PatternTrackSize();
       void rest(uint8_t track, uint8_t step, bool state);
       bool stepOn(uint8_t track, uint8_t step);
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
@@ -82,8 +86,6 @@ class AcidSequencerClass
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       uint8_t getCurrentStep(uint8_t track);
-      uint8_t getTrackChannel(uint8_t track);
-      uint8_t getTrackPort(uint8_t track) { return 0; };
       uint8_t getTrackNumber();
       uint16_t getTrackMaxLength(uint8_t track);
       uint16_t getTrackLength(uint8_t track);
@@ -120,9 +122,9 @@ class AcidSequencerClass
       void setMute(uint8_t track, uint8_t voice, uint8_t mute);
       uint8_t getMute(uint8_t track, uint8_t voice);
       const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
-
-      // main callback outputs... CV ouput for next release please!
-      void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port));
+      
+      // main callback output data
+      void setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track));
 };
 
 extern AcidSequencerClass AcidSequencer;

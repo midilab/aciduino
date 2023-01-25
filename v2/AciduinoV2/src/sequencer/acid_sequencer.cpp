@@ -68,6 +68,40 @@ void AcidSequencerClass::on96PPQN(uint32_t tick)
   _engine808.onClockCall(tick);
 }
 
+uint16_t AcidSequencerClass::get303PatternMemorySize()
+{
+  // size of sequencer data on ram memory, to be used as base for epprom and sdcard save
+  return _engine303.getPatternMemorySize();
+}
+
+uint16_t AcidSequencerClass::get303PatternTrackSize()
+{
+  // size of sequencer data on ram memory, to be used as base for epprom and sdcard save
+  return _engine303.getPatternTrackSize();
+}
+
+uint16_t AcidSequencerClass::get808PatternMemorySize()
+{
+  // size of sequencer data on ram memory, to be used as base for epprom and sdcard save
+  return _engine808.getPatternMemorySize();
+}
+
+uint16_t AcidSequencerClass::get808PatternTrackSize()
+{
+  // size of sequencer data on ram memory, to be used as base for epprom and sdcard save
+  return _engine808.getPatternTrackSize();
+}
+
+void * AcidSequencerClass::getPatternData(uint8_t track)
+{
+  // 303 request
+  if(track < TRACK_NUMBER_303)
+    return _engine303.getPatternData(track);
+  // 808 request?
+  else
+    return _engine808.getPatternData(track-TRACK_NUMBER_303);
+}
+
 void AcidSequencerClass::clearStackNote(int8_t track)
 {
   if (track == -1) {
@@ -82,16 +116,6 @@ void AcidSequencerClass::clearStackNote(int8_t track)
   // 808 request?
   else
     _engine808.clearStackNote(track-TRACK_NUMBER_303);
-}
-
-void AcidSequencerClass::setTrackChannel(uint8_t track, uint8_t channel) 
-{
-  // 303 request
-  if(track < TRACK_NUMBER_303)
-    _engine303.setTrackChannel(track, channel);
-  // 808 request?
-  else
-    _engine808.setTrackChannel(track-TRACK_NUMBER_303, channel);
 }
 
 void AcidSequencerClass::rest(uint8_t track, uint8_t step, bool state) 
@@ -357,16 +381,6 @@ const char * AcidSequencerClass::getTrackVoiceName(uint8_t track, uint8_t voice)
   return _engine808.getTrackVoiceName(track-TRACK_NUMBER_303, voice);
 }
 
-uint8_t AcidSequencerClass::getTrackChannel(uint8_t track)
-{
-  // 303 request
-  if(track < TRACK_NUMBER_303)
-    _engine303.getTrackChannel(track); 
-  // 808 request?
-  else
-    _engine808.getTrackChannel(track-TRACK_NUMBER_303);
-}
-
 uint8_t AcidSequencerClass::getTune(uint8_t track)
 {
   return _engine303.getTune(track);
@@ -402,10 +416,10 @@ const char * AcidSequencerClass::getTemperamentName(uint8_t temperament_id)
   return _engine303.getTemperamentName(temperament_id);
 }
 
-void AcidSequencerClass::setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) 
+void AcidSequencerClass::setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)) 
 {
-  _engine303.setMidiOutputCallback(callback);
-  _engine808.setMidiOutputCallback(callback);
+  _engine303.setOutputCallback(callback);
+  _engine808.setOutputCallback(callback);
 }
 
 void AcidSequencerClass::acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1, uint8_t param_2, uint8_t param_3, uint8_t param_4, uint8_t param_5, uint8_t param_6) 

@@ -34,6 +34,19 @@
 
 #include "bjorklund.h"
 
+//
+// multicore archs
+//
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+  portMUX_TYPE _acidEngine303TimerMux = portMUX_INITIALIZER_UNLOCKED;
+	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine303TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine303TimerMux);
+//
+// singlecore archs
+//
+#else
+	#define ATOMIC(X) noInterrupts(); X; interrupts();
+#endif
+
 // helper
 #define GET_BIT(a,n) ((a >> n)  & 0x01)  
 #define SET_BIT(a,n) (a |=  (1ULL<<n))
@@ -43,7 +56,7 @@ class Engine
 {
   protected:
 
-		void (*_onMidiEventCallback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port);
+		void (*_onEventCallback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
 
   public:
 
@@ -76,8 +89,8 @@ class Engine
     virtual uint8_t getTrackVoice(uint8_t track) {}
     virtual const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0) {}
 
-    void setMidiOutputCallback(void (*callback)(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)) {
-      _onMidiEventCallback = callback;
+    void setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)) {
+      _onEventCallback = callback;
     }
 };
 

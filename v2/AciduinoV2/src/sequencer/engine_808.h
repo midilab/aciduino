@@ -65,7 +65,8 @@ struct SEQUENCER_TRACK_808
   uint8_t step_location;
   uint8_t step_length;
   int8_t shift;
-  uint8_t channel;
+  //uint8_t channel;
+  //uint8_t port;
   uint8_t mute;
   uint8_t roll_type;
 #ifdef GLOBAL_ACCENT
@@ -80,8 +81,6 @@ typedef struct
 	const char * name;
   // for midi
 	uint8_t note;
-  // for gate
-  //uint8_t port;
 } CTRL_DATA; 
   
 class Engine808 : public Engine
@@ -106,7 +105,6 @@ class Engine808 : public Engine
           
         }
 
-      void setTrackChannel(uint8_t track, uint8_t channel);
       void init();
 
       void rest(uint8_t track, uint8_t step, bool state);
@@ -121,7 +119,6 @@ class Engine808 : public Engine
       uint8_t getStepData(uint8_t track, uint8_t step);
       uint8_t getCurrentStep(uint8_t track);
       uint16_t getTrackLength(uint8_t track);
-      uint8_t getTrackChannel(uint8_t track);
       void setShiftPos(uint8_t track, int8_t shift);
       int8_t getShiftPos(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
@@ -137,6 +134,9 @@ class Engine808 : public Engine
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability);
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
       void onStepCall(uint32_t tick);
+      void * getPatternData(uint8_t track);
+      uint16_t getPatternMemorySize();
+      uint16_t getPatternTrackSize();
 
       // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
       void onClockCall(uint32_t tick);

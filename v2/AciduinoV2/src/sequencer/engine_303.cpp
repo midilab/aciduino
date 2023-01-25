@@ -35,30 +35,11 @@
 
 #include "engine_303.h"
 
-//
-// multicore archs
-//
-#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  portMUX_TYPE _acidEngine303TimerMux = portMUX_INITIALIZER_UNLOCKED;
-	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine303TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine303TimerMux);
-//
-// singlecore archs
-//
-#else
-	#define ATOMIC(X) noInterrupts(); X; interrupts();
-#endif
-
-void Engine303::setTrackChannel(uint8_t track, uint8_t channel)
-{
-  ATOMIC(_sequencer[track].channel = channel);
-}
-
 void Engine303::init()
 {
   // initing sequencer memory data
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
 
-    _sequencer[track].channel = track;
     _sequencer[track].data.shift = 0;
     _sequencer[track].data.step_length = STEP_MAX_SIZE_303-1;
     _sequencer[track].data.transpose = 0;
@@ -76,6 +57,21 @@ void Engine303::init()
     }
     
   }
+}
+
+void * Engine303::getPatternData(uint8_t track)
+{
+  return (void *)&_sequencer[track];
+}
+
+uint16_t Engine303::getPatternMemorySize()
+{
+  return sizeof(_sequencer);
+}
+
+uint16_t Engine303::getPatternTrackSize()
+{
+  return sizeof(_sequencer[0]);
 }
 
 void Engine303::rest(uint8_t track, uint8_t step, bool state) 
@@ -183,14 +179,6 @@ uint8_t Engine303::getCurrentStep(uint8_t track)
   static uint8_t step;
   ATOMIC(step = _sequencer[track].step_location) 
   return step;
-}
-
-uint8_t Engine303::getTrackChannel(uint8_t track)
-{
-  static uint8_t channel;
-  ATOMIC(channel = _sequencer[track].channel) 
-  return channel;
-  //return _sequencer[track].channel;
 }
 
 void Engine303::clearStepData(uint8_t track, uint8_t rest)
@@ -366,7 +354,7 @@ void Engine303::onStepCall(uint32_t tick)
           _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on
-          _onMidiEventCallback(NOTE_ON, note, _sequencer[track].data.step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, _sequencer[track].channel, 0);
+          _onEventCallback(NOTE_ON, note, _sequencer[track].data.step[_sequencer[track].step_location].accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, track);
           break;
         }
       }
@@ -387,7 +375,7 @@ void Engine303::onClockCall(uint32_t tick)
       if ( _sequencer[track].stack[i].length != -1 ) {
         --_sequencer[track].stack[i].length;
         if ( _sequencer[track].stack[i].length == 0 ) {
-          _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+          _onEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, track);
           _sequencer[track].stack[i].length = -1;
         }
       }  
@@ -403,14 +391,14 @@ void Engine303::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_303; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < NOTE_STACK_SIZE_303; j++ ) {
-        _onMidiEventCallback(NOTE_OFF, _sequencer[i].stack[j].note, 0, _sequencer[i].channel, 0);
+        _onEventCallback(NOTE_OFF, _sequencer[i].stack[j].note, 0, i);
         _sequencer[i].stack[j].length = -1;
       } 
     }
   } else {
     // clear and send any note off 
     for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
-      _onMidiEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, _sequencer[track].channel, 0);
+      _onEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, track);
       _sequencer[track].stack[i].length = -1;
     }     
   }

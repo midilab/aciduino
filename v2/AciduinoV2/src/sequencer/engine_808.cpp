@@ -44,25 +44,11 @@
 // on generative add the option to generate new accent only
 #include "engine_808.h"
 
-//
-// multicore archs
-//
-#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  portMUX_TYPE _acidEngine808TimerMux = portMUX_INITIALIZER_UNLOCKED;
-	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine808TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine808TimerMux);
-//
-// singlecore archs
-//
-#else
-	#define ATOMIC(X) noInterrupts(); X; interrupts();
-#endif
-
 void Engine808::init()
 {
   // initing sequencer memory data
   for ( uint8_t track = 0; track < TRACK_NUMBER_808; track++ ) {
 
-    _sequencer[track].channel = track+TRACK_NUMBER_303;
     _sequencer[track].step_location = 0;
     _sequencer[track].step_length = STEP_MAX_SIZE_808;
     _sequencer[track].mute = 0;
@@ -143,7 +129,7 @@ void Engine808::onStepCall(uint32_t tick)
         }
         
         // send the drum triger
-        _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, _sequencer[track].channel, 0);   
+        _onEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, track+TRACK_NUMBER_303);   
 
       } 
     }
@@ -168,7 +154,7 @@ void Engine808::onClockCall(uint32_t tick)
 
         --_sequencer[track].voice[i].trigger_ctrl;
         if ( _sequencer[track].voice[i].trigger_ctrl == 0 ) {
-          _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+          _onEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, track+TRACK_NUMBER_303);
         }
 
       // roll handler
@@ -192,7 +178,7 @@ void Engine808::onClockCall(uint32_t tick)
         }
 
         if (shot_the_moon)
-          _onMidiEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, _sequencer[track].channel, 0);
+          _onEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, track+TRACK_NUMBER_303);
       }
 
     }
@@ -207,17 +193,32 @@ void Engine808::clearStackNote(int8_t track)
     for ( uint8_t i = 0; i < TRACK_NUMBER_808; i++ ) {
       // clear and send any note off 
       for ( uint8_t j = 0; j < VOICE_MAX_SIZE_808; j++ ) {
-        _onMidiEventCallback(NOTE_OFF, _sequencer[i].voice[j].note, 0, _sequencer[i].channel, 0);
+        _onEventCallback(NOTE_OFF, _sequencer[i].voice[j].note, 0, i+TRACK_NUMBER_303);
         _sequencer[i].voice[j].trigger_ctrl = 0;
-      } 
+      }
     }
   //} else {
   //  // clear and send any note off 
   //  for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-  //    _onMidiEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, _sequencer[track].channel, 0);
+  //    _onEventCallback(NOTE_OFF, _sequencer[track].voice[i].note, 0, track+TRACK_NUMBER_303);
   //    _sequencer[track].voice[i].trigger_ctrl = 0;
   //  }     
   //}
+}
+
+void * Engine808::getPatternData(uint8_t track)
+{
+  return (void *)&_sequencer[track];
+}
+
+uint16_t Engine808::getPatternMemorySize()
+{
+  return sizeof(_sequencer);
+}
+
+uint16_t Engine808::getPatternTrackSize()
+{
+  return sizeof(_sequencer[0]);
 }
 
 void Engine808::rest(uint8_t track, uint8_t step, bool state) 
@@ -301,16 +302,6 @@ uint8_t Engine808::getCurrentStep(uint8_t track)
     // for voices
     ATOMIC(step = (_sequencer[track].step_location + _sequencer[track].voice[_voice].shift) % _sequencer[track].voice[_voice].step_length) 
     return step;
-}
-
-uint8_t Engine808::getTrackChannel(uint8_t track)
-{
-  return _sequencer[track].channel;
-}
-
-void Engine808::setTrackChannel(uint8_t track, uint8_t channel)
-{
-  ATOMIC(_sequencer[track].channel = channel);
 }
 
 void Engine808::clearStepData(uint8_t track, uint8_t voice)

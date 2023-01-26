@@ -724,11 +724,14 @@ struct PatternControl : PageComponent {
 
     void function2() {
       // save ... paste
-      uint8_t pattern = selected_line-2+pattern_index;
-      // save memory to selected line pattern
+      
+      // save all memory current into selected pattern line
+      //uint8_t pattern = selected_line-2+pattern_index;
       //savePattern(pattern);
+
+      // save the grid as it is selected per track
       for (uint8_t i=0; i < max_elements; i++) {
-        savePattern(pattern, _pattern_grid[i]);
+        savePattern(_pattern_grid[i], i);
       }
     }
 

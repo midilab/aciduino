@@ -3,10 +3,11 @@
 // epprom memory layout setup
 //
 #define EPPROM_SIZE                 EEPROM.length()
-#define EPPROM_SESSION_ADDRESS      0
+#define EPPROM_CHECK_DATA_ADDRESS   0
+#define EPPROM_SESSION_ADDRESS      2
 #define EPPROM_SESSION_SIZE         (sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup))
 #define EPRROM_PATTERN_ADDRESS      (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE)
-#define EPRROM_PATTERN_AVAILABLE    (EPPROM_SIZE-EPPROM_SESSION_SIZE) / (AcidSequencer.get303PatternMemorySize() + AcidSequencer.get808PatternMemorySize())
+#define EPRROM_PATTERN_AVAILABLE    (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (AcidSequencer.get303PatternMemorySize() + AcidSequencer.get808PatternMemorySize())
 //
 // common data definitions
 //
@@ -100,11 +101,11 @@ bool loadPattern(uint8_t pattern, int8_t track = -1)
 {
   uint16_t pattern_address = EPRROM_PATTERN_ADDRESS + (pattern * PATTERN_TOTAL_MEM_SIZE);
   if (track != -1) {
-    uint16_t pattern_track_address = pattern_address + (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (TRACK_NUMBER_303-track)));
+    uint16_t pattern_track_address = pattern_address + (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (track-TRACK_NUMBER_303)));
     // load only a track patttern
     AcidSequencer.setMute(track, true);
     AcidSequencer.clearStackNote(track);
-    uCtrl.storage->load(AcidSequencer.getPatternData(track), (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_track_address);
+    uCtrl.storage->load(AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_track_address);
     AcidSequencer.setMute(track, false);
   } else {
     // load the whole pattern for all tracks
@@ -131,9 +132,9 @@ bool savePattern(uint8_t pattern, int8_t track = -1)
 {
   uint16_t pattern_address = EPRROM_PATTERN_ADDRESS + (pattern * PATTERN_TOTAL_MEM_SIZE);
   if (track != -1) {
-    uint16_t pattern_track_address = pattern_address + (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE * track : (PATTERN_808_TRACK_SIZE * (TRACK_NUMBER_303-track)));
+    uint16_t pattern_track_address = pattern_address + (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (track-TRACK_NUMBER_303)));
     // save only a track patttern
-    uCtrl.storage->save(AcidSequencer.getPatternData(track), (track < TRACK_NUMBER_303 ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_track_address);
+    uCtrl.storage->save(AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_track_address);
   } else {
     // saves the whole pattern for all tracks
     // save 303 whole pattern data first
@@ -141,6 +142,30 @@ bool savePattern(uint8_t pattern, int8_t track = -1)
     // then 808 whole pattern data last
     uCtrl.storage->save(AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
   }
+}
+
+bool checkEppromDataLayoutChange()
+{
+  uint16_t pattern_size = 0;
+  uCtrl.storage->load(&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
+  if (pattern_size == PATTERN_TOTAL_MEM_SIZE) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+void eppomInit()
+{
+    uint16_t pattern_size = PATTERN_TOTAL_MEM_SIZE;
+    // init epprom session/pattern memory
+    // init all epprom slots to defaults
+    saveSession();
+    for (uint8_t pattern=0; pattern < EPRROM_PATTERN_AVAILABLE; pattern++) {
+      savePattern(pattern);
+    }
+    // mark epprom first bytes with pattern size to use as a checker for layout changes
+    uCtrl.storage->save(&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
 }
 
 #if defined(TEENSYDUINO)

@@ -16,6 +16,11 @@ void initSequencer()
   if (checkEppromDataLayoutChange()) {
     eppomInit();
   }
+
+  // load epprom saved session
+  loadSession();
+  // load first pattern
+  loadPattern(0);
 }
 
 // used by AcidSequencer object as callback to spill data out

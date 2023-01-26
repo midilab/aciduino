@@ -725,7 +725,11 @@ struct PatternControl : PageComponent {
     void function2() {
       // save ... paste
       uint8_t pattern = selected_line-2+pattern_index;
-      savePattern(pattern);
+      // save memory to selected line pattern
+      //savePattern(pattern);
+      for (uint8_t i=0; i < max_elements; i++) {
+        savePattern(pattern, _pattern_grid[i]);
+      }
     }
 
     void changePattern(uint8_t pattern, int8_t track = -1) {
@@ -1254,10 +1258,13 @@ struct TrackOutputSelector : PageComponent {
 } trackOutputSelectorComponent;
 
 struct SessionConfig : PageComponent {
+  
+    SessionConfig() {
+      grid_size = 2;    
+    }
 
     void view() {
       genericOptionView("session", String("epprom"), line, col, selected, true);
-
       setF1("load");
       setF2("save");
     }
@@ -1280,7 +1287,11 @@ struct SessionConfig : PageComponent {
 struct SystemResources : PageComponent {
 
     uint8_t resource_id = 0;
-    
+
+    SystemResources() {
+      grid_size = 2;    
+    }
+
     void view() {
 
       switch(resource_id) {

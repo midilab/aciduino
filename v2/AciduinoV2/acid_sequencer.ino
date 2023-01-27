@@ -1,12 +1,14 @@
 
 void initSequencer()
 {
+  // init default track output data
   for(uint8_t track=0; track < TRACK_NUMBER_303+TRACK_NUMBER_808; track++) {
     _track_output_setup[track].output = MIDI_OUTPUT;
     _track_output_setup[track].channel = track;
     _track_output_setup[track].port = 0;
   }
-  // the acid sequencer main output
+  
+  // the acid sequencer main output callback
   AcidSequencer.setOutputCallback(sequencerOutHandler);
 
   // we going to init epprom in two cases:

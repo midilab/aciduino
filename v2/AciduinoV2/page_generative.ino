@@ -19,7 +19,8 @@ void generativeFunction2()
 
 void generative_page_init()
 {
-  uCtrl.page->set("gene", generative_page_create, generative_page_destroy, generative_page_refresh, generative_page_digital_input, generative_page_analog_input, 2);     
+  //uCtrl.page->set("gene", generative_page_create, generative_page_destroy, generative_page_refresh, generative_page_digital_input, generative_page_analog_input, 2);   
+  uCtrl.page->set("gene", generative_page_create, generative_page_destroy, generative_page_refresh, generative_page_digital_input, nullptr, 2);     
 }
 
 void generative_page_create()

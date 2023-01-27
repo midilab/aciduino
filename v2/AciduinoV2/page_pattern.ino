@@ -1,7 +1,8 @@
 
 void pattern_page_init()
 {
-  uCtrl.page->set("ptrn", pattern_page_create, pattern_page_destroy, pattern_page_refresh, pattern_page_digital_input, pattern_page_analog_input, 2);
+  //uCtrl.page->set("ptrn", pattern_page_create, pattern_page_destroy, pattern_page_refresh, pattern_page_digital_input, pattern_page_analog_input, 2);
+  uCtrl.page->set("ptrn", pattern_page_create, pattern_page_destroy, pattern_page_refresh, pattern_page_digital_input, nullptr, 2);
 }
 
 void pattern_page_create()

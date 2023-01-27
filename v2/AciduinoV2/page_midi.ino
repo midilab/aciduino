@@ -1,7 +1,8 @@
 
 void midi_page_init()
 {
-  uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, midi_page_analog_input, 2);     
+  //uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, midi_page_analog_input, 2);   
+  uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, nullptr, 1);       
 
   // register midi controller options per track
   if (TRACK_NUMBER_303 > 0) {

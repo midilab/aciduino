@@ -28,14 +28,6 @@
 #define NOTE_VELOCITY_808       70
 #define ACCENT_VELOCITY_808     127
 #define MAX_VOICE_NAME_CHARS    3
-//#define GLOBAL_ACCENT           // if you choose to go with global accent you can save some ram
-
-// MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
-#define MIDI_CLOCK 0xF8
-#define MIDI_START 0xFA
-#define MIDI_STOP  0xFC
-#define NOTE_ON    0x90
-#define NOTE_OFF   0x80
-#define MIDI_CC    0xB0
+//#define GLOBAL_ACCENT           // if you choose to go with global accent you can save some ram and epprom/sdcard in size for pattern
 
 #endif

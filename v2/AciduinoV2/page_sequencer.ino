@@ -1,6 +1,7 @@
 void step_sequencer_page_init()
 {
-  uCtrl.page->set("seqr", step_sequencer_page_create, step_sequencer_page_destroy, step_sequencer_page_refresh, step_sequencer_page_digital_input, step_sequencer_page_analog_input, 2);     
+  //uCtrl.page->set("seqr", step_sequencer_page_create, step_sequencer_page_destroy, step_sequencer_page_refresh, step_sequencer_page_digital_input, step_sequencer_page_analog_input, 2);   
+  uCtrl.page->set("seqr", step_sequencer_page_create, step_sequencer_page_destroy, step_sequencer_page_refresh, step_sequencer_page_digital_input, nullptr, 2);     
 }
 
 void step_sequencer_page_create()

@@ -205,12 +205,12 @@ uint16_t Engine303::getTrackLength(uint8_t track)
   //static uint16_t length;
   //ATOMIC(length = _sequencer[track].data.step_length+1) 
   //return length;
-  return _sequencer[track].data.step_length+1;
+  return _sequencer[track].data.step_length;
 }
 
 void Engine303::setTrackLength(uint8_t track, uint16_t length)
 {
-  ATOMIC(_sequencer[track].data.step_length = length-1);  
+  ATOMIC(_sequencer[track].data.step_length = length);  
 }
 
 void Engine303::setMute(uint8_t track, uint8_t mute)

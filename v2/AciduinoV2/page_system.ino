@@ -3,7 +3,8 @@ bool _powersave = false;
 
 void system_page_init()
 { 
-  uCtrl.page->set("syst", system_page_create, system_page_destroy, system_page_refresh, system_page_digital_input, system_page_analog_input, 2);    
+  //uCtrl.page->set("syst", system_page_create, system_page_destroy, system_page_refresh, system_page_digital_input, system_page_analog_input, 2); 
+  uCtrl.page->set("syst", system_page_create, system_page_destroy, system_page_refresh, system_page_digital_input, nullptr, 2);    
 }
 
 void system_page_create()

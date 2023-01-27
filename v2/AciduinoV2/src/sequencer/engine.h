@@ -52,6 +52,14 @@
 #define SET_BIT(a,n) (a |=  (1ULL<<n))
 #define CLR_BIT(a,n) (a &= ~(1ULL<<n))
 
+// MIDI clock, start, stop, note on and note off byte definitions - based on MIDI 1.0 Standards.
+#define MIDI_CLOCK 0xF8
+#define MIDI_START 0xFA
+#define MIDI_STOP  0xFC
+#define NOTE_ON    0x90
+#define NOTE_OFF   0x80
+#define MIDI_CC    0xB0
+
 class Engine
 {
   protected:

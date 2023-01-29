@@ -67,7 +67,7 @@ void onClockStart()
 void onClockStop() 
 {
   sendMidiStop();
-  // clear all tracks stack note
+  // clear all tracks stack note(all floating notes off!)
   AcidSequencer.clearStackNote();
   _playing = false;
 #if defined(USE_BPM_LED)

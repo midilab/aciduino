@@ -1,13 +1,13 @@
-// midi handler
+// ussing 3 midi_messages data structure to
+// keep interrupted and non interrupted memory area safe
 uctrl::protocol::midi::MIDI_MESSAGE msg;
 uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
-
-uint8_t _port = 1;
+uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
 
 volatile uint8_t _midi_clock_port = 0; // 0 = internal
 volatile uint8_t _midi_rec_port = 2;
 
-// All midi interface registred thru uCtrl get incomming data thru callback
+// All midi interface registred thru uCtrl get incomming data thru this callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {
   if ( uClock.getMode() == uClock.EXTERNAL_CLOCK ) {
@@ -95,11 +95,11 @@ void sendMidiStop() {
 // this is used inside interruption and outside, controlled by interrupted var
 void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0) {
   if (interrupted) {
-    msg_interrupt.type = uctrl::protocol::midi::ControlChange;
-    msg_interrupt.data1 = cc;
-    msg_interrupt.data2 = value;
-    msg_interrupt.channel = channel;
-    uCtrl.midi->write(&msg_interrupt, port+1, interrupted);
+    msg_interrupt_pots.type = uctrl::protocol::midi::ControlChange;
+    msg_interrupt_pots.data1 = cc;
+    msg_interrupt_pots.data2 = value;
+    msg_interrupt_pots.channel = channel;
+    uCtrl.midi->write(&msg_interrupt_pots, port+1, 0);
   } else {
     msg.type = uctrl::protocol::midi::ControlChange;
     msg.data1 = cc;

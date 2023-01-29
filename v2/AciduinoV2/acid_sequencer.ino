@@ -11,7 +11,7 @@ void initSequencer()
   // the acid sequencer main output callback
   AcidSequencer.setOutputCallback(sequencerOutHandler);
 
-  // we going to init epprom in two cases:
+  // we're going to init epprom in two cases:
   // if track layout changes || if no aciduino data present at epprom
   // so if you want to keep your pattenrs and change layout consider backup pattenrs into another sequencer
   // because they will be wipeout for the new memory layout to take place

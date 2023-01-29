@@ -71,7 +71,7 @@
 #include "src/sequencer/acid_sequencer.h"
 
 void setup() {
-  // setup uctrl hardware/interface
+  // setup uctrl hardware and control interfaces
   uCtrlSetup();
   // setup clock system
   uClockSetup();

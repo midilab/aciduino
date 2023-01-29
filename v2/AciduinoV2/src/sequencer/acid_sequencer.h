@@ -33,6 +33,7 @@
 #include "setup.h"
 
 // acid sequencers modules
+#include "engine.h"
 #include "engine_303.h"
 #include "engine_808.h"
 
@@ -47,16 +48,28 @@
 // use a flag or value for note_off to get into loop inside 96ppqn call with 
 // note on and off controlled until it finished the step
 
+typedef enum {
+  REALTIME,
+  STEP,
+} REC_MODE;
+
 class AcidSequencerClass
 {
     private:
 
       Engine303 _engine303;
       Engine808 _engine808;
-      
+      uint32_t _tick = 0;
+
+      REC_MODE _rec_mode = REALTIME;
+      int16_t _rec_realtime_ctrl = -1;
+      uint8_t _rec_realtime_note = 0;
+
       uint8_t _selected_pattern = 0;
 
       const char * _note_string_table[12] = {"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
+		
+      void (*_onEventCallback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
 
     public:
 
@@ -70,6 +83,9 @@ class AcidSequencerClass
       // The callback function wich will be called when clock stops by using Clock.stop() method.
       void onClockStop();
       void clearStackNote(int8_t track = -1);
+
+      // realtime rec and step rec modes support
+      void input(uint8_t track, uint8_t msg, uint8_t data1, uint8_t data2, uint8_t interrupted = 0);
 
       // general interface for UI/Sequencer for 303 and 808 generic access
       void * getPatternData(uint8_t track);

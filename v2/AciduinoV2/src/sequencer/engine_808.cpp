@@ -391,6 +391,16 @@ uint8_t Engine808::getTrackVoiceConfig(uint8_t track)
   return _sequencer[track].voice[_voice].note;
 }
 
+int8_t Engine808::getTrackVoiceByNote(uint8_t track, uint8_t note)
+{
+  for (uint8_t voice=0; voice < VOICE_MAX_SIZE_808; voice++) {
+    if (_sequencer[track].voice[voice].note == note) {
+      return voice;
+    }
+  }
+  return -1;
+}
+
 void Engine808::setTrackVoiceConfig(uint8_t track, uint8_t note)
 {
   ATOMIC(_sequencer[track].voice[_voice].note = note);

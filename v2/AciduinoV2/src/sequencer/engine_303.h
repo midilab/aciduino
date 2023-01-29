@@ -105,6 +105,7 @@ class Engine303 : public Engine
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
+      void setLongTie(uint8_t track, uint8_t start_step, uint8_t step_end);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note);
       void * getPatternData(uint8_t track);
       uint16_t getPatternMemorySize();

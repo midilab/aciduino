@@ -223,6 +223,36 @@ uint8_t Engine303::getMute(uint8_t track)
   return _sequencer[track].mute;
 }
 
+void Engine303::setLongTie(uint8_t track, uint8_t start_step, uint8_t step_end)
+{
+  uint8_t steps_holded = 0;
+  uint8_t note = getStepData(track, start_step);
+  uint8_t step_size = getTrackLength(track);
+
+  start_step = (start_step+1) % getTrackLength(track);
+
+  // hold longer than track end step
+  if (step_end < start_step) {
+    steps_holded = step_size - (start_step - step_end);
+  } else if (step_end > start_step) {
+    steps_holded = step_end - start_step;
+  }
+
+  //step_end = step_end == 0 ? getTrackLength(track)-1 : step_end-1;
+
+  if (steps_holded > 0) {
+    uint16_t end_step = start_step+steps_holded;
+    for (uint16_t i=start_step; i < end_step; i++) {
+      uint8_t step_idx = i%step_size;
+      // set step to rest mode and tie it and same note holded!
+      rest(track, step_idx, true);
+      setTie(track, step_idx, true);
+      setSlide(track, step_idx, false);
+      setStepData(track, step_idx, note);
+    }
+  }
+}
+
 void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t slide_probability, uint8_t tie_probability, uint8_t number_of_tones, uint8_t lower_note, uint8_t range_note) 
 {
   uint8_t note, high_note, accent, slide, tie, rest, last_step;

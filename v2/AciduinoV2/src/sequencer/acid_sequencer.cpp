@@ -62,6 +62,7 @@ void AcidSequencerClass::on16PPQN(uint32_t tick)
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
 void AcidSequencerClass::on96PPQN(uint32_t tick) 
 {
+  _tick = tick;
   // 303 clock call
   _engine303.onClockCall(tick);
   // 808 clock call
@@ -424,6 +425,7 @@ const char * AcidSequencerClass::getTemperamentName(uint8_t temperament_id)
 
 void AcidSequencerClass::setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)) 
 {
+  _onEventCallback = callback;
   _engine303.setOutputCallback(callback);
   _engine808.setOutputCallback(callback);
 }
@@ -448,6 +450,103 @@ const char * AcidSequencerClass::getNoteString(uint8_t note)
 
   sprintf(szBuffer, "%s%d", _note_string_table[interval], octave+1);
   return szBuffer;
+}
+
+void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_t data2, uint8_t interrupted)
+{
+  //
+  // REALTIME REC MODE with quantization
+  //
+  if (_rec_mode == REALTIME) {
+    // quantize it at ~80%
+    bool accent = false;
+    uint8_t quantized_step = getCurrentStep(track);
+    uint32_t tick = 0;
+    uint8_t quantize_factor = 0;
+
+    ATOMIC(tick = _tick);
+    quantize_factor = tick % 6;
+
+    // 4.8 is 80%, from zero based 3.8 ~4
+    // -1 on this case makes perfect for live record: 3
+    if ( quantize_factor > 3 ) {
+      ++quantized_step;
+      // in case quantization ahead of play pointer we put this note on hold to avoid ghost notes wilhe recording
+      // what to do with ghost notes???
+    }
+
+    if (msg == NOTE_ON) {
+
+      if (AcidSequencer.is303(track)) {
+        // if we have a note on waiting note off and receive a note on
+        // check for slide:
+        //if (_rec_realtime_ctrl != -1) {
+        //  _engine303.setLongTie(track, _rec_realtime_ctrl, quantized_step);
+          // send note off
+        //  _onEventCallback(NOTE_OFF, _rec_realtime_note, 0, track);
+        //  _rec_realtime_ctrl = -1;
+        //  setSlide(track, quantized_step, true);
+        //} else {
+          // this controls note on/off flux to keep track of realtime notes
+        //  _rec_realtime_ctrl = quantized_step;
+          //_rec_realtime_note = data1;
+        //}
+
+        setStepData(track, quantized_step, data1);
+        // check for accent
+        if (data2 >= ACCENT_VELOCITY_303)
+          accent = true;
+
+        // record note in!
+        AcidSequencer.rest(track, quantized_step, false);
+        AcidSequencer.setAccent(track, quantized_step, accent);
+        
+        // send note preview
+        _onEventCallback(NOTE_ON, data1, accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, track);
+      } else {
+        // check wich voice we should record
+        int8_t voice = _engine808.getTrackVoiceByNote(track-TRACK_NUMBER_303, data1);
+        if (voice != -1) {
+          AcidSequencer.setTrackVoice(track, voice);
+          // check for accent
+          if (data2 >= ACCENT_VELOCITY_808)
+            accent = true;
+
+          // record note in!
+          AcidSequencer.rest(track, quantized_step, false);
+          AcidSequencer.setAccent(track, quantized_step, accent);
+        }
+
+        // send note preview
+        _onEventCallback(NOTE_ON, data1, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, track);
+      }
+
+    } else if (msg == NOTE_OFF) {
+
+      if (AcidSequencer.is303(track)) {
+        
+        //if (_rec_realtime_ctrl == -1) {
+        //  return;
+        //}
+        
+        // should we set a long tie?
+        //if (_rec_realtime_ctrl != quantized_step) {
+        //  _engine303.setLongTie(track, _rec_realtime_ctrl, quantized_step);
+        //  _rec_realtime_ctrl = -1;
+        //}
+
+      }
+        
+      // send note off
+      _onEventCallback(NOTE_OFF, data1, 0, track);
+
+    }
+    
+  // STEP REC MODE
+  } else {
+
+  }
+
 }
 
 AcidSequencerClass AcidSequencer;

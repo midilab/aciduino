@@ -132,6 +132,7 @@ class Engine808 : public Engine
       uint8_t getTrackVoice(uint8_t track);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
+      int8_t getTrackVoiceByNote(uint8_t track, uint8_t note);
       const char * getTrackVoiceName(uint8_t track, uint8_t voice = 0);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probability, uint8_t roll_probability);
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.

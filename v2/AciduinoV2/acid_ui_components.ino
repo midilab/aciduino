@@ -772,7 +772,6 @@ struct StepSequencer : PageComponent {
     uint8_t pot_last_note = 36;
     bool full_size_view = false;
     // rec and preview function helpers
-    uint8_t rec_step_in = 0;
     uint8_t rec_track = 0;
     uint8_t rec_note = 36;
 
@@ -1019,21 +1018,11 @@ struct StepSequencer : PageComponent {
           AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
         // tap button for preview and realtime record with generic button 1(DECREMENT)
         } else {
-          // if its playing we record
+          // step or realtime record
           // keep track to avoid changes on note while note on state
-          rec_step_in = curr_step+1;
           rec_track = _selected_track;
           rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
-          if (_playing) {
-            // for 303 we also set the note input via nav pot
-            if (AcidSequencer.is303(rec_track)) {
-              AcidSequencer.setStepData(rec_track, rec_step_in, rec_note);
-            }
-            // record note in!
-            AcidSequencer.rest(rec_track, rec_step_in, false);
-          }
-          // send note preview
-          sendNote(rec_note, _track_output_setup[rec_track].channel, _track_output_setup[rec_track].port, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808); 
+          AcidSequencer.input(rec_track, NOTE_ON, rec_note, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
         }
 
       // secondary inc/dec or pot nav action
@@ -1089,34 +1078,7 @@ struct StepSequencer : PageComponent {
       if(selected_line >= 2) {
         // preview note release for note off
         if (data == DECREMENT) {
-          // if its playing we record
-          if (_playing) {
-            // for 303 we also set the note input via nav pot
-            if (AcidSequencer.is303(rec_track)) {
-              // should we set tie?
-              uint8_t start_step = rec_step_in+1;
-              uint8_t steps_holded = 0;
-              // hold longer than track end step
-              if (curr_step < rec_step_in) {
-                steps_holded = step_size - (rec_step_in - curr_step);
-              } else if (curr_step > rec_step_in) {
-                steps_holded = curr_step - rec_step_in;
-              }
-
-              if (steps_holded > 0) {
-                uint8_t end_step = start_step+steps_holded;
-                for (uint8_t i=start_step; i < end_step; i++) {
-                  uint8_t step_idx = i%step_size;
-                  // set step to rest mode and tie it and same note holded!
-                  AcidSequencer.rest(rec_track, step_idx, true);
-                  AcidSequencer.setTie(rec_track, step_idx, true);
-                  AcidSequencer.setStepData(rec_track, step_idx, rec_note);
-                }
-              }
-            }
-          }
-          // send note off
-          sendNote(rec_note, _track_output_setup[rec_track].channel, _track_output_setup[rec_track].port, 0);
+          AcidSequencer.input(rec_track, NOTE_OFF, rec_note, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
         }
       }
     }

@@ -5,7 +5,7 @@ uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
 uint8_t _port = 1;
 
 volatile uint8_t _midi_clock_port = 0; // 0 = internal
-volatile uint8_t _midi_rec_port = 1;
+volatile uint8_t _midi_rec_port = 2;
 
 // All midi interface registred thru uCtrl get incomming data thru callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
@@ -28,9 +28,42 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
   }
 
   // control goes thru selected track(no matter what channel)
-  //switch (msg->type) {
-  //
-  //}  
+  switch (msg->type) {
+
+    //
+    // Note ON/OFF
+    //  
+    case uctrl::protocol::midi::NoteOn:
+    case uctrl::protocol::midi::NoteOff:
+      AcidSequencer.input(_selected_track, msg->type == uctrl::protocol::midi::NoteOn ? NOTE_ON : NOTE_OFF, msg->data1, msg->data2, interrupted);
+      break;
+
+    //
+    // Control Change
+    //
+    case uctrl::protocol::midi::ControlChange:
+
+      // CC MAP Control
+      switch ( msg->data1 ) {
+
+        // Sustain Controller 64
+        case 64:
+          //if (_foot_pedal_rec == true) {
+          //  if ( msg->data2 == 127 ) {
+              //footSwitchHandle(HIGH);
+          //  } else if ( msg->data2 == 0 ) {
+              //footSwitchHandle(LOW);
+          //  }
+          //  return;
+          //}
+          break;
+      }
+      break;
+      
+    default:
+      break;
+      
+  }  
 }
 
 // used by AcidSequencer object as callback to spill midi messages out

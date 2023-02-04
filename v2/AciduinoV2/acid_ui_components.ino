@@ -114,13 +114,17 @@ struct MidiCCControl : PageComponent {
         updateControlMap();
         int8_t pot_map = AcidSequencer.is303(_selected_track) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
         if (pot_map == -1) {
-          setF1("learn", learn == true ? true : false);
+          setF2("learn", learn == true ? true : false);
         } else {
           // clear pot_map
           //setF1(String(String("clear") + String(pot_map)).c_str());
-          setF1("clear");
+          setF2("clear");
         }
-        setF2("");
+        if (learn == true) {
+          setF1("cancel");
+        } else {
+          setF1("");
+        }
       // no shift 
       } else {
         setF1("A", selected_map == 0 ? true : false);
@@ -135,6 +139,16 @@ struct MidiCCControl : PageComponent {
     void function1() {
       // shift 
       if (uCtrl.page->isShiftPressed() || learn == true) {
+        // cancel learn
+        learn = false;
+      } else {
+        selected_map = 0;
+      }
+    }
+
+    void function2() {
+      // shift 
+      if (uCtrl.page->isShiftPressed()) {
         // learn!
         // lock all other pots
         // set waiting learn flag
@@ -146,15 +160,6 @@ struct MidiCCControl : PageComponent {
           // clear pot_map
           clearCtrl(ctrl_selected);
         }
-      } else {
-        selected_map = 0;
-      }
-    }
-
-    void function2() {
-      // shift 
-      if (uCtrl.page->isShiftPressed()) {
-        // ... reserved for play
       } else {
         selected_map = 1;
       }
@@ -585,9 +590,6 @@ struct MutePatternControl : PageComponent {
     
 } mutePatternComponent;
 
-// TODO should goes to session data?
-uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
-
 // the control knob will handle midi cc for the last selected midi cc of selected track inside this component
 struct PatternControl : PageComponent {
     
@@ -603,10 +605,13 @@ struct PatternControl : PageComponent {
     const uint8_t block_size = ceil(86.00 / max_elements_per_grid);
     uint8_t track_index = 0;
     uint8_t pattern_index = 0;
+    bool copy_state = false;
+    bool select_all = false;
     
     PatternControl()
     {
       // we want this component to be 4 lines max and 2 grids navigable object
+      // the +2 lines are for scroll up/down usage
       line_size = 6;
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
@@ -616,17 +621,21 @@ struct PatternControl : PageComponent {
     void view() {
       // update selected mute block based on selected track(fast nav using track change)
       selected_track = _selected_track;
+      selected_pattern = selected_line-2+pattern_index;
       uint8_t line_count = 1;
-      
+
+      // ui for all vs single
+      // for all blink twice fast as selected one for the pattern line
       // patterns
       for (uint8_t i=pattern_index; i < pattern_index+4; i++) {
         
         // pattern grid
         for (uint8_t j=0; j < max_elements_per_grid; j++) {
           // default block base
-          uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, line_count+1 == selected_line && j == selected_track ? true : false);
+          uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
           if (_pattern_grid[j+track_index] != i) {
-            uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, line_count+1 == selected_line && j == selected_track ? true : false);
+            // playing pattern box
+            uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
           }
         }
 
@@ -639,16 +648,16 @@ struct PatternControl : PageComponent {
 
       // shift goes to copy/paste function
       if (uCtrl.page->isShiftPressed()) {
-        setF1("clear");
-        setF2("");
+        setF1("save as");
+        setF2("save");
       } else {
         // shift f1 goes copy, if copy state then no shift f1 goes paste instead of clear
-        if (false) {
+        if (copy_state) {
           setF1("cancel");
-          setF2("paste");
+          setF2("paste"); 
         } else {
           setF1("copy");
-          setF2("save");
+          setF2("all", select_all ? true : false);
         }
         
       }
@@ -703,35 +712,72 @@ struct PatternControl : PageComponent {
           break;
       }
     }
-    
+
+    // changes here
+    // use all for pattern grid changes too
+    // and take inc for change as press and dec as change on pattern start(quantized pattern change)
     void change(int16_t data) {
       // INCREMENT -1 // changes whole pattern tracks
       // DECREMENT -2 // changes only a pattern track
       // INCREMENT_SECONDARY -3 // changes selected track
       // DECREMENT_SECONDARY -4 // changes selected track
       // POT // last used midi control
-      uint8_t pattern = selected_line-2+pattern_index;
       if (data == INCREMENT) {
-        changePattern(pattern);
+        changePattern(selected_pattern);
       } else if (data == DECREMENT) {
-        changePattern(pattern, _selected_track);
+        changePattern(selected_pattern, _selected_track);
       }
     }
     
     void function1() {
-      // copy/clear ... cancel
+      if (uCtrl.page->isShiftPressed()) {
+        // save as: gets all current memory and saves on selected pattern(all tracks)
+        // save all memory current into selected pattern line
+        savePattern(selected_line-2+pattern_index);
+      } else {
+        if (copy_state) {
+          // cancel
+          copy_state = false;
+        } else {
+          // copy
+          if (select_all) {
+            // copy all
+            copyPattern(selected_pattern);
+          } else {
+            // copy track
+            copyPattern(selected_pattern, _selected_track);
+          }
+          copy_state = true;
+        }
+      }
     }
 
     void function2() {
-      // save ... paste
-      
-      // save all memory current into selected pattern line
-      //uint8_t pattern = selected_line-2+pattern_index;
-      //savePattern(pattern);
-
-      // save the grid as it is selected per track
-      for (uint8_t i=0; i < max_elements; i++) {
-        savePattern(_pattern_grid[i], i);
+      // save as it is on memory and pattern selected per track
+      if (uCtrl.page->isShiftPressed()) {
+        // save the grid as it is selected per track
+        for (uint8_t i=0; i < max_elements; i++) {
+          savePattern(_pattern_grid[i], i);
+        }
+      // paste/all
+      } else {
+        if (copy_state) {
+          // paste all
+          if(select_all) {
+            if (pastePattern(selected_pattern)) {
+              
+            }
+          // paste track
+          } else {
+            if (pastePattern(selected_pattern, _selected_track)) {
+              
+            }
+          }
+          copy_state = false;
+        } else {
+          // copy all selection
+          select_all = !select_all;
+        }
       }
     }
 
@@ -742,11 +788,14 @@ struct PatternControl : PageComponent {
         for (uint8_t i=0; i < max_elements; i++) {
           _pattern_grid[i] = pattern;
         }
-        return;
+      } else {
+        // loads only a track pattern
+        loadPattern(pattern, track);
+        _pattern_grid[track] = pattern;
       }
-      // loads only a track pattern
-      loadPattern(pattern, track);
-      _pattern_grid[track] = pattern;
+      
+      // update current pattern reference
+      current_pattern = pattern;
     }
     
 } patternComponent;
@@ -1130,10 +1179,13 @@ struct StepSequencer : PageComponent {
     
 } stepSequencerComponent;
 
-struct TempoBpm : PageComponent {
+struct TempoTransport : PageComponent {
 
     void view() {
       genericOptionView("tempo", String(uClock.getTempo(), 1), line, col, selected);
+
+      setF1("rec", AcidSequencer.getRecStatus());
+      setF2("play", _playing ? true : false);
     }
 
     void change(int16_t data) {
@@ -1148,7 +1200,20 @@ struct TempoBpm : PageComponent {
       }
     }
 
-} tempoBpmComponent;
+    void function1() {
+      // rec mode
+      AcidSequencer.setRecStatus(!AcidSequencer.getRecStatus());
+    }
+
+    void function2() {
+      // play/stop
+      if (_playing)
+        uClock.stop();
+      else
+        uClock.start();
+    }
+
+} tempoTransportComponent;
 
 struct TempoClockSource : PageComponent {
 
@@ -1165,7 +1230,7 @@ struct TempoClockSource : PageComponent {
         uClock.setMode(uClock.INTERNAL_CLOCK);
       }
     }
-
+    
 } tempoClockSourceComponent;
 
 struct RecInputSource : PageComponent {
@@ -1558,11 +1623,6 @@ void playStop()
     uClock.stop();
   else
     uClock.start();
-}
-
-void tempoSetup()
-{
-  uCtrl.page->selectComponent(topBarComponent);
 }
 
 void previousTrack()

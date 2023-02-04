@@ -41,7 +41,7 @@ void Engine303::init()
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
 
     _sequencer[track].data.shift = 0;
-    _sequencer[track].data.step_length = STEP_MAX_SIZE_303-1;
+    _sequencer[track].data.step_length = STEP_MAX_SIZE_303;
     _sequencer[track].data.transpose = 0;
     _sequencer[track].data.tune = 0;
     _sequencer[track].step_location = 0;

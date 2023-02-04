@@ -32,7 +32,7 @@ void system_page_refresh(uint8_t subpage)
 
   if (subpage == 0) {
     
-    uCtrl.page->component(tempoBpmComponent, 3, 1, true);
+    uCtrl.page->component(tempoTransportComponent, 3, 1, true);
     uCtrl.page->component(tempoClockSourceComponent, 4, 1);
     
     uCtrl.page->component(recInputComponent, 3, 2);

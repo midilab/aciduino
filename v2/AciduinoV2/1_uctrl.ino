@@ -50,6 +50,7 @@ typedef enum {
   UP_BUTTON,
   DOWN_BUTTON,
   PREVIOUS_BUTTON,
+  //TRANSPORT_BUTTON_1,
 
 #if defined(USE_PUSH_8) || defined(USE_PUSH_24) || defined(USE_PUSH_32) || defined(USE_TOUCH_32)
   // first extension 8 group
@@ -330,15 +331,14 @@ void uCtrlSetup() {
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2);
   uCtrl.page->setNavPot(1);
 #endif
-  // shift button callback setup
-  // slave/master tempo set
-  //uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_1, tempoSetup);
-  // play/stop tempo
-  uCtrl.page->setShiftCtrlAction(PAGE_BUTTON_2, playStop);
+  // hook button callback setup
   // previous track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
   // next track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
+  // transport play/stop and rec on/off
+  //uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
+  //uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recStatus);
   // bottom bar for f1 and f2 functions draw function
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
 
@@ -349,5 +349,5 @@ void uCtrlSetup() {
   uCtrl.dout->writeAll(LOW);
   
   // 
-  uCtrl.page->setPage(1);
+  uCtrl.page->setPage(0);
 }

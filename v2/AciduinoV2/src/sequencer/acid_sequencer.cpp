@@ -452,14 +452,46 @@ const char * AcidSequencerClass::getNoteString(uint8_t note)
   return szBuffer;
 }
 
+void AcidSequencerClass::setRecMode(uint8_t rec_mode)
+{
+  ATOMIC(_rec_mode = rec_mode);
+}
+
+void AcidSequencerClass::setRecStatus(bool record)
+{
+  ATOMIC(_rec_status = record);
+}
+
+bool AcidSequencerClass::getRecStatus()
+{
+  return _rec_status;
+}
+
 void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_t data2, uint8_t interrupted)
 {
+  bool accent = false;
+
+  // pass message thru for live play on selected track
+  if (msg == NOTE_ON) {
+    // check for accent
+    if (data2 >= is303(track) ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_808)
+      accent = true;
+
+    // send note preview
+    _onEventCallback(NOTE_ON, data1, accent ? (is303(track) ? ACCENT_VELOCITY_303 : ACCENT_VELOCITY_808) : (is303(track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808), track);
+  } else if (msg == NOTE_OFF) {
+    // send note off
+    _onEventCallback(NOTE_OFF, data1, 0, track);
+  }
+
+  if (_rec_status == false)
+    return;
+
   //
   // REALTIME REC MODE with quantization
   //
   if (_rec_mode == REALTIME) {
     // quantize it at ~80%
-    bool accent = false;
     uint8_t quantized_step = getCurrentStep(track);
     uint32_t tick = 0;
     uint8_t quantize_factor = 0;
@@ -478,6 +510,7 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
     if (msg == NOTE_ON) {
 
       if (AcidSequencer.is303(track)) {
+
         // if we have a note on waiting note off and receive a note on
         // check for slide:
         //if (_rec_realtime_ctrl != -1) {
@@ -493,32 +526,23 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
         //}
 
         setStepData(track, quantized_step, data1);
-        // check for accent
-        if (data2 >= ACCENT_VELOCITY_303)
-          accent = true;
 
         // record note in!
         AcidSequencer.rest(track, quantized_step, false);
         AcidSequencer.setAccent(track, quantized_step, accent);
         
-        // send note preview
-        _onEventCallback(NOTE_ON, data1, accent ? ACCENT_VELOCITY_303 : NOTE_VELOCITY_303, track);
       } else {
+
         // check wich voice we should record
         int8_t voice = _engine808.getTrackVoiceByNote(track-TRACK_NUMBER_303, data1);
         if (voice != -1) {
           AcidSequencer.setTrackVoice(track, voice);
-          // check for accent
-          if (data2 >= ACCENT_VELOCITY_808)
-            accent = true;
 
           // record note in!
           AcidSequencer.rest(track, quantized_step, false);
           AcidSequencer.setAccent(track, quantized_step, accent);
         }
 
-        // send note preview
-        _onEventCallback(NOTE_ON, data1, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, track);
       }
 
     } else if (msg == NOTE_OFF) {
@@ -537,9 +561,6 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
 
       }
         
-      // send note off
-      _onEventCallback(NOTE_OFF, data1, 0, track);
-
     }
     
   // STEP REC MODE

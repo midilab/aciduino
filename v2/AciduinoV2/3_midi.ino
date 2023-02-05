@@ -5,7 +5,7 @@ uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
 uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
 
 volatile uint8_t _midi_clock_port = 0; // 0 = internal
-volatile uint8_t _midi_rec_port = 2;
+volatile uint8_t _midi_rec_port = 1;
 
 // All midi interface registred thru uCtrl get incomming data thru this callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 

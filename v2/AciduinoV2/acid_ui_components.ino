@@ -41,6 +41,11 @@ struct MidiCCControl : PageComponent {
 
     uint8_t last_selected_track = 0;
 
+#if defined(LEARN_ENABLED)
+    const bool learn_enabled = true; 
+#else
+    const bool learn_enabled = false; 
+#endif
     bool learn = false;
 
     // layout:
@@ -109,8 +114,8 @@ struct MidiCCControl : PageComponent {
         ++ctrl_counter;
       }
 
-      // shift 
-      if (uCtrl.page->isShiftPressed() || learn == true) {
+      // shift only if learn enabled
+      if ((uCtrl.page->isShiftPressed() || learn == true) && learn_enabled == true) {
         updateControlMap();
         int8_t pot_map = AcidSequencer.is303(_selected_track) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
         if (pot_map == -1) {
@@ -138,7 +143,7 @@ struct MidiCCControl : PageComponent {
     
     void function1() {
       // shift 
-      if (uCtrl.page->isShiftPressed() || learn == true) {
+      if ((uCtrl.page->isShiftPressed() || learn == true) && learn_enabled == true) {
         // cancel learn
         learn = false;
       } else {
@@ -148,7 +153,7 @@ struct MidiCCControl : PageComponent {
 
     void function2() {
       // shift 
-      if (uCtrl.page->isShiftPressed()) {
+      if (uCtrl.page->isShiftPressed() && learn_enabled == true) {
         // learn!
         // lock all other pots
         // set waiting learn flag
@@ -271,8 +276,6 @@ struct TopBar : PageComponent {
     const uint8_t PLAYING[8] = {0x00, 0x06, 0x1e, 0x7e, 0x7e, 0x1e, 0x06, 0x00};
     
     TopBar() {
-      // not overried by hook callback of a page
-      //no_hook = true;
       // no directly navigation thru here
       no_nav = true;
     }
@@ -337,36 +340,8 @@ struct TopBar : PageComponent {
 
       // top bar big line 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);
-      
-      // f1 and f2
-      //setF1(uClock.getMode() == uClock.INTERNAL_CLOCK ? "external" : "internal");
-      //setF2(_playing ? "stop" : "play");
     }
 
-    /*
-    void change(int16_t data) {
-      // primary incrementer or decrementer
-      if (data == DECREMENT || data == INCREMENT) {
-        // inc and dec will fine update to 0.1 bpm
-        uClock.setTempo(uClock.getTempo()+((data == DECREMENT ? -1 : 1) * 0.1));
-      // secondary inc/dec or pot nav action
-      } else {
-        data = parseData(data, 40, 160, (uint16_t)uClock.getTempo());
-        uClock.setTempo(data);
-      }
-    }
-    */
-
-    void function1() {
-        //uClock.setMode(uClock.getMode() == uClock.INTERNAL_CLOCK ? uClock.EXTERNAL_CLOCK : uClock.INTERNAL_CLOCK);
-    }
-
-    void function2() {
-        if (_playing)
-          uClock.stop();
-        else
-          uClock.start();
-    }
 } topBarComponent;
 
 // the control knob will handle midi cc for the last selected midi cc of selected track inside this component
@@ -624,6 +599,10 @@ struct PatternControl : PageComponent {
       selected_pattern = selected_line-2+pattern_index;
       uint8_t line_count = 1;
 
+    
+      if (selected_line == 1)
+        selected_line = 2;
+        
       // ui for all vs single
       // for all blink twice fast as selected one for the pattern line
       // patterns
@@ -753,12 +732,14 @@ struct PatternControl : PageComponent {
     }
 
     void function2() {
-      // save as it is on memory and pattern selected per track
+      // save: memory and pattern selected per track as it is on grid
       if (uCtrl.page->isShiftPressed()) {
         // save the grid as it is selected per track
         for (uint8_t i=0; i < max_elements; i++) {
           savePattern(_pattern_grid[i], i);
         }
+        // save _mute_grid for current_pattern only
+        saveMuteGrid(current_pattern);
       // paste/all
       } else {
         if (copy_state) {
@@ -842,7 +823,7 @@ struct StepSequencer : PageComponent {
         line_size = full_size_view ? (selected_locator == locator_length-1 ? ceil((step_size - (selected_locator * 64)) / 16) : 4) + 1 : 2;
       }
     }
-    
+
     void view() {
       uint8_t steps_line = line + 1;
       uint8_t line_idx = 0, step_on = 0;
@@ -945,9 +926,8 @@ struct StepSequencer : PageComponent {
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
-          setF1("mute", AcidSequencer.is303(_selected_track) ? AcidSequencer.getMute(_selected_track) : AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
-          // you can only paste if the selected selector is cleared otherwise it will shows copy
-          setF2("clear");
+          setF1("clear");
+          setF2("mute", AcidSequencer.is303(_selected_track) ? AcidSequencer.getMute(_selected_track) : AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
       // Steps
       } else if (selected_line >= 2) {
         setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
@@ -1134,6 +1114,16 @@ struct StepSequencer : PageComponent {
     
     void function1() {
       if (selected_line == 1) {
+        // clear track
+        AcidSequencer.clearTrack(_selected_track);
+      } else if (selected_line >= 2) {
+        // 303 and 808 uses the same accent button f1
+        AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
+      }
+    }
+
+    void function2() {
+      if (selected_line == 1) {
         // mute track(voice for 808)
         if (AcidSequencer.is303(_selected_track)) {
           AcidSequencer.setMute(_selected_track, !AcidSequencer.getMute(_selected_track));
@@ -1143,16 +1133,6 @@ struct StepSequencer : PageComponent {
           AcidSequencer.setMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track), !AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
           mutePatternComponent.updateCurrentMuteState(_selected_track, AcidSequencer.getTrackVoice(_selected_track));
         }
-      } else if (selected_line >= 2) {
-        // 303 and 808 uses the same accent button f1
-        AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
-      }
-    }
-
-    void function2() {
-      if (selected_line == 1) {
-        // clear track
-        AcidSequencer.clearTrack(_selected_track);
       } else if (selected_line >= 2) {
         // 303
         if (AcidSequencer.is303(_selected_track)) {

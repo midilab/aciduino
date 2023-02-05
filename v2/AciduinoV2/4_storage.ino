@@ -171,7 +171,7 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
       
     uCtrl.storage->save(AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
 
-    // save _mute_pattern only for track?
+    // save _mute_pattern for a specific patern
     //...
   } else {
     // saves the whole pattern for all tracks
@@ -183,6 +183,12 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
     // _mute_grid data
     uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
   }
+}
+
+bool saveMuteGrid(uint8_t pattern)
+{
+  // _mute_grid data
+  uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
 }
 
 // copy current track data into same or another track pattern memory

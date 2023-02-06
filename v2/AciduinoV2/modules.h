@@ -97,6 +97,7 @@
   #define USE_AIN
   #if defined (USE_POT_8) || defined (USE_POT_16)
     #define USE_AIN_4051
+    #define LEARN_ENABLED
   #endif
 #endif
 

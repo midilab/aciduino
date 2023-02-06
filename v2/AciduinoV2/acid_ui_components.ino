@@ -582,6 +582,7 @@ struct PatternControl : PageComponent {
     uint8_t pattern_index = 0;
     bool copy_state = false;
     bool select_all = false;
+    bool save_as_state = false;
     
     PatternControl()
     {
@@ -626,7 +627,7 @@ struct PatternControl : PageComponent {
       }
 
       // shift goes to copy/paste function
-      if (uCtrl.page->isShiftPressed()) {
+      if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         setF1("save as");
         setF2("save");
       } else {
@@ -634,6 +635,9 @@ struct PatternControl : PageComponent {
         if (copy_state) {
           setF1("cancel");
           setF2("paste"); 
+        } else if (save_as_state) {
+          setF1("cancel");
+          setF2("save as"); 
         } else {
           setF1("copy");
           setF2("all", select_all ? true : false);
@@ -709,14 +713,13 @@ struct PatternControl : PageComponent {
     }
     
     void function1() {
-      if (uCtrl.page->isShiftPressed()) {
-        // save as: gets all current memory and saves on selected pattern(all tracks)
-        // save all memory current into selected pattern line
-        savePattern(selected_line-2+pattern_index);
+      if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
+        save_as_state = true;
       } else {
-        if (copy_state) {
+        if (copy_state || save_as_state) {
           // cancel
           copy_state = false;
+          save_as_state = false;
         } else {
           // copy
           if (select_all) {
@@ -733,14 +736,14 @@ struct PatternControl : PageComponent {
 
     void function2() {
       // save: memory and pattern selected per track as it is on grid
-      if (uCtrl.page->isShiftPressed()) {
+      if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         // save the grid as it is selected per track
         for (uint8_t i=0; i < max_elements; i++) {
           savePattern(_pattern_grid[i], i);
         }
         // save _mute_grid for current_pattern only
         saveMuteGrid(current_pattern);
-      // paste/all
+      // paste/all, save as selection
       } else {
         if (copy_state) {
           // paste all
@@ -755,6 +758,11 @@ struct PatternControl : PageComponent {
             }
           }
           copy_state = false;
+        } else if (save_as_state) {
+          // save as: gets all current memory and saves on selected pattern(all tracks)
+          // save all memory current into selected pattern line
+          savePattern(selected_line-2+pattern_index);
+          save_as_state = false;
         } else {
           // copy all selection
           select_all = !select_all;
@@ -1603,6 +1611,11 @@ void playStop()
     uClock.stop();
   else
     uClock.start();
+}
+
+void recToggle()
+{
+  AcidSequencer.setRecStatus(!AcidSequencer.getRecStatus());
 }
 
 void previousTrack()

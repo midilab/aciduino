@@ -12,6 +12,9 @@
 //#define USE_UONE_PINOUT
 //#define USE_MEGA_SHIELD_PINOUT
 
+// want a dedicated transport button?
+//#define USE_TRANSPORT_BUTTON
+
 //
 // USE_CUSTOM_PINOUT
 //
@@ -31,6 +34,8 @@
   #define NAV_UP_PIN                14
   #define NAV_DOWN_PIN              9
   #define NAV_LEFT_PIN              16
+    
+  #define TRANSPORT_BUTTON_1_PIN    10
   
   // going to use changer pot?
   #define CHANGER_POT_PIN           A9
@@ -68,6 +73,8 @@
     #define NAV_DOWN_PIN              9
     #define NAV_LEFT_PIN              16
     
+    #define TRANSPORT_BUTTON_1_PIN    10
+    
     // going to use changer pot?
     #define CHANGER_POT_PIN           A9
 
@@ -93,6 +100,8 @@
     #define NAV_UP_PIN                18
     #define NAV_DOWN_PIN              19
     #define NAV_LEFT_PIN              23
+    
+    //#define TRANSPORT_BUTTON_1_PIN    ??
     
     // going to use changer pot?
     // GPIO 0 - ADC2_1
@@ -121,6 +130,8 @@
     #define NAV_DOWN_PIN              3
     #define NAV_LEFT_PIN              2
     
+    #define TRANSPORT_BUTTON_1_PIN    7
+    
   #endif
 
 //
@@ -145,6 +156,8 @@
   #define NAV_UP_PIN                4
   #define NAV_DOWN_PIN              3
   #define NAV_LEFT_PIN              2
+    
+  //#define TRANSPORT_BUTTON_1_PIN    7
   
   // the other controls are handled
   // by touch driver

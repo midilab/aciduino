@@ -50,7 +50,9 @@ typedef enum {
   UP_BUTTON,
   DOWN_BUTTON,
   PREVIOUS_BUTTON,
-  //TRANSPORT_BUTTON_1,
+#if defined(USE_TRANSPORT_BUTTON)
+  TRANSPORT_BUTTON_1,
+#endif
 
 #if defined(USE_PUSH_8) || defined(USE_PUSH_24) || defined(USE_PUSH_32) || defined(USE_TOUCH_32)
   // first extension 8 group
@@ -198,6 +200,11 @@ void uCtrlSetup() {
   uCtrl.din->plug(NAV_DOWN_PIN);
   // previous
   uCtrl.din->plug(NAV_LEFT_PIN);
+  #if defined(USE_TRANSPORT_BUTTON)
+  // transport
+  uCtrl.din->plug(TRANSPORT_BUTTON_1_PIN);
+  #endif
+  
 #endif
 
 // any shiftregister to plug?
@@ -219,6 +226,11 @@ void uCtrlSetup() {
   // little hack to make the shift protoboard work, ground our gnd button pin 2 to avoid floating noises around...
   pinMode(2, OUTPUT);
   digitalWrite(2, LOW);
+  #if defined(USE_TRANSPORT_BUTTON)
+  // in case transport button
+  pinMode(8, OUTPUT);
+  digitalWrite(8, LOW);
+  #endif
 #endif
 
   //
@@ -336,9 +348,16 @@ void uCtrlSetup() {
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
   // next track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
-  // transport play/stop and rec on/off
-  //uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
-  //uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recStatus);
+
+  // transport play/stop and shifted rec on/off
+#if defined(USE_TRANSPORT_BUTTON)
+  uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
+  uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recToggle);
+#elif defined(USE_PUSH_8) || defined(USE_PUSH_16) || defined(USE_PUSH_32)
+  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, playStop);
+  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, recToggle);
+#endif
+
   // bottom bar for f1 and f2 functions draw function
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
 

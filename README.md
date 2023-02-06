@@ -1,10 +1,10 @@
 # Aciduino
 
-Cheap, DIY Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines for a very low cost on arduino platform.
+Cheap, DIY Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines on arduino platform.
 
 There are two flavors of aciduino, the [first version(v1)](https://github.com/midilab/aciduino/tree/master/v1/) is a TB303 sequencer only, the [second version(v2)](https://github.com/midilab/aciduino/tree/master/v2/) is a TB303 and TR808 sequencer with oled display and step grid system.
 
-You can do it in 1 hour on your protoboard or order a PCB.
+You can do it in 1 or 2 hour on your protoboard or order a PCB.
 
 ## Aciduino V1
 
@@ -38,6 +38,9 @@ A oled screen to get access to all parameters that matters in realtime, a easy t
 
 ## TB-303 and TR-808 Step Sequencer clone
 Programming using the same analogy and features of originals. 
+
+## Grid pattern system
+Grid pattern system with mixing patterns support and mute automation (only available on v2)
 
 ## Generative Engine
 Generate automatic harmonized acid lines for your 303 or acid rythms for your 808 clones by pressing a single button and twist some generative parameter knobs. 

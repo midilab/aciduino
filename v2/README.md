@@ -1,10 +1,10 @@
 # Aciduino V2
 
-Put your DIY super powers to the test building your own Roland's TB-303 and/or TB-808 step sequencer! An Arduino based clone project specially hacked with corrosive features to improve live performances! Save your money building this classic synthesizer clone faster than a blink of an eye.
+Put your DIY super powers to the test building your own Roland's TB-303 and/or TB-808 step sequencer! An Arduino based clone project specially hacked with corrosive features to improve live performances! Save your money building the classic and timeless TB-303 and TR-808 step sequencer clone faster than a blink of an eye.
 
 This version is multi-arch that allows differents micro-controllers to be used on the build, rigth now supports Arduino Mega, any Teensy >= 3.2 and a experimental and ongoing support to ESP32.
 
-Aciduino V2 is also the first official uModular app, wich makes use of uModular schematics and libraries [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock).
+Aciduino V2 is also the first official uModular app, wich makes use of [uMODULAR](https://github.com/midilab/uMODULAR) schematics, [uCtrl](https://github.com/midilab/uCtrl) drivers/interface library and [uClock](https://github.com/midilab/uClock) BPM clock generator.
 
 Since this version makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) libraries as submodule, so just remember to init submodules just after clone the repo.
 
@@ -64,23 +64,12 @@ The interface presents you simple schema to navigate and interact with you acidu
 
 **Shift + Nav UP/DOWN:** Change page  
 **Shift + Nav LEFT/RIGHT:** Changes subpage  
-**Shift + Element button 1:** Tempo setup  
-**Shift + Element button 2:** Play/Stop  
 **Shift + Generic button 1:** Previous track  
 **Shift + Generic button 2:** Next track  
 
 **Step Sequencer Pot, Shift + Pot**  
-303: Pot Changes notes, Shift + Pot Changes octave   
-808: Pot Changes voice, Shift + Pot Changes voice config(midi cc or cv port)  
-
-### Roadmap
-
-- midi in rec input  
-- pattern grid for live page  
-- 808 fill groups 1-4  
-- save to epprom or sdcard  
-- copy/paste  
-- getbyvalue pot on midi controller  
+303: [Pot] Changes notes [Shift + Pot] Changes octave   
+808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
 
 # uMODULAR uOne
 

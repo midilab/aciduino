@@ -19,11 +19,11 @@ void midi_page_init()
     midiControllerComponent.set303Control("delay t.", 18);
     midiControllerComponent.set303Control("delay l.", 19);
     midiControllerComponent.set303Control("tuning", 104);
-    //midiControllerComponent.set303Control("...", 1);
-    //midiControllerComponent.set303Control("...", 1);
-    //midiControllerComponent.set303Control("...", 1);
-    //midiControllerComponent.set303Control("...", 1);
-    //midiControllerComponent.set303Control("...", 1);
+    midiControllerComponent.set303Control("efx 1", 105);
+    midiControllerComponent.set303Control("efx 2", 106);
+    midiControllerComponent.set303Control("efx 3", 107);
+    midiControllerComponent.set303Control("efx 4", 108);
+    midiControllerComponent.set303Control("efx 5", 109);
   }
   if (TRACK_NUMBER_808 > 0) {
     // max 16 controls!

@@ -340,14 +340,14 @@ void Engine303::onStepCall(uint32_t tick)
 
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
 
+    // get actual step location.
+    _sequencer[track].step_location = (tick + _sequencer[track].data.shift) % _sequencer[track].data.step_length;
+
     // are we mute?
     if (_sequencer[track].mute)
       continue;
-    
+
     length = NOTE_LENGTH_303;
-    
-    // get actual step location.
-    _sequencer[track].step_location = (tick + _sequencer[track].data.shift) % _sequencer[track].data.step_length;
     
     // send note on only if this step are not in rest mode
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {

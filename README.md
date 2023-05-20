@@ -4,7 +4,7 @@ Cheap, DIY Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Y
 
 There are two flavors of aciduino, the [first version(v1)](https://github.com/midilab/aciduino/tree/master/v1/) is a TB303 sequencer only, the [second version(v2)](https://github.com/midilab/aciduino/tree/master/v2/) is a TB303 and TR808 sequencer with oled display and step grid system.
 
-You can do it in 1 or 2 hour on your protoboard or order a PCB.
+You can do it in 1 or 2 hour on your protoboard or [order a v1 PCB](https://pushermanproductions.com/product/midilab-aciduino-303-style-midi-sequencer-pcb-only/).
 
 ## Aciduino V1
 

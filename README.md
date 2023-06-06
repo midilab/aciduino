@@ -6,6 +6,8 @@ There are two flavors of aciduino, the [first version(v1)](https://github.com/mi
 
 You can do it in 1 or 2 hour on your protoboard or [order a v1 PCB](https://pushermanproductions.com/product/midilab-aciduino-303-style-midi-sequencer-pcb-only/).
 
+Find out more about at [official home page](https://midilab.co/aciduino/)
+
 ## Aciduino V1
 
 TB-303 only sequencer.

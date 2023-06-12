@@ -1,62 +1,56 @@
 # Aciduino
 
-Cheap, DIY Roland TB303/TR808 Step Sequencer clone aimed for live interaction. Your acid lines on arduino platform.
+The DIY Arduino-based Roland TB303 and TR808 Step Sequencer clone and MIDI Controller. Designed using readily available, inexpensive parts. It can be easily assembled on a protoboard or [ordered as PCB](https://pushermanproductions.com/product/midilab-aciduino-303-style-midi-sequencer-pcb-only/). 
 
-There are two flavors of aciduino, the [first version(v1)](https://github.com/midilab/aciduino/tree/master/v1/) is a TB303 sequencer only, the [second version(v2)](https://github.com/midilab/aciduino/tree/master/v2/) is a TB303 and TR808 sequencer with oled display and step grid system.
-
-You can do it in 1 or 2 hour on your protoboard or [order a v1 PCB](https://pushermanproductions.com/product/midilab-aciduino-303-style-midi-sequencer-pcb-only/).
+There are two flavors of aciduino, the [first version(v1)](https://github.com/midilab/aciduino/tree/master/v1/) is a TB303 sequencer only, the [second version(v2)](https://github.com/midilab/aciduino/tree/master/v2/) is a TB303 and TR808 sequencer with oled display and step/pattern/mute grid system.
 
 Find out more about at [official home page](https://midilab.co/aciduino/)
 
-## Aciduino V1
+## [Aciduino V1](https://github.com/midilab/aciduino/tree/master/v1/)  
+2 Tracks TB303 sequencer and MIDI Controller.
 
-TB-303 only sequencer.
+V1 on PCB
+[![](https://midilab.co/data/uploads/2022/05/aciduino_mk2-1024x632.jpg)](https://midilab.co/data/uploads/2022/05/aciduino_mk2.jpg)
 
-![Image of aciduino-v1 on pcb](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
+V1 on Protoboard
+[![](https://midilab.co/data/uploads/2023/03/aciduinov1-1024x576.jpg)](https://midilab.co/data/uploads/2023/03/aciduinov1.jpg)
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/acid_step_sequencer-protoboard-v002.png)
+## [Aciduino V2](https://github.com/midilab/aciduino/tree/master/v2/)  
+Up to 16 Tracks TB303/TR808 sequencer with step, pattern and mute automation grid system, MIDI Controller, OLED display and extensible modular design to plug more potentiometers, buttons, MIDI or CV/Gate interfaces.
 
-[Click here for more info](https://github.com/midilab/aciduino/tree/master/v1/)
+V2 on Protoboard
+[![](https://midilab.co/data/uploads/2023/01/aciduino_v2_teensy_bb-1024x696.jpg)](https://midilab.co/data/uploads/2023/01/aciduino_v2_teensy_bb-scaled.jpg)
 
-## Aciduino V2
+V2 on PCB(prototype)
+[![](https://midilab.co/data/uploads/2023/03/uone_umodular-scaled.jpg)](https://midilab.co/data/uploads/2023/03/uone_umodular-scaled.jpg)
 
-TB-303 and TR-808 sequencer with Oled. The modular design allows you to extend it with more knobs or buttons/leds on another protoboard.
+Features
+========
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)
+### 303/808 Step Sequencer clone
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_lite_v2-teensy.png)
+Programming bass and drum steps using same analogy of original machines • Save your pattern work on microcontroller EPPROM memory for later live gigs • Use step length and shift to make some unusual sequences • Automation grid system for step edit, pattern navigation and mute tracks • Realtime and Step record modes for MIDI keyboard input(v2 only)
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2-avr_mega_bb.png)
+### Professional grade Clock
 
-Aciduino v2 brings new acid elements such as 808 step sequencer and a generative engine based on euclidian algorithm for great acid drums ideas.
+Tight and solid clock system using hardware timers to achieve realtime professional grade tick system • Send or receive clock to keep all your external equipment synced
 
-A oled screen to get access to all parameters that matters in realtime, a easy to edit grid system for 808 and 303.
+### Generative Engine
 
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
+Generate new and fresh acid music patterns by pressing a single button and twist some parameters • Harmonizer to force musical harmonic modes for bass lines • Euclidian generator for drum parts
 
-[Click here for more info](https://github.com/midilab/aciduino/tree/master/v2/)
+### Midi Controller
 
-# Features
+Controls up to 16 parameters per track of your external synthesizers(bass/drums) • Midi learn(v2 only) • 16 potentiometers modular support to extend aciduino as midi controller(v2 only)
 
-## TB-303 and TR-808 Step Sequencer clone
-Programming using the same analogy and features of originals. 
+### Pattern memory
 
-## Grid pattern system
-Grid pattern system with mixing patterns support and mute automation (only available on v2)
+Store your patterns conveniently on the microcontroller's EEPROM, allowing you to access them effortlessly during live performances.
 
-## Generative Engine
-Generate automatic harmonized acid lines for your 303 or acid rythms for your 808 clones by pressing a single button and twist some generative parameter knobs. 
+# Easy and fast Assembly
 
-## Midi Controller
-Controls your acid machines midi parameters per track.
+1 or 2 hours assembly time on protoboard. 
 
-## Midi Clock
-Tight and solid MIDI clock to drive your gears clock needs or receive midi sync signal.
+[V1 Assembly](https://github.com/midilab/aciduino/tree/master/v1)
 
-# uMODULAR uOne and Aciduino V2
-
-One of the uMODULAR projects to run your Aciduino V2, soon avaliable.
-
-![Image of aciduino on uone front](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_umodular.jpg)
-
-![Image of aciduino on uone back](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_back.jpeg)
+[V2 Assembly](https://github.com/midilab/aciduino/tree/master/v2#assembly)

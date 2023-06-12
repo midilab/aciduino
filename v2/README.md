@@ -2,11 +2,11 @@
 
 Put your DIY super powers to the test building your own Roland's TB-303 and/or TB-808 step sequencer! An Arduino based clone project specially hacked with corrosive features to improve live performances! Save your money building the classic and timeless TB-303 and TR-808 step sequencer clone faster than a blink of an eye.
 
-This version is multi-arch that allows differents micro-controllers to be used on the build, rigth now supports Arduino Mega, any Teensy >= 3.2 and a experimental and ongoing support to ESP32.
+This version is multi-architecture, allowing for the use of different microcontrollers in the build. Currently, it supports Arduino Mega, any Teensy >= 3.2, and features experimental and ongoing support for ESP32.
 
-Aciduino V2 is also the first official uModular app, wich makes use of [uMODULAR](https://github.com/midilab/uMODULAR) schematics, [uCtrl](https://github.com/midilab/uCtrl) drivers/interface library and [uClock](https://github.com/midilab/uClock) BPM clock generator.
+Aciduino V2 is also the first official [uMODULAR](https://github.com/midilab/uMODULAR) app, leveraging uMODULAR schematics, [uCtrl](https://github.com/midilab/uCtrl) drivers/interface library, and [uClock](https://github.com/midilab/uClock) BPM clock generator.
 
-Since this version makes use of [uCtrl](https://github.com/midilab/uCtrl) and [uClock](https://github.com/midilab/uClock) libraries as submodule, so just remember to init submodules just after clone the repo.
+As this version utilizes uCtrl and uClock libraries as submodules, please remember to initialize the submodules immediately after cloning the repository.
 
 ```console
 phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git

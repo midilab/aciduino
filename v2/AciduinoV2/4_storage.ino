@@ -89,19 +89,19 @@ bool loadSession()
   // check if there is a session saved.. otherwise init one based on the defaults
   // we can use the last byte as version control
   // load session data
-  uCtrl.storage->load(_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
-  uCtrl.storage->load(_generative_808, sizeof(_generative_808));
-  uCtrl.storage->load(_control_map_global, sizeof(_control_map_global));
-  uCtrl.storage->load(_track_output_setup, sizeof(_track_output_setup));
+  uCtrl.storage->load((void*)_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
+  uCtrl.storage->load((void*)_generative_808, sizeof(_generative_808));
+  uCtrl.storage->load((void*)_control_map_global, sizeof(_control_map_global));
+  uCtrl.storage->load((void*)_track_output_setup, sizeof(_track_output_setup));
 }
 
 bool saveSession()
 {
   // save session data
-  uCtrl.storage->save(_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
-  uCtrl.storage->save(_generative_808, sizeof(_generative_808));
-  uCtrl.storage->save(_control_map_global, sizeof(_control_map_global));
-  uCtrl.storage->save(_track_output_setup, sizeof(_track_output_setup));
+  uCtrl.storage->save((void*)_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
+  uCtrl.storage->save((void*)_generative_808, sizeof(_generative_808));
+  uCtrl.storage->save((void*)_control_map_global, sizeof(_control_map_global));
+  uCtrl.storage->save((void*)_track_output_setup, sizeof(_track_output_setup));
 }
 
 uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1)
@@ -127,7 +127,7 @@ bool loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
       
     AcidSequencer.setMute(track, true);
     AcidSequencer.clearStackNote(track);
-    uCtrl.storage->load(AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    uCtrl.storage->load((void*)AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
     AcidSequencer.setMute(track, false);
 
     // load _mute_pattern only for track?
@@ -144,12 +144,12 @@ bool loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
     AcidSequencer.clearStackNote();
     
     // get 303 whole pattern data first
-    uCtrl.storage->load(AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->load((void*)AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->load(AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->load((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
 
     // load _mute_pattern
-    uCtrl.storage->load((void *)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->load((void*)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
@@ -169,7 +169,7 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
     if (from_track != -1)
       track = from_track;
       
-    uCtrl.storage->save(AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    uCtrl.storage->save((void*)AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
 
     // save _mute_pattern for a specific patern
     //...
@@ -177,9 +177,9 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
     // saves the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
     // save 303 whole pattern data first
-    uCtrl.storage->save(AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->save((void*)AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->save(AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->save((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
     // _mute_grid data
     uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
   }
@@ -188,7 +188,7 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
 bool saveMuteGrid(uint8_t pattern)
 {
   // _mute_grid data
-  uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+  uCtrl.storage->save((void*)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
 }
 
 // copy current track data into same or another track pattern memory
@@ -210,7 +210,7 @@ bool pastePattern(uint8_t pattern, int8_t track = -1)
       pastePattern(pattern, i);
     }
     // paste _mute_grid too!
-    uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void*)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     return true;
   }
 
@@ -269,7 +269,7 @@ void Engine808::setBufferTrack(uint8_t track)
 bool checkEppromDataLayoutChange()
 {
   uint16_t pattern_size = 0;
-  uCtrl.storage->load(&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
+  uCtrl.storage->load((void*)&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
   if (pattern_size == PATTERN_TOTAL_MEM_SIZE) {
     return false;
   } else {
@@ -287,7 +287,7 @@ void eppomInit()
       savePattern(pattern);
     }
     // mark epprom first bytes with pattern size to use as a checker for layout changes
-    uCtrl.storage->save(&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
+    uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
 }
 
 #if defined(TEENSYDUINO)

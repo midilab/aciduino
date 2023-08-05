@@ -89,7 +89,7 @@ class AcidSequencerClass
       void input(uint8_t track, uint8_t msg, uint8_t data1, uint8_t data2, uint8_t interrupted = 0);
       void setRecStatus(bool record);
       bool getRecStatus();
-      void setRecMode(uint8_t rec_mode);
+      void setRecMode(REC_MODE rec_mode);
 
       // general interface for UI/Sequencer for 303 and 808 generic access
       void * getPatternData(uint8_t track);

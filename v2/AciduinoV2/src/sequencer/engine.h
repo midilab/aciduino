@@ -38,8 +38,8 @@
 // multicore archs
 //
 #if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  portMUX_TYPE _acidEngine303TimerMux = portMUX_INITIALIZER_UNLOCKED;
-	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngine303TimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngine303TimerMux);
+  extern portMUX_TYPE _acidEngineTimerMux;
+	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngineTimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngineTimerMux);
 //
 // singlecore archs
 //

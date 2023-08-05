@@ -36,6 +36,14 @@
 // note on and off controlled until it finished the step
 #include "acid_sequencer.h"
 
+//
+// multicore arch extern definition
+//
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+  // extern definition of engine.h declaration
+  portMUX_TYPE _acidEngineTimerMux = portMUX_INITIALIZER_UNLOCKED;
+#endif
+
 AcidSequencerClass::AcidSequencerClass()
 {
   // initing our sequencer engines
@@ -452,7 +460,7 @@ const char * AcidSequencerClass::getNoteString(uint8_t note)
   return szBuffer;
 }
 
-void AcidSequencerClass::setRecMode(uint8_t rec_mode)
+void AcidSequencerClass::setRecMode(REC_MODE rec_mode)
 {
   ATOMIC(_rec_mode = rec_mode);
 }

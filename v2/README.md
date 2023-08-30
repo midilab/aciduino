@@ -6,7 +6,13 @@ This version is multi-architecture, allowing for the use of different microcontr
 
 Aciduino V2 is also the first official [uMODULAR](https://github.com/midilab/uMODULAR) app, leveraging uMODULAR schematics, [uCtrl](https://github.com/midilab/uCtrl) drivers/interface library, and [uClock](https://github.com/midilab/uClock) BPM clock generator.
 
-As this version utilizes uCtrl and uClock libraries as submodules, please remember to initialize the submodules immediately after cloning the repository.
+# Download
+
+The recommended way for aciduino users is to make use of release pack on [Releases area](https://github.com/midilab/aciduino/releases), make sure to download the one named aciduino-v2_xxx.zip, where xxx is the version released.  
+  
+If you want to get the latest on the edge features and keep in track with development of aciduino you can make use of git version via clone.  
+  
+As this version utilizes uCtrl and uClock libraries as submodules, please remember to initialize the submodules immediately after cloning the repository.  
 
 ```console
 phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git

@@ -34,7 +34,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 typedef enum {
   
 #if defined(USE_CHANGER_ENCODER)
-  ENCODER_DEC = 1,
+  ENCODER_DEC = 0,
   ENCODER_INC,
 #else
   NONE_4_NOW, // forces 0 to get shift as 1

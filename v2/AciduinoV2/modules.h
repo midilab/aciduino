@@ -96,7 +96,7 @@
 #if defined(USE_CHANGER_POT) || defined (USE_POT_8) || defined (USE_POT_16)
   #define USE_AIN
   #if defined (USE_POT_8) || defined (USE_POT_16)
-    #define USE_AIN_4051
+    #define USE_AIN_4051_DRIVER
     #define LEARN_ENABLED
   #endif
 #endif

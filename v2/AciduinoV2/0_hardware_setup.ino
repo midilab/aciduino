@@ -144,7 +144,7 @@
   #define NAV_ENCODER_INC_PIN       28
   
   // or use changer pot?
-  #define CHANGER_POT_PIN           A8
+  //#define CHANGER_POT_PIN           A8
   
   #define NAV_SHIFT_PIN             13
   

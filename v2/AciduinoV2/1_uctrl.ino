@@ -32,14 +32,10 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 #endif
 
 typedef enum {
-  
 #if defined(USE_CHANGER_ENCODER)
-  ENCODER_DEC = 0,
+  ENCODER_DEC,
   ENCODER_INC,
-#else
-  NONE_4_NOW, // forces 0 to get shift as 1
 #endif
-
   // the basic minimun ui buttons (9 total)
   SHIFT_BUTTON,
   PAGE_BUTTON_1,
@@ -265,8 +261,6 @@ void uCtrlSetup() {
   #if defined (USE_POT_16)
   uCtrl.ain->plug(POT_MUX_COMM2);
   #endif
-  // get a global entry point for our midi pot controllers
-  uCtrl.ain->setCallback(midiControllerHandle);
 #elif defined(USE_CHANGER_POT)
   uCtrl.initAin();
   uCtrl.ain->plug(CHANGER_POT_PIN);
@@ -282,6 +276,8 @@ void uCtrlSetup() {
   // raise the average reads for pot for better stability
   uCtrl.ain->setAvgReads(8);
 #endif
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
 
   //
   // Capacitive Touch Module

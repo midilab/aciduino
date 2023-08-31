@@ -255,7 +255,6 @@ struct MidiCCControl : PageComponent {
 
 // used by ain in case any POT_X registred
 void midiControllerHandle(uint8_t port, uint16_t value, uint8_t interrupted) {
-  --port;
   // check for learn request
   midiControllerComponent.learnCtrl(port);
   

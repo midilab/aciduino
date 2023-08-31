@@ -257,9 +257,9 @@ void uCtrlSetup() {
   uCtrl.oled->print(">init ain...", 8, 1);
 #if defined(USE_POT_8) || defined (USE_POT_16)
   uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
-  uCtrl.ain->plug(POT_MUX_COMM1);
+  uCtrl.ain->plugMux(POT_MUX_COMM1);
   #if defined (USE_POT_16)
-  uCtrl.ain->plug(POT_MUX_COMM2);
+  uCtrl.ain->plugMux(POT_MUX_COMM2);
   #endif
 #elif defined(USE_CHANGER_POT)
   uCtrl.initAin();

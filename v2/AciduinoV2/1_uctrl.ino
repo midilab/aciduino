@@ -261,6 +261,8 @@ void uCtrlSetup() {
   #if defined (USE_POT_16)
   uCtrl.ain->plugMux(POT_MUX_COMM2);
   #endif
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
 #elif defined(USE_CHANGER_POT)
   uCtrl.initAin();
   uCtrl.ain->plug(CHANGER_POT_PIN);
@@ -276,8 +278,6 @@ void uCtrlSetup() {
   // raise the average reads for pot for better stability
   uCtrl.ain->setAvgReads(8);
 #endif
-  // get a global entry point for our midi pot controllers
-  uCtrl.ain->setCallback(midiControllerHandle);
 
   //
   // Capacitive Touch Module

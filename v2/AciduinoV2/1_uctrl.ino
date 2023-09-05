@@ -286,7 +286,8 @@ void uCtrlSetup() {
   uCtrl.oled->print(">init ctouch...", 8, 1);
   uCtrl.initCapTouch(TOUCH_CTRL_PIN1, TOUCH_CTRL_PIN2, TOUCH_CTRL_PIN3, TOUCH_CTRL_PIN4);
   //uCtrl.touch->setThreshold(41);
-  uCtrl.touch->setThreshold(90);
+  //uCtrl.touch->setThreshold(90);
+  uCtrl.touch->setThreshold(110);
   uCtrl.touch->plug(TOUCH_MUX_COMM1);
   uCtrl.touch->plug(TOUCH_MUX_COMM2);
 #endif

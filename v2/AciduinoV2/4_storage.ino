@@ -2,7 +2,11 @@
 //
 // epprom memory layout setup
 //
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+#define EPPROM_SIZE                 4096
+#else
 #define EPPROM_SIZE                 EEPROM.length()
+#endif
 #define EPPROM_CHECK_DATA_ADDRESS   0
 #define EPPROM_SESSION_ADDRESS      2
 #define EPPROM_SESSION_SIZE         (sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup))
@@ -84,7 +88,7 @@ uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
 uint8_t _copy_pattern = 0;
 int8_t _copy_track = -1;
     
-bool loadSession()
+void loadSession()
 {
   // check if there is a session saved.. otherwise init one based on the defaults
   // we can use the last byte as version control
@@ -95,7 +99,7 @@ bool loadSession()
   uCtrl.storage->load((void*)_track_output_setup, sizeof(_track_output_setup));
 }
 
-bool saveSession()
+void saveSession()
 {
   // save session data
   uCtrl.storage->save((void*)_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
@@ -113,7 +117,7 @@ uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1)
   return pattern_address;
 }
 
-bool loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
+void loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
 {
   uint16_t pattern_address = 0;
   
@@ -149,7 +153,7 @@ bool loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
     uCtrl.storage->load((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
 
     // load _mute_pattern
-    uCtrl.storage->load((void*)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->load((void*)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
@@ -158,7 +162,7 @@ bool loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1)
   }
 }
 
-bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
+void savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
 {
   uint16_t pattern_address = 0;
   if (track != -1) {
@@ -181,18 +185,18 @@ bool savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1)
     // then 808 whole pattern data last
     uCtrl.storage->save((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
     // _mute_grid data
-    uCtrl.storage->save((void *)&_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void *)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
   }
 }
 
-bool saveMuteGrid(uint8_t pattern)
+void saveMuteGrid(uint8_t pattern)
 {
   // _mute_grid data
-  uCtrl.storage->save((void*)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+  uCtrl.storage->save((void*)_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
 }
 
 // copy current track data into same or another track pattern memory
-bool copyPattern(uint8_t pattern, int8_t track = -1)
+void copyPattern(uint8_t pattern, int8_t track = -1)
 {
     _copy_pattern = pattern;
     _copy_track = track;
@@ -210,7 +214,7 @@ bool pastePattern(uint8_t pattern, int8_t track = -1)
       pastePattern(pattern, i);
     }
     // paste _mute_grid too!
-    uCtrl.storage->save((void*)&_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void*)_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     return true;
   }
 
@@ -277,7 +281,7 @@ bool checkEppromDataLayoutChange()
   }
 }
 
-void eppomInit()
+void eppromInit()
 {
     uint16_t pattern_size = PATTERN_TOTAL_MEM_SIZE;
     // init epprom session/pattern memory

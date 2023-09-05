@@ -25,7 +25,7 @@ void system_page_refresh(uint8_t subpage)
 
   uCtrl.page->component(topBarComponent, 1, 1);
 
-  //uCtrl.oled->print("# aciduino v2", 1, 1);
+  //uCtrl.oled->print(String(), 2, 1);
 
   // save options goes into this page for session related
   //...

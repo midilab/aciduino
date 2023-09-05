@@ -132,12 +132,9 @@ void midiHandle() {
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
 void midiHandleSync() {
-// avoid use midi sync input for esp32 since it triggering watchdog for resets
-#if !defined(ARDUINO_ARCH_ESP32) || !defined(ESP32)
   if (_midi_clock_port > 0) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}
     uCtrl.midi->read(_midi_clock_port);
   }
-#endif
 }

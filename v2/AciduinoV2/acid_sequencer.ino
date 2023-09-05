@@ -16,7 +16,7 @@ void initSequencer()
   // so if you want to keep your pattenrs and change layout consider backup pattenrs into another sequencer
   // because they will be wipeout for the new memory layout to take place
   if (checkEppromDataLayoutChange()) {
-    eppomInit();
+    eppromInit();
   }
 
   // load epprom saved session

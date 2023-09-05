@@ -36,16 +36,11 @@
 // note on and off controlled until it finished the step
 #include "acid_sequencer.h"
 
-//
-// multicore arch extern definition
-//
-#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  // extern definition of engine.h declaration
-  portMUX_TYPE _acidEngineTimerMux = portMUX_INITIALIZER_UNLOCKED;
-#endif
-
 AcidSequencerClass::AcidSequencerClass()
 {
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+	_mutex = xSemaphoreCreateMutex();
+#endif
   // initing our sequencer engines
   if (TRACK_NUMBER_303 > 0) {
     //_engine303 = new Engine303();

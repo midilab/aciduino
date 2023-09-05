@@ -38,8 +38,12 @@
 // multicore archs
 //
 #if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  extern portMUX_TYPE _acidEngineTimerMux;
-	#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngineTimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngineTimerMux);
+  // mutex to protect the shared resource
+  extern SemaphoreHandle_t _mutex;
+  // mutex control for task
+  #define ATOMIC(X) xSemaphoreTake(_mutex, portMAX_DELAY); X; xSemaphoreGive(_mutex);
+  //extern portMUX_TYPE _acidEngineTimerMux;
+	//#define ATOMIC(X) portENTER_CRITICAL_ISR(&_acidEngineTimerMux); X; portEXIT_CRITICAL_ISR(&_acidEngineTimerMux);
 //
 // singlecore archs
 //

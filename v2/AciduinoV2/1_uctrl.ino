@@ -17,9 +17,16 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
   #endif
 #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32) 
   // initing midi devices
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
-  //#define USE_MIDI2
+  // in case we got USB native mode support builtin, use it!
+  #if defined(CONFIG_TINYUSB_ENABLED)
+    ESPNATIVEUSBMIDI espNativeUsbMidi;
+    MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI,espNativeUsbMidi,MIDI1);
+    //MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+    MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+    #define USE_MIDI2
+  #else
+    MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
+  #endif
 #elif defined(ARDUINO_ARCH_AVR)  
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
@@ -297,6 +304,13 @@ void uCtrlSetup() {
   //
   uCtrl.oled->print(">init midi...", 8, 1);  
   uCtrl.initMidi();
+#if defined(CONFIG_TINYUSB_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+  // initing esp32nativeusbmidi
+  espNativeUsbMidi.begin();
+  // initing USB device
+  USB.productName("aciduinov2");
+  USB.begin();
+#endif
   // initing midi port 1
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI
   // initing midi port 2

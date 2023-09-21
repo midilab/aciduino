@@ -84,7 +84,7 @@ void Engine808::init()
 }
 
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-void Engine808::onStepCall(uint32_t tick) 
+void Engine808::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl) 
 {
   uint8_t step;
   int8_t note;

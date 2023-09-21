@@ -77,7 +77,7 @@ class AcidSequencerClass
       AcidSequencerClass();
 
       // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-      void on16PPQN(uint32_t tick);
+      void on16PPQN(uint32_t tick, int8_t shuffle_lenght_ctrl);
       void on96PPQN(uint32_t tick);
       // The callback function wich will be called when clock starts by using Clock.start() method.
       void onClockStart();

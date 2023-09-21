@@ -1,4 +1,3 @@
-
 void initSequencer()
 {
   // init default track output data
@@ -18,6 +17,10 @@ void initSequencer()
   if (checkEppromDataLayoutChange()) {
     eppromInit();
   }
+
+  // load shuffle form memory pattern?
+  int8_t init_template[2] = {0,1};
+  uClock.setShuffleTemplate(init_template, 2);
 
   // load epprom saved session
   loadSession();

@@ -332,10 +332,11 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
 }
 
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-void Engine303::onStepCall(uint32_t tick) 
+void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl) 
 {
   uint8_t step, next_step;
   uint16_t length, step_length;
+  int8_t length_shuffe;
   int8_t note;
 
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
@@ -368,6 +369,12 @@ void Engine303::onStepCall(uint32_t tick)
         }
       }
 
+      // apply shuffle length?
+      if (shuffle_length_ctrl != 0) {
+        length_shuffe = length + shuffle_length_ctrl;
+        length = length_shuffe <= 0 ? 1 : length_shuffe;
+      }
+      
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {

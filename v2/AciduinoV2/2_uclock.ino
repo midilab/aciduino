@@ -40,7 +40,7 @@ void uClockSetup()
 void ClockOut16PPQN(uint32_t tick) 
 {
   // sequencer tick
-  AcidSequencer.on16PPQN(tick);
+  AcidSequencer.on16PPQN(tick, uClock.getShuffleLength());
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.

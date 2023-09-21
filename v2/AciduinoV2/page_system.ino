@@ -134,8 +134,7 @@ struct ShuffleSignature : PageComponent {
     data = parseData(data, 0, 4, current_shuffle);
     current_shuffle = data;
     // uClock shuffle
-    uint8_t template_size = sizeof(shuffle_templates[current_shuffle]) / sizeof(shuffle_templates[current_shuffle][0]);
-    uClock.setShuffleTemplate(shuffle_templates[current_shuffle], template_size);
+    uClock.setShuffleTemplate(shuffle_templates[current_shuffle]);
   }
 
 } shuffleSignatureComponent;

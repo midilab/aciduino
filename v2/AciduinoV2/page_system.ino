@@ -72,6 +72,94 @@ struct TempoClockSource : PageComponent {
     
 } tempoClockSourceComponent;
 
+struct MidiChannelConfig : PageComponent {
+
+    void view() {
+      genericOptionView("channel", String(_track_output_setup[_selected_track].channel+1), line, col, selected);
+    }
+    
+    void change(int16_t data) {
+      data = parseData(data, 0, 15, _track_output_setup[_selected_track].channel);
+      ATOMIC(_track_output_setup[_selected_track].channel = data)
+    }
+
+} midiChannelConfigComponent;
+
+struct TrackOutputSelector : PageComponent {
+
+    void view() {
+      genericOptionView("out", String(String("midi") + (_track_output_setup[_selected_track].port+1)), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, uCtrl.midi->sizeOf()-1, _track_output_setup[_selected_track].port);
+      ATOMIC(_track_output_setup[_selected_track].port = data)
+    }
+
+} trackOutputSelectorComponent;
+
+struct SessionConfig : PageComponent {
+  
+    SessionConfig() {
+      grid_size = 2;    
+    }
+
+    void view() {
+      genericOptionView("session", String("epprom"), line, col, selected, true);
+      setF1("load");
+      setF2("save");
+    }
+    
+    void change(int16_t data) {
+      //data = parseData(data, 0, 15, _track_output_setup[_selected_track].channel);
+      //_track_output_setup[_selected_track].channel = data;
+    }
+
+    void function1() {
+      loadSession();
+    }
+
+    void function2() {
+      saveSession();
+    }
+
+} sessionConfigComponent;
+
+struct SystemResources : PageComponent {
+
+    uint8_t resource_id = 0;
+
+    SystemResources() {
+      grid_size = 2;    
+    }
+
+    void view() {
+
+      switch(resource_id) {
+        case 0:
+          genericOptionView("free ram", String(freeRam()), line, col, selected, true);
+          break;
+        case 1:
+          genericOptionView("epprom", String(EPPROM_SIZE), line, col, selected, true);
+          break;
+        case 2:
+          //genericOptionView("session", String(String((EPPROM_SESSION_SIZE/(float)EEPROM.length())*100) + String("%")), line, col, selected, true);
+          genericOptionView("session", String(EPPROM_SESSION_SIZE), line, col, selected, true);
+          break;
+        case 3:
+          genericOptionView("pattern", String(EPRROM_PATTERN_AVAILABLE), line, col, selected, true);
+          break;
+      }
+      
+    }
+    
+    void change(int16_t data) {
+      data = parseData(data, 0, 3, resource_id);
+      resource_id = data;
+    }
+    
+} systemResourcesComponent;
+
 struct RecInputSource : PageComponent {
     
     void view() {

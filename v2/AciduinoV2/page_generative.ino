@@ -36,6 +36,139 @@ void generative_page_destroy()
   uCtrl.page->clearFunctionHook();
 }
 
+
+struct TonesNumber : PageComponent {
+
+    void view() {
+      genericOptionView("tones", String(_generative_303[_selected_track].number_of_tones), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 1, 7, _generative_303[_selected_track].number_of_tones);
+      _generative_303[_selected_track].number_of_tones = data;
+    }
+    
+} tonesNumberComponent;
+
+struct LowOctave : PageComponent {
+  
+    void view() {
+      genericOptionView("octave", String(_generative_303[_selected_track].lower_octave), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 1, 11, _generative_303[_selected_track].lower_octave);
+      _generative_303[_selected_track].lower_octave = data;
+    }
+    
+} lowOctaveComponent;
+
+struct RangeOctave : PageComponent {
+  
+    void view() {
+      genericOptionView("octaves", String(_generative_303[_selected_track].range_octave), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 1, 11, _generative_303[_selected_track].range_octave);
+      _generative_303[_selected_track].range_octave = data;
+    }
+    
+} rangeOctaveComponent;
+
+struct AccentAmount : PageComponent {
+  
+    void view() {
+      uint8_t accent_probability = AcidSequencer.is303(_selected_track) ? _generative_303[_selected_track].accent_probability : _generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      genericOptionView("accent", String(accent_probability), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      uint8_t * accent_probability = AcidSequencer.is303(_selected_track) ? &_generative_303[_selected_track].accent_probability : &_generative_808[_selected_track-TRACK_NUMBER_303].accent_probability; 
+      data = parseData(data, 0, 100, *accent_probability);
+      *accent_probability = data;
+    }
+
+} accentAmountComponent;
+
+struct SlideAmount : PageComponent {
+  
+    void view() {
+      genericOptionView("slide", String(_generative_303[_selected_track].slide_probability), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, 100, _generative_303[_selected_track].slide_probability);
+      _generative_303[_selected_track].slide_probability = data;
+    }
+    
+} slideAmountComponent;
+
+struct TieAmount : PageComponent {
+  
+    void view() {
+      genericOptionView("tie", String(_generative_303[_selected_track].tie_probability), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, 100, _generative_303[_selected_track].tie_probability);
+      _generative_303[_selected_track].tie_probability = data;
+    }
+    
+} tieAmountComponent;
+
+struct RollAmount : PageComponent {
+  
+    void view() {
+      genericOptionView("roll", String(_generative_808[_selected_track-TRACK_NUMBER_303].roll_probability), line, col, selected);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, 100, _generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
+      _generative_808[_selected_track-TRACK_NUMBER_303].roll_probability = data;
+    }
+    
+} rollAmountComponent;
+
+struct TrackScale : PageComponent {
+
+    TrackScale() {
+      // we want this component to be 2 grids navigable object
+      grid_size = 2;
+    }
+    
+    void view() {
+      genericOptionView("scale", String(AcidSequencer.getTemperamentName(AcidSequencer.getTemperamentId())), line, col, selected, true);
+    }
+
+    void change(int16_t data) {
+      data = parseData(data, 0, 13, AcidSequencer.getTemperamentId());
+      AcidSequencer.setTemperament(data);
+    }
+
+} scaleComponent;
+
+struct TrackFill : PageComponent {
+
+    TrackFill() {
+      // we want this component to be 2 grids navigable object
+      grid_size = 2;
+    }
+    
+    void view() {
+      uint8_t generative_fill = AcidSequencer.is303(_selected_track) ? _generative_303[_selected_track].generative_fill : _generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      genericOptionView("fill", String(generative_fill), line, col, selected, true);
+    }
+
+    void change(int16_t data) {
+      //clearStackNote(_selected_track);
+      uint8_t * generative_fill = AcidSequencer.is303(_selected_track) ? &_generative_303[_selected_track].generative_fill : &_generative_808[_selected_track-TRACK_NUMBER_303].generative_fill; 
+      data = parseData(data, 1, 100, *generative_fill);
+      *generative_fill = data;
+    }
+    
+} fillComponent;
+
 // called each cycle interaction of interface object for UI refresh
 void generative_page_refresh(uint8_t subpage)
 {

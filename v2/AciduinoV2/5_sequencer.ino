@@ -43,3 +43,35 @@ void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8
       break;
   }
 }
+
+
+void playStop()
+{
+  if (_playing)
+    uClock.stop();
+  else
+    uClock.start();
+}
+
+void recToggle()
+{
+  AcidSequencer.setRecStatus(!AcidSequencer.getRecStatus());
+}
+
+void previousTrack()
+{
+  if (_selected_track == 0) {
+    _selected_track = AcidSequencer.getTrackNumber() - 1;
+  } else {
+    --_selected_track;
+  }
+}
+
+void nextTrack()
+{
+  if (_selected_track == AcidSequencer.getTrackNumber() - 1) {
+    _selected_track = 0;
+  } else {
+    ++_selected_track;
+  }
+}

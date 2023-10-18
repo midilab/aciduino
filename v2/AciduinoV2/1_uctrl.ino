@@ -26,7 +26,10 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
     #define USE_MIDI2
   #else
     MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
+    //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+    //#define USE_MIDI2
   #endif
+  // #if defined(CONFIG_BT_ENABLED)...
 #elif defined(ARDUINO_ARCH_AVR)  
   // initing midi devices
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
@@ -310,6 +313,10 @@ void uCtrlSetup() {
   // initing USB device
   USB.productName("aciduinov2");
   USB.begin();
+#endif
+#if defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+    //BLEMIDI.setHandleConnected(OnConnected); // void OnConnected() {}
+    //BLEMIDI.setHandleDisconnected(OnDisconnected); // void OnDisconnected() {}
 #endif
   // initing midi port 1
   uCtrl.midi->plug(&MIDI1); // MIDI PORT 1: USB MIDI

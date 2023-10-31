@@ -3,6 +3,7 @@
 ## Introduction
 
 Up to 16 Tracks TB303/TR808 sequencer with step, pattern and mute automation grid system, MIDI Controller, OLED display and extensible modular design to plug more potentiometers, buttons, MIDI or CV/Gate interfaces.
+
 a friend of mine some time ago had come out with this one:
 "Put your DIY super powers to the test building your own Roland’s TB-303 and TB-808 step sequencer! An Arduino based clone project specially hacked with corrosive features for live performances! Save your money building this classic sequencer clone faster than a blink of an eye."
 
@@ -25,20 +26,49 @@ If you followed the assembly guide you should have a device like this :
 
 The GUI is divided into the following main sections:
 
-- **Header bar:** Contains the Track number <span style="color: white; background-color: black;">T1-T5</span> and type (303 or 808), the <span style="color: white; background-color: black;">page name</span> and selected subpage (1 or 2), the <span style="color: white; background-color: black;">clock source</span> and tempo value (40-180).
+- **Header bar:** Contains the Track number (by default T1 to T5) and type (303 or 808), the Page name and selected subpage (1 or 2), the clock soucre and tempo value (40-180).
 - **Subpage display:** where the actual tweaking occurs.
 - **Function buttons label:** Provides a clear feedback for the 2 function buttons
 
 
 
-## WORKFLOW
+## HOW TO USE?
 
-You can navigate through the different <span style="color: white; background-color: black;">| parameters</span> by clicking the arrow keys `UP`, `DOWN`, `LEFT`, `RIGHT`. The current selected item is <blink>blinking</blink>.
-General buttons are to be used aside the potentiometer as increment or increment buttons, depending on the page or selected item they are also used to activate / desactivate steps or patterns, mutes. We will describe them in their corresponding page.
 
-To switch between pages, hold the `Shift ^` button and press `UP` or `DOWN` button. 
+The interface presents you simple schema to navigate and interact with you aciduino.
 
-1. ## System Page <span style="color: white; background-color: black;">syst</span>
+**Navigation buttons:** UP, DOWN, LEFT. RIGTH. use to navigate thru page elements.  
+*4 right most buttons*  
+
+**Function buttons:** If the current selected element has an action, it will show up at bottom of your display with the action name for each button.  
+*2 upper buttons*  
+
+**Generic buttons:** Acts as value changer, a decrementer and incrementer for almost all elements.  
+*2 lower buttons*  
+
+**Pot:** Acts as a value changer just like generic buttons, most of elements can be changed using generic buttons or the pot as wish.  
+
+**Shift button** Hold it while press another interface button.  
+*bottom left button* 
+
+**Transport button** press to start or stop the sequencer  
+*middle left button* 
+ 
+
+**Shift + Nav UP/DOWN:** Change page  
+**Shift + Nav LEFT/RIGHT:** Changes subpage  
+**Shift + Generic button 1:** Previous track  
+**Shift + Generic button 2:** Next track  
+
+**Step Sequencer Pot, Shift + Pot**  
+303: [Pot] Changes notes [Shift + Pot] Changes octave   
+808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
+
+
+
+
+
+ ### System Page <span style="color: white; background-color: black;">syst</span>
 ![MIDI Sequencer Interface](images/SystPage1.png)
 ![MIDI Sequencer Interface](images/SystPage2.png)
  
@@ -51,7 +81,7 @@ To switch between pages, hold the `Shift ^` button and press `UP` or `DOWN` butt
  - **session:** save your ideas on eeprom or SDCard
 
 
-2. ## Sequencer page <span style="color: white; background-color: black;">seqr</span>
+ ### Sequencer page <span style="color: white; background-color: black;">seqr</span>
  ![MIDI Sequencer Interface](images/Seqr303Page1.png)
  ![MIDI Sequencer Interface](images/Seqr303Page2.png)
 
@@ -91,19 +121,19 @@ To switch between pages, hold the `Shift ^` button and press `UP` or `DOWN` butt
 </table>
 
 
-3. ## Generator page <span style="color: white; background-color: black;">gene</span>
+ ### Generator page <span style="color: white; background-color: black;">gene</span>
  ![MIDI Sequencer Interface](images/Gene303Page1.png)
  ![MIDI Sequencer Interface](images/Gene303Page2.png)
  
 
  - **Header bar:** 
 
-4. ## Pattern page <span style="color: white; background-color: black;">ptrn</span>
+ ### Pattern page <span style="color: white; background-color: black;">ptrn</span>
  ![MIDI Sequencer Interface](images/PtrnPage1.png)
   ![MIDI Sequencer Interface](images/PtrnPage2.png)
 
  - **Header bar:** Contains
-5. ## MIDI page <span style="color: white; background-color: black;">midi</span>
+ ### MIDI page <span style="color: white; background-color: black;">midi</span>
  ![MIDI Sequencer Interface](images/MidiPage1.png)
 
  - **Midi CCs** they are sent on the selected Track MIDI channel, CC# and naming can be changed in in `/AciduinoV2/page_midi.ino` : look for     "midiControllerComponent.set303Control("filter", 74);"
@@ -125,4 +155,4 @@ For some nice talking, ideas or questions you can say hi on our  [discord channe
 
 
 ---
-© 2023 Aciduino. All rights reserved.
+ 2023 Aciduino. 

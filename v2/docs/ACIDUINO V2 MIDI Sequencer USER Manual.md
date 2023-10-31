@@ -82,7 +82,7 @@ The interface presents you simple schema to navigate and interact with you acidu
 
  ### Sequencer page 
  ![MIDI Sequencer Interface](images/Seqr303Page1.png)
- ![MIDI Sequencer Interface](images/Seqr303Page2.png)
+ ![MIDI Sequencer Interface](images/Seqr303Page1.png)
 
  **Step Sequencer Pot, Shift + Pot**  
 303: [Pot] Changes notes [Shift + Pot] Changes octave   

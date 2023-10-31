@@ -32,7 +32,7 @@ The GUI is divided into the following main sections:
 
 
 
-## HOW TO USE?
+## WORKFLOW
 
 
 The interface presents you simple schema to navigate and interact with you aciduino.
@@ -60,32 +60,33 @@ The interface presents you simple schema to navigate and interact with you acidu
 **Shift + Generic button 1:** Previous track  
 **Shift + Generic button 2:** Next track  
 
-**Step Sequencer Pot, Shift + Pot**  
-303: [Pot] Changes notes [Shift + Pot] Changes octave   
-808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
 
 
 
 
 
- ### System Page <span style="color: white; background-color: black;">syst</span>
+ ### **System Page** 
 ![MIDI Sequencer Interface](images/SystPage1.png)
 ![MIDI Sequencer Interface](images/SystPage2.png)
  
- - **tempo:** set uClock tempo from 40 to 180,when selected F1= rec and F2 = play
- - **clock:** choose clock source, internal, midi1 or midi2
- - **shuffle:** turn the groove on or off
- - **sig.:** set the swing signature (3 MPC signatures, user signatures can be added)
- - **rec:** input source midi1 or midi2 
- - **mode:** record in real time or stepmode
- - **session:** save your ideas on eeprom or SDCard
+**Tempo** set uClock tempo from 40 to 180  
+*pot=change value, F1=rec F2=play, generic buttons=NA* 
+ 
+**clock:** choose clock source, internal, midi1 or midi2
+  **shuffle:** turn the groove on or off
+  **sig.:** set the swing signature (3 MPC signatures, user signatures can be added)
+  **rec:** input source midi1 or midi2 
+  **mode:** record in real time or stepmode
+  **session:** save your ideas on eeprom or SDCard
 
 
- ### Sequencer page <span style="color: white; background-color: black;">seqr</span>
+ ### Sequencer page 
  ![MIDI Sequencer Interface](images/Seqr303Page1.png)
  ![MIDI Sequencer Interface](images/Seqr303Page2.png)
 
- 
+ **Step Sequencer Pot, Shift + Pot**  
+303: [Pot] Changes notes [Shift + Pot] Changes octave   
+808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
 
  - **Selected item:** <table>
   <tr>
@@ -121,7 +122,7 @@ The interface presents you simple schema to navigate and interact with you acidu
 </table>
 
 
- ### Generator page <span style="color: white; background-color: black;">gene</span>
+ ### Generator page 
  ![MIDI Sequencer Interface](images/Gene303Page1.png)
  ![MIDI Sequencer Interface](images/Gene303Page2.png)
  

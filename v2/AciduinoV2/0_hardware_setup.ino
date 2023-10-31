@@ -7,8 +7,8 @@
 // if you need change pinout, please do
 // it under USE_CUSTOM_PINOUT definitions
 // and ucomment the line bellow:
-//#define USE_CUSTOM_PINOUT
-#define USE_PROTOBOARD_PINOUT
+#define USE_CUSTOM_PINOUT
+//#define USE_PROTOBOARD_PINOUT
 //#define USE_UONE_PINOUT
 //#define USE_MEGA_SHIELD_PINOUT
 
@@ -26,16 +26,18 @@
   
   #define NAV_SHIFT_PIN             4
   
-  #define NAV_FUNCTION1_PIN         6
-  #define NAV_FUNCTION2_PIN         7
-  #define NAV_GENERAL1_PIN          3
-  #define NAV_GENERAL2_PIN          5
-  #define NAV_RIGHT_PIN             15
-  #define NAV_UP_PIN                14
-  #define NAV_DOWN_PIN              9
-  #define NAV_LEFT_PIN              16
+
+  #define NAV_FUNCTION1_PIN 7
+#define NAV_FUNCTION2_PIN 6
+#define NAV_GENERAL1_PIN 3
+#define NAV_GENERAL2_PIN 5
+#define NAV_RIGHT_PIN 17
+#define NAV_UP_PIN 15
+#define NAV_DOWN_PIN 9
+#define NAV_LEFT_PIN 16
+  
     
-  #define TRANSPORT_BUTTON_1_PIN    10
+  //#define TRANSPORT_BUTTON_1_PIN    10
   
   // going to use changer pot?
   #define CHANGER_POT_PIN           A9

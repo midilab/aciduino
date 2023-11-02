@@ -97,40 +97,72 @@ generic buttons= decrementer / incrementer*
 
 ---  
 
-### Sequencer page    
+### Sequencer page     
  There are slightly different parameters depending on the Track type.
  
-  **length:** 0 to whatever you defined in `/AciduinoV2/src/sequencer/setup.h`
- 0 to 64 for a 808 track. Note that each voice of a 808 track can have a different sequence length
+  **length:**  define the number of steps in the current sequence 
+  0 to whatever you defined in `/AciduinoV2/src/sequencer/setup.h`for a 303 track.  
+ 0 to 64 for a 808 track. Note that each drum voice of a 808 track can have a different pattern length   
+*pot=step number  
+No function available   
+generic buttons= decrementer / incrementer* 
+
+ **Shift :** offset the whole sequence forward or backward  
  
- **Fill:** 
- ![MIDI Sequencer Interface](images/PageSeqr303.png)
- 
- 
- ![MIDI Sequencer Interface](images/PageSeqr808.png)
-
- **Step Sequencer Pot, Shift + Pot**  
-303: [Pot] Changes notes [Shift + Pot] Changes octave   
-808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
-
-
-
-**Voice:** set the tonic note
+  - **303 Sequencer Page**  
+ ![MIDI Sequencer Interface](images/PageSeqr303.png)  
+  **Tune:** set the tonic note (off - C1 -> B1)  
+   *pot=off/set tonic note  
+   No function available   
+   generic buttons= decrementer / incrementer*   
+     
+  **transpose :** transpose the sequence   
+  *pot=off/set tonic note  
+No function available    
+generic buttons= decrementer / incrementer*  
   
-**Note:** set the drum part midi note number
-**Shift :** offset the whole sequence forward or backward
-**transpose :** transpose the tonic note
-**roll:** set the roll type  
+  **Bar Selector :** the bar above the step sequencer representation. Each division represent a 16 step bar, a bold division tells which bar is being played, a blinking division tells which bar is being edited    
+  *pot=no option  
+F1=clear sequence / F2=mute pattern   
+generic buttons= bugs the sequence*  
+
+  **Step Selector :** each small square is a rest,each bold square is a gated step. The label underneath the sequencer is indicating the step note and octave. The blinking step outline tells which bar is being edited. When Aciduino is playing, the moving step outline is indicating which step is being played.  
+     Default note velocity is 70, accented is 127. This can be defined in `/AciduinoV2/src/sequencer/setup.h`  
+  *pot=select picth  
+  shift+pot=select octave      
+  F1= accent / F2=slide(gated step) or tie (rest) 
+  generic buttons= trigger  / F2=mute pattern*  
+
+  - **808 Sequencer Page**
+ ![MIDI Sequencer Interface](images/PageSeqr808.png)
+ **Voice:** set the tonic note    
+ **Note:** set the drum part midi note number  
+ **roll:** set the roll type  
+ **Step Sequencer Pot, Shift + Pot**  
+808: [Pot] Changes notes [Shift + Pot] Changes Drum Voice  
+
 
 ---
 
 ### Generator page  
-  
+
+ **Fill:**  the percentage of activated steps in the sequence, this will only affect the next generated sequence  
+  *pot=step number  
+No function available  
+generic buttons= decrementer / incrementer*  
+
+  - **303 Generator Page**  
+    
  ![MIDI Sequencer Interface](images/PageGene303.png)
- ![MIDI Sequencer Interface](images/PageGene808.png)
+   **Tune:** set the tonic note (off - C1 -> B1)  
+  **transpose :** transpose the sequence  
  
 
- - **Header bar:** 
+ - **808 Generator Page**
+ ![MIDI Sequencer Interface](images/PageGene808.png)  
+ 808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port) 
+ 
+
 
 ---  
 
@@ -139,7 +171,6 @@ generic buttons= decrementer / incrementer*
 
 --- 
 
- - **Header bar:** Contains
 ### MIDI page 
  ![MIDI Sequencer Interface](images/PageMidi303.png)
   ![MIDI Sequencer Interface](images/PageMidi808.png)

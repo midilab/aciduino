@@ -142,7 +142,8 @@ generic buttons= bugs the sequence*
   generic buttons= trigger  / F2=mute pattern*  
 
   - **808 Sequencer Page**
- ![MIDI Sequencer Interface](images/PageSeqr808.png)
+  - 
+ ![MIDI Sequencer Interface](images/PageSeqr808.png)  
  **Voice:** set the tonic note    
  **Note:** set the drum part midi note number  
  **roll:** set the roll type  
@@ -174,9 +175,9 @@ generic buttons= decrementer / incrementer*
 
 ---  
 
-### Pattern page 
+### Pattern page  
 
- ![MIDI Sequencer Interface](images/PagePtrn.png)
+ ![MIDI Sequencer Interface](images/PagePtrn.png)  
   *pot=no interaction here
 F1=copy / F2=all
 Shift+F1=save as / Shift+F2=save  
@@ -184,13 +185,13 @@ generic buttons= play selected pattern / play selected scene*
 
 --- 
 
-### MIDI page 
+### MIDI page  
 
 
- ![MIDI Sequencer Interface](images/PageMidi303.png)
+ ![MIDI Sequencer Interface](images/PageMidi303.png)  
  
- 
-  ![MIDI Sequencer Interface](images/PageMidi808.png)
+ Labels and CC# are different 
+  ![MIDI Sequencer Interface](images/PageMidi808.png)  
 
  - **Midi CCs** they are sent on the selected Track MIDI channel, CC# and naming can be changed in in `/AciduinoV2/page_midi.ino` : look for     `midiControllerComponent.set303Control("filter", 74);`
 

@@ -95,6 +95,14 @@ generic buttons= decrementer / incrementer*
 F1=load / F2=save  
 generic buttons= decrementer / incrementer*  
 
+**Track Config:**  
+**out :** midi 1 or midi 2
+ 
+  
+*pot=storage  
+F1=load / F2=save  
+generic buttons= decrementer / incrementer*  
+
 ---  
 
 ### Sequencer page     

@@ -175,12 +175,21 @@ generic buttons= decrementer / incrementer*
 ---  
 
 ### Pattern page 
+
  ![MIDI Sequencer Interface](images/PagePtrn.png)
+  *pot=no interaction here
+F1=copy / F2=all
+Shift+F1=save as / Shift+F2=save  
+generic buttons= play selected pattern / play selected scene*  
 
 --- 
 
 ### MIDI page 
+
+
  ![MIDI Sequencer Interface](images/PageMidi303.png)
+ 
+ 
   ![MIDI Sequencer Interface](images/PageMidi808.png)
 
  - **Midi CCs** they are sent on the selected Track MIDI channel, CC# and naming can be changed in in `/AciduinoV2/page_midi.ino` : look for     `midiControllerComponent.set303Control("filter", 74);`

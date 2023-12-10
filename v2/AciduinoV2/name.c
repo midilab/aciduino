@@ -1,4 +1,4 @@
-#if defined(TEENSYDUINO) && defined(USE_USB_MIDI)
+#if defined(TEENSYDUINO) && defined(USB_MIDI)
 
 // Teensy only platform
 // To give your project a unique name, this code must be

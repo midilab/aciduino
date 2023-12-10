@@ -76,8 +76,8 @@
 //#include "src/ports/avr/mega.h"
 //#include "src/ports/teensy/generic.h"
 //#include "src/ports/esp32/wroom.h"
-#include "src/ports/teensy/uone.h"
-//#include "src/ports/avr/midilab_mega.h"
+//#include "src/ports/teensy/uone.h"
+#include "src/ports/avr/midilab_mega.h"
 
 // globals
 bool _playing = false;

@@ -228,14 +228,14 @@ void uCtrlSetup() {
 
   uCtrl.initAin();
   uCtrl.ain->plug(CHANGER_POT_PIN);
-#if defined(USE_PROTOBOARD)
+#if defined(INVERT_POT_READ)
   // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
   uCtrl.ain->invertRead(true);
-#if defined(TEENSYDUINO)
+#endif
+#if defined(USE_PROTOBOARD) || defined(TEENSYDUINO)
   // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
   pinMode(22, OUTPUT);
   digitalWrite(22, LOW);
-#endif
 #endif
   // raise the average reads for pot for better stability
   uCtrl.ain->setAvgReads(8);
@@ -250,7 +250,8 @@ void uCtrlSetup() {
   uCtrl.initCapTouch(TOUCH_CTRL_PIN1, TOUCH_CTRL_PIN2, TOUCH_CTRL_PIN3, TOUCH_CTRL_PIN4);
   //uCtrl.touch->setThreshold(41);
   //uCtrl.touch->setThreshold(90);
-  uCtrl.touch->setThreshold(110);
+  //uCtrl.touch->setThreshold(110);
+  uCtrl.touch->setThreshold(TOUCH_TRESHOLD);
   uCtrl.touch->plug(TOUCH_MUX_COMM1);
   uCtrl.touch->plug(TOUCH_MUX_COMM2);
 #endif
@@ -314,7 +315,7 @@ void uCtrlSetup() {
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
 #elif defined(USE_CHANGER_POT)
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2);
-  uCtrl.page->setNavPot(0);
+  uCtrl.page->setNavPot(0); // id=0, first registred ain pin via plug() call
 #endif
   // hook button callback setup
   // previous track

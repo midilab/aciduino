@@ -9,18 +9,14 @@
 // Display device
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-#define FLIP_DISPLAY
 
 // Midi device
 // initing midi devices
 #if defined(USB_MIDI)
   #define MIDI1         usbMIDI
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
-  #define USE_MIDI1
-  #define USE_MIDI2
 #else
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
-  #define USE_MIDI1
 #endif
 
 //============================================
@@ -34,6 +30,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // choose you changer! only one please...
 #define USE_CHANGER_POT
 //#define USE_CHANGER_ENCODER
+
+#define USE_MIDI1
+#define USE_MIDI2
+
+#define FLIP_DISPLAY
+
+#define INVERT_POT_READ
 
 // for protoboard hacks
 #define USE_TEENSY_PROTOBOARD_HACKS

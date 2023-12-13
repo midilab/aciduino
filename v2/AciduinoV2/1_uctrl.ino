@@ -217,6 +217,9 @@ void uCtrlSetup() {
 #if defined(USE_POT_8) || defined(USE_POT_16)
 
   uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
+#if defined(USE_CHANGER_POT)
+  uCtrl.ain->plug(CHANGER_POT_PIN);
+#endif
   uCtrl.ain->plugMux(POT_MUX_COMM1);
 #if defined(USE_POT_16)
   uCtrl.ain->plugMux(POT_MUX_COMM2);
@@ -248,9 +251,6 @@ void uCtrlSetup() {
 #if defined(USE_TOUCH_32)
   uCtrl.oled->print(">init ctouch...", 8, 1);
   uCtrl.initCapTouch(TOUCH_CTRL_PIN1, TOUCH_CTRL_PIN2, TOUCH_CTRL_PIN3, TOUCH_CTRL_PIN4);
-  //uCtrl.touch->setThreshold(41);
-  //uCtrl.touch->setThreshold(90);
-  //uCtrl.touch->setThreshold(110);
   uCtrl.touch->setThreshold(TOUCH_TRESHOLD);
   uCtrl.touch->plug(TOUCH_MUX_COMM1);
   uCtrl.touch->plug(TOUCH_MUX_COMM2);
@@ -313,8 +313,10 @@ void uCtrlSetup() {
   // component UI interface setup
 #if defined(USE_CHANGER_ENCODER)
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
-#elif defined(USE_CHANGER_POT)
+#else
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2);
+#endif
+#if defined(USE_CHANGER_POT)
   uCtrl.page->setNavPot(0); // id=0, first registred ain pin via plug() call
 #endif
   // hook button callback setup

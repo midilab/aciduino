@@ -3,23 +3,6 @@
 // teensy 3.2+ on protoboard
 
 //============================================
-// Managed Devices Setup
-//============================================
-
-// Display device
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-
-// Midi device
-// initing midi devices
-#if defined(USB_MIDI)
-  #define MIDI1         usbMIDI
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
-#else
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
-#endif
-
-//============================================
 // Aciduino Features Setup
 //============================================
 
@@ -79,3 +62,16 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 // going to use changer pot?
 #define CHANGER_POT_PIN           A9
+
+//============================================
+// Managed Devices Setup
+//============================================
+
+// Display device
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+// Midi device
+// initing midi devices
+#define MIDI1         usbMIDI
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);

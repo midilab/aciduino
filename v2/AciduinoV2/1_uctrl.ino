@@ -235,7 +235,7 @@ void uCtrlSetup() {
   // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
   uCtrl.ain->invertRead(true);
 #endif
-#if defined(USE_PROTOBOARD) || defined(TEENSYDUINO)
+#if defined(USE_TEENSY_PROTOBOARD_HACKS)
   // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
   pinMode(22, OUTPUT);
   digitalWrite(22, LOW);

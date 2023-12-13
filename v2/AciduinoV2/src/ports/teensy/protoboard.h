@@ -10,21 +10,21 @@
 // change for another pin if use any spi module
 #define USE_BPM_LED       LED_BUILTIN
 // main navigation
-// choose you changer! only one please...
 #define USE_CHANGER_POT
 //#define USE_CHANGER_ENCODER
+#define USE_TRANSPORT_BUTTON
+
+#define FLIP_DISPLAY
+#define INVERT_POT_READ
 
 #define USE_MIDI1
 #define USE_MIDI2
-
-#define FLIP_DISPLAY
-
-#define INVERT_POT_READ
 
 // for protoboard hacks
 #define USE_TEENSY_PROTOBOARD_HACKS
 
 // wich modules you need acidman?
+// PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
 //#define USE_PUSH_8      // uses 165 shiftregister (buttons)
 //#define USE_PUSH_24     // uses 3x 165 shiftregister
 //#define USE_PUSH_32     // uses 4x 165 shiftregister
@@ -75,3 +75,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // initing midi devices
 #define MIDI1         usbMIDI
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+
+// SPI devices
+//#define PUSH_SPI          SPI
+//#define LED_SPI           SPI

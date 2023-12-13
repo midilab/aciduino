@@ -1,30 +1,6 @@
 #include "../../uCtrl/uCtrl.h"
 
 //============================================
-// Managed Devices Setup
-//============================================
-
-// Display device
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-#define FLIP_DISPLAY
-
-// Midi device
-// initing midi devices
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
-#define USE_MIDI1
-#define USE_MIDI2
-//#define USE_MIDI3
-//#define USE_MIDI4
-
-// SPI devices
-#define PUSH_SPI          SPI
-#define LED_SPI           SPI
-
-//============================================
 // Aciduino Features Setup
 //============================================
 
@@ -36,8 +12,18 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 // choose you changer! only one please...
 //#define USE_CHANGER_POT
 #define USE_CHANGER_ENCODER
+//#define USE_TRANSPORT_BUTTON
+
+#define FLIP_DISPLAY
+//#define INVERT_POT_READ
+
+#define USE_MIDI1
+#define USE_MIDI2
+//#define USE_MIDI3
+//#define USE_MIDI4
 
 // to extend your aciduino controls you can make use of the following uMODULAR modules:
+// PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
 #define USE_PUSH_8      // uses 165 shiftregister (buttons)
 //#define USE_PUSH_24     // uses 3x 165 shiftregister
 //#define USE_PUSH_32     // uses 4x 165 shiftregister
@@ -87,3 +73,22 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 #define POT_CTRL_PIN3             49
 #define POT_MUX_COMM1             A0
 #define POT_MUX_COMM2             A1
+
+//============================================
+// Managed Devices Setup
+//============================================
+
+// Display device
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+// Midi device
+// initing midi devices
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
+
+// SPI devices
+#define PUSH_SPI          SPI
+#define LED_SPI           SPI

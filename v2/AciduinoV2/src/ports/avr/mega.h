@@ -1,25 +1,6 @@
 #include "../../uCtrl/uCtrl.h"
 
 //============================================
-// Managed Devices Setup
-//============================================
-
-// Display device
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-
-// Midi device
-// initing midi devices
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
-#define USE_MIDI1
-#define USE_MIDI2
-//#define USE_MIDI3
-//#define USE_MIDI4
-
-//============================================
 // Aciduino Features Setup
 //============================================
 
@@ -30,8 +11,18 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 // choose you changer! only one please...
 #define USE_CHANGER_POT
 //#define USE_CHANGER_ENCODER
+//#define USE_TRANSPORT_BUTTON
+
+//#define FLIP_DISPLAY
+//#define INVERT_POT_READ
+
+#define USE_MIDI1
+#define USE_MIDI2
+//#define USE_MIDI3
+//#define USE_MIDI4
 
 // wich modules you need acidman?
+// PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
 //#define USE_PUSH_8      // uses 165 shiftregister (buttons)
 //#define USE_PUSH_24     // uses 3x 165 shiftregister
 //#define USE_PUSH_32     // uses 4x 165 shiftregister
@@ -68,3 +59,22 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 #define NAV_LEFT_PIN              2
 
 #define TRANSPORT_BUTTON_1_PIN    7
+
+//============================================
+// Managed Devices Setup
+//============================================
+
+// Display device
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+// Midi device
+// initing midi devices
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI4);
+
+// SPI devices
+//#define PUSH_SPI          SPI
+//#define LED_SPI           SPI

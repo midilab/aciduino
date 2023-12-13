@@ -3,6 +3,43 @@
 //uONE!
 
 //============================================
+// Aciduino Features Setup
+//============================================
+
+// make use of bpm led?
+// change for another pin if use any spi module
+//#define USE_BPM_LED       LED_BUILTIN
+// main navigation
+//#define USE_CHANGER_POT
+#define USE_CHANGER_ENCODER
+//#define USE_TRANSPORT_BUTTON
+
+//#define FLIP_DISPLAY
+//#define INVERT_POT_READ
+
+#define USE_MIDI1
+#define USE_MIDI2
+
+// wich modules you need acidman?
+// PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
+//#define USE_PUSH_8      // uses 165 shiftregister (buttons)
+//#define USE_PUSH_24     // uses 3x 165 shiftregister
+//#define USE_PUSH_32     // uses 4x 165 shiftregister
+//#define USE_LED_8       // uses 595 shiftregister
+#define USE_LED_24      // uses 3x 595 shiftregister
+//#define USE_POT_8       // uses 4051 multiplexer
+//#define USE_POT_16      // uses 2x 4051 multiplexer
+#define USE_TOUCH_32    // uses 2x 4067 multiplexer
+//#define TOUCH_TRESHOLD    41
+//#define TOUCH_TRESHOLD    90
+#define TOUCH_TRESHOLD    110
+
+// learn support for pots?
+#if defined (USE_POT_8) || defined (USE_POT_16)
+  #define LEARN_ENABLED
+#endif
+
+//============================================
 // PINOUT Setup
 //============================================
 
@@ -31,39 +68,6 @@
 #define TOUCH_CTRL_PIN4           4
 #define TOUCH_MUX_COMM1           A6
 #define TOUCH_MUX_COMM2           A7
-
-//============================================
-// Aciduino Features Setup
-//============================================
-
-// make use of bpm led?
-// change for another pin if use any spi module
-//#define USE_BPM_LED       LED_BUILTIN
-// main navigation
-// choose you changer! only one please...
-//#define USE_CHANGER_POT
-#define USE_CHANGER_ENCODER
-
-// wich modules you need acidman?
-//#define USE_PUSH_8      // uses 165 shiftregister (buttons)
-//#define USE_PUSH_24     // uses 3x 165 shiftregister
-//#define USE_PUSH_32     // uses 4x 165 shiftregister
-//#define USE_LED_8       // uses 595 shiftregister
-#define USE_LED_24      // uses 3x 595 shiftregister
-//#define USE_POT_8       // uses 4051 multiplexer
-//#define USE_POT_16      // uses 2x 4051 multiplexer
-#define USE_TOUCH_32    // uses 2x 4067 multiplexer
-//#define TOUCH_TRESHOLD    41
-//#define TOUCH_TRESHOLD    90
-#define TOUCH_TRESHOLD    110
-
-#define USE_MIDI1
-#define USE_MIDI2
-
-// learn support for pots?
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
 
 //============================================
 // Managed Devices Setup

@@ -2,32 +2,6 @@
 
 // wroom on protoboard
 
-//============================================
-// Managed Devices Setup
-//============================================
-
-// Display device
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-//#define FLIP_DISPLAY
-
-// Midi device
-// initing midi devices
-// in case we got USB native mode support builtin, use it!
-#if defined(CONFIG_TINYUSB_ENABLED)
-  ESPNATIVEUSBMIDI espNativeUsbMidi;
-  MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
-  #define USE_MIDI1
-  #define USE_MIDI2
-#else
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
-  //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
-  #define USE_MIDI1
-  //#define USE_MIDI2
-#endif
-// #if defined(CONFIG_BT_ENABLED)...
-
 
 //#define USE_MIDI3
 //#define USE_MIDI4
@@ -40,11 +14,18 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 #define LED_BUILTIN       2
 #define USE_BPM_LED       LED_BUILTIN
 // main navigation
-// choose you changer! only one please...
 #define USE_CHANGER_POT
 //#define USE_CHANGER_ENCODER
+//#define USE_TRANSPORT_BUTTON
+
+//#define FLIP_DISPLAY
+//#define INVERT_POT_READ
+
+#define USE_MIDI1
+//#define USE_MIDI2
 
 // wich modules you need acidman?
+// PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
 //#define USE_PUSH_8      // uses 165 shiftregister (buttons)
 //#define USE_PUSH_24     // uses 3x 165 shiftregister
 //#define USE_PUSH_32     // uses 4x 165 shiftregister
@@ -83,3 +64,28 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // going to use changer pot?
 // GPIO 0 - ADC2_1
 #define CHANGER_POT_PIN           0
+
+//============================================
+// Managed Devices Setup
+//============================================
+
+// Display device
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+// Midi device
+// initing midi devices
+// in case we got USB native mode support builtin, use it!
+#if defined(CONFIG_TINYUSB_ENABLED)
+  ESPNATIVEUSBMIDI espNativeUsbMidi;
+  MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+#else
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
+  //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+#endif
+// #if defined(CONFIG_BT_ENABLED)...
+
+// SPI devices
+//#define PUSH_SPI          SPI
+//#define LED_SPI           SPI

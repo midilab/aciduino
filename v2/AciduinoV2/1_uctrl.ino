@@ -151,7 +151,7 @@ void uCtrlSetup() {
   //
   uCtrl.initOled(&u8g2);
 #if defined(USE_PROTOBOARD) || defined(USE_MEGA_SHIELD)
-  uCtrl.oled->flipDisplay(0); 
+  uCtrl.oled->flipDisplay(1); 
 #endif
   uCtrl.oled->print("booting", 4, 1);
   uCtrl.oled->print("please wait...", 5, 1); 

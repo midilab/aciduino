@@ -30,9 +30,9 @@
 //#define USE_POT_8       // uses 4051 multiplexer
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 #define USE_TOUCH_32    // uses 2x 4067 multiplexer
-//#define TOUCH_TRESHOLD    41
 //#define TOUCH_TRESHOLD    90
-#define TOUCH_TRESHOLD    110
+#define TOUCH_TRESHOLD    100
+//#define TOUCH_TRESHOLD    110
 
 // learn support for pots?
 #if defined (USE_POT_8) || defined (USE_POT_16)

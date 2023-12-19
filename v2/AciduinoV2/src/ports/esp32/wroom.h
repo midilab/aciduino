@@ -41,6 +41,8 @@
 // PINOUT Setup
 //============================================
 
+// Some of the ADC2 pins are used as strapping pins (GPIO 0, 2, 15) thus cannot be used freely. Such is the case in the following official Development Kits:
+
 // going to use changer encoder?
 //#define NAV_ENCODER_DEC_PIN       5
 //#define NAV_ENCODER_INC_PIN       18
@@ -61,10 +63,7 @@
 // going to use changer pot?
 // esp32 30pins
 // GPIO 15 - ADC2_3
-//#define CHANGER_POT_PIN             15
-// esp32 38pins
-// GPIO 0 - ADC2_1
-#define CHANGER_POT_PIN           0
+#define CHANGER_POT_PIN             15
 
 //============================================
 // Managed Devices Setup

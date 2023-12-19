@@ -66,16 +66,6 @@
 // GPIO 0 - ADC2_1
 #define CHANGER_POT_PIN           0
 
-// 4 pot extension
-// GPIO 35 - ADC1_7
-#define MIDI_CONTROLLER_3_POT_PIN   35
-// GPIO 34 - ADC1_6
-#define MIDI_CONTROLLER_4_POT_PIN   34
-// GPIO 39 - ADC1_3
-#define MIDI_CONTROLLER_1_POT_PIN   39
-// GPIO 36 - ADC1_0
-#define MIDI_CONTROLLER_2_POT_PIN   36
-
 //============================================
 // Managed Devices Setup
 //============================================

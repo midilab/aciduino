@@ -70,6 +70,20 @@
 //
 #include "src/sequencer/acid_sequencer.h"
 
+//
+// Select your platform port
+//
+//#include "src/ports/avr/mega.h"
+//#include "src/ports/teensy/protoboard.h"
+#include "src/ports/esp32/wroom.h"
+//#include "src/ports/esp32/wroom-ext1.h"
+//#include "src/ports/teensy/uone.h"
+//#include "src/ports/avr/midilab_mega.h"
+
+// globals
+bool _playing = false;
+uint8_t _selected_track = 0;
+
 void setup() {
   // setup uctrl hardware and control interfaces
   uCtrlSetup();

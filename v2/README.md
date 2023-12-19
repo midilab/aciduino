@@ -18,6 +18,22 @@ As this version utilizes uCtrl and uClock libraries as submodules, please rememb
 phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git
 phuture@acidlab:~$ cd aciduino/
 phuture@acidlab:~$ git submodule update --init --recursive
+```  
+
+Open v2/AciduinoV2/AciduinoV2.ino and uncomment only one of the following microcontroller ports depending on wich one you're going to use.
+
+```c
+...
+//
+// Select your platform port
+//
+//#include "src/ports/avr/mega.h"
+//#include "src/ports/teensy/protoboard.h"
+#include "src/ports/esp32/wroom.h"
+//#include "src/ports/esp32/wroom-ext1.h"
+//#include "src/ports/teensy/uone.h"
+//#include "src/ports/avr/midilab_mega.h"
+...
 ```
 
 ## How does it looks like?
@@ -35,20 +51,6 @@ A oled screen to get access to all parameters that matters in realtime, a easy t
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino-v2-808-grid.jpg)
 
 [Click here for more info](https://github.com/midilab/aciduino/tree/master/v2/)
-
-## Assembly
-
-Place the buttons, knob and powerlines
-
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1.jpg)
-
-You need to increase the size of two of the hole to place the pot base support on top (+) connect grid line.
-
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1_pot_placement.jpg)
-
-Place signal lines for buttons
-
-![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step2.jpg)
 
 ## How to use?
 
@@ -76,6 +78,20 @@ The interface presents you simple schema to navigate and interact with you acidu
 **Step Sequencer Pot, Shift + Pot**  
 303: [Pot] Changes notes [Shift + Pot] Changes octave   
 808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
+
+## Assembly
+
+Place the buttons, knob and powerlines
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1.jpg)
+
+You need to increase the size of two of the hole to place the pot base support on top (+) connect grid line.
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step1_pot_placement.jpg)
+
+Place signal lines for buttons
+
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/step2.jpg)
 
 # uMODULAR uOne
 

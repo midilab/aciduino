@@ -11,8 +11,8 @@
 #define LED_BUILTIN       2
 #define USE_BPM_LED       LED_BUILTIN
 // main navigation
-#define USE_CHANGER_POT
-//#define USE_CHANGER_ENCODER
+//#define USE_CHANGER_POT
+#define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
 #define FLIP_DISPLAY
@@ -33,18 +33,17 @@
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 //#define USE_TOUCH_32    // uses 2x 4067 multiplexer
 
-// learn support for pots?
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
+// learn support for extension pots? not pot changer!
+#define LEARN_ENABLED
 
 //============================================
 // PINOUT Setup
 //============================================
+// https://lastminuteengineers.com/esp32-pinout-reference/
 
 // going to use changer encoder?
-//#define NAV_ENCODER_DEC_PIN       5
-//#define NAV_ENCODER_INC_PIN       18
+#define NAV_ENCODER_DEC_PIN       13
+#define NAV_ENCODER_INC_PIN       4
 
 #define NAV_SHIFT_PIN             12
 
@@ -62,16 +61,26 @@
 // Gpios 6, 7, 8, 9, 10 and 11 are a no go for ESP32 to use?
 // going to use changer pot?
 // GPIO 15 - ADC2_3
-#define CHANGER_POT_PIN             15
+//#define CHANGER_POT_PIN             15
 // 4 pot extension
+#define MIDI_CONTROLLER_1_POT_PIN   15
 // GPIO 35 - ADC1_7
-#define MIDI_CONTROLLER_1_POT_PIN   35
+/* #define MIDI_CONTROLLER_1_POT_PIN   35
 // GPIO 34 - ADC1_6
 #define MIDI_CONTROLLER_2_POT_PIN   34
 // GPIO 39 - ADC1_3
 #define MIDI_CONTROLLER_3_POT_PIN   39
 // GPIO 36 - ADC1_0
-#define MIDI_CONTROLLER_4_POT_PIN   36
+#define MIDI_CONTROLLER_4_POT_PIN   36 */
+// + 4 pots extensions
+/* // GPIO 35 - ADC1_7 ???
+#define MIDI_CONTROLLER_1_POT_PIN   ??
+// GPIO 34 - ADC1_6  ???
+#define MIDI_CONTROLLER_2_POT_PIN   ??
+// GPIO 39 - ADC1_3  ???
+#define MIDI_CONTROLLER_3_POT_PIN   ??
+// GPIO 36 - ADC1_0  ??
+#define MIDI_CONTROLLER_4_POT_PIN   ?? */
 
 //============================================
 // Managed Devices Setup
@@ -89,8 +98,8 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
   MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
 #else
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
+  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+  MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
   //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
 #endif
 // #if defined(CONFIG_BT_ENABLED)...

@@ -11,7 +11,7 @@ typedef enum {
   GENERIC_BUTTON_2,
   NEXT_BUTTON,
   UP_BUTTON,
-  DOWN_BUTTON,
+  DOWN_BUTTON, 
   PREVIOUS_BUTTON,
 #if defined(USE_TRANSPORT_BUTTON)
   TRANSPORT_BUTTON_1,
@@ -227,10 +227,15 @@ void uCtrlSetup() {
   // get a global entry point for our midi pot controllers
   uCtrl.ain->setCallback(midiControllerHandle);
 
-#elif defined(USE_CHANGER_POT)
-
+// else > no POT on mux
+#else
   uCtrl.initAin();
+#if defined(USE_CHANGER_POT)
   uCtrl.ain->plug(CHANGER_POT_PIN);
+#endif
+#if defined(MIDI_CONTROLLER_1_POT_PIN)
+  uCtrl.ain->plug(MIDI_CONTROLLER_1_POT_PIN);
+#endif
 #if defined(INVERT_POT_READ)
   // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
   uCtrl.ain->invertRead(true);
@@ -243,7 +248,7 @@ void uCtrlSetup() {
   // raise the average reads for pot for better stability
   uCtrl.ain->setAvgReads(8);
 
-#endif // if defined(USE_POT_8) || defined(USE_POT_16) > elif defined(USE_CHANGER_POT)
+#endif // if defined(USE_POT_8) || defined(USE_POT_16) > else
 
   //
   // Capacitive Touch Module

@@ -15,6 +15,8 @@
 #define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
+#define USE_POT_MICRO
+
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
@@ -33,8 +35,6 @@
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 //#define USE_TOUCH_32    // uses 2x 4067 multiplexer
 
-// learn support for extension pots? not pot changer!
-#define LEARN_ENABLED
 
 //============================================
 // PINOUT Setup
@@ -61,26 +61,26 @@
 // Gpios 6, 7, 8, 9, 10 and 11 are a no go for ESP32 to use?
 // going to use changer pot?
 // GPIO 15 - ADC2_3
-//#define CHANGER_POT_PIN             15
+#define CHANGER_POT_PIN           15
 // 4 pot extension
-#define MIDI_CONTROLLER_1_POT_PIN   15
+#define POT_MICRO_1_PIN           15
 // GPIO 35 - ADC1_7
-/* #define MIDI_CONTROLLER_1_POT_PIN   35
+/* #define POT_MICRO_1_PIN   35
 // GPIO 34 - ADC1_6
-#define MIDI_CONTROLLER_2_POT_PIN   34
+#define POT_MICRO_2_PIN   34
 // GPIO 39 - ADC1_3
-#define MIDI_CONTROLLER_3_POT_PIN   39
+#define POT_MICRO_3_PIN   39
 // GPIO 36 - ADC1_0
-#define MIDI_CONTROLLER_4_POT_PIN   36 */
+#define POT_MICRO_4_PIN   36 */
 // + 4 pots extensions
 /* // GPIO 35 - ADC1_7 ???
-#define MIDI_CONTROLLER_1_POT_PIN   ??
+#define POT_MICRO_5_PIN   ??
 // GPIO 34 - ADC1_6  ???
-#define MIDI_CONTROLLER_2_POT_PIN   ??
+#define POT_MICRO_6_PIN   ??
 // GPIO 39 - ADC1_3  ???
-#define MIDI_CONTROLLER_3_POT_PIN   ??
+#define POT_MICRO_7_PIN   ??
 // GPIO 36 - ADC1_0  ??
-#define MIDI_CONTROLLER_4_POT_PIN   ?? */
+#define POT_MICRO_8_PIN   ?? */
 
 //============================================
 // Managed Devices Setup

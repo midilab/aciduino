@@ -25,36 +25,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE. 
  */
-
-/* 
- 
-  Aciduino v2
-  
-  4 tracks/2 engines: 303, 808
-
-  track types:
-  MIDI: 303, 808
-  CV: 303(1cv 3gates), 808(4 gates)
-  SAMPLER: 808
-  SYNTH: 303
-  
-  load any engine on any track
-  default: 303, 303, 808, 808
-
-  shift+knob turn = last used midi control of the channel
-
-  shift+ generic1/2 changes track...
-
-  shift+ nav left/nav right changes subpage
-
-  shift+ nav up/nav down changes page
-
-  shift+ page button 2 play/stop
-
-  shift+ page button 1 tempo setup
-
-
-*/
 //
 // BPM Clock support
 //
@@ -75,8 +45,8 @@
 //
 //#include "src/ports/avr/mega.h"
 //#include "src/ports/teensy/protoboard.h"
-#include "src/ports/esp32/wroom.h"
-//#include "src/ports/esp32/wroom-ext1.h"
+//#include "src/ports/esp32/wroom.h"
+#include "src/ports/esp32/wroom-ext1.h"
 //#include "src/ports/teensy/uone.h"
 //#include "src/ports/avr/midilab_mega.h"
 
@@ -91,6 +61,7 @@ void setup() {
   uClockSetup();
   // init the sequencer
   initSequencer();
+  Serial.begin(115200);
 }
 
 void loop() {

@@ -14,6 +14,8 @@
 #define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
+//#define USE_POT_MICRO
+
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
@@ -33,10 +35,6 @@
 #define USE_POT_16      // uses 2x 4051 multiplexer
 //#define USE_TOUCH_32    // uses 2x 4067 multiplexer
 
-// learn support for pots?
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
 
 //============================================
 // PINOUT Setup
@@ -73,6 +71,7 @@
 #define POT_CTRL_PIN3             49
 #define POT_MUX_COMM1             A0
 #define POT_MUX_COMM2             A1
+
 
 //============================================
 // Managed Devices Setup

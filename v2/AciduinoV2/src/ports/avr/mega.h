@@ -13,6 +13,8 @@
 //#define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
+//#define USE_POT_MICRO
+
 //#define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
@@ -32,9 +34,6 @@
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 //#define USE_TOUCH_32    // uses 2x 4067 multiplexer
 
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
 
 //============================================
 // PINOUT Setup
@@ -59,6 +58,17 @@
 #define NAV_LEFT_PIN              2
 
 #define TRANSPORT_BUTTON_1_PIN    7
+
+// you need USE_POT_MICRO to enable those pins
+//#define POT_MICRO_1_PIN   ??
+//#define POT_MICRO_2_PIN   ??
+//#define POT_MICRO_3_PIN   ??
+//#define POT_MICRO_4_PIN   ??
+// + 4 pots extensions
+//#define POT_MICRO_5_PIN   ??
+//#define POT_MICRO_6_PIN   ??
+//#define POT_MICRO_7_PIN   ??
+//#define POT_MICRO_8_PIN   ??
 
 //============================================
 // Managed Devices Setup

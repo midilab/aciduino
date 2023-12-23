@@ -94,6 +94,10 @@ typedef enum {
 
 } LED_INTERFACE_CONTROLS;
 
+#if defined (USE_POT_8) || defined (USE_POT_16) || defined (USE_POT_MICRO)
+#define LEARN_ENABLED
+#endif
+
 void uCtrlSetup() {
   //
   // OLED setup
@@ -217,6 +221,7 @@ void uCtrlSetup() {
 #if defined(USE_POT_8) || defined(USE_POT_16)
 
   uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
+
 #if defined(USE_CHANGER_POT)
   uCtrl.ain->plug(CHANGER_POT_PIN);
 #endif
@@ -224,22 +229,56 @@ void uCtrlSetup() {
 #if defined(USE_POT_16)
   uCtrl.ain->plugMux(POT_MUX_COMM2);
 #endif
+
   // get a global entry point for our midi pot controllers
   uCtrl.ain->setCallback(midiControllerHandle);
 
 // else > no POT on mux
 #else
+
   uCtrl.initAin();
+
 #if defined(USE_CHANGER_POT)
   uCtrl.ain->plug(CHANGER_POT_PIN);
 #endif
-#if defined(MIDI_CONTROLLER_1_POT_PIN)
-  uCtrl.ain->plug(MIDI_CONTROLLER_1_POT_PIN);
+
+#if defined(USE_POT_MICRO)
+
+#if defined(POT_MICRO_1_PIN)
+  uCtrl.ain->plug(POT_MICRO_1_PIN);
 #endif
+#if defined(POT_MICRO_2_PIN)
+  uCtrl.ain->plug(POT_MICRO_2_PIN);
+#endif
+#if defined(POT_MICRO_3_PIN)
+  uCtrl.ain->plug(POT_MICRO_3_PIN);
+#endif
+#if defined(POT_MICRO_4_PIN)
+  uCtrl.ain->plug(POT_MICRO_4_PIN);
+#endif
+#if defined(POT_MICRO_5_PIN)
+  uCtrl.ain->plug(POT_MICRO_5_PIN);
+#endif
+#if defined(POT_MICRO_6_PIN)
+  uCtrl.ain->plug(POT_MICRO_6_PIN);
+#endif
+#if defined(POT_MICRO_7_PIN)
+  uCtrl.ain->plug(POT_MICRO_7_PIN);
+#endif
+#if defined(POT_MICRO_8_PIN)
+  uCtrl.ain->plug(POT_MICRO_8_PIN);
+#endif
+
+
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
+#endif
+
 #if defined(INVERT_POT_READ)
   // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
   uCtrl.ain->invertRead(true);
 #endif
+
 #if defined(USE_TEENSY_PROTOBOARD_HACKS)
   // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
   pinMode(22, OUTPUT);

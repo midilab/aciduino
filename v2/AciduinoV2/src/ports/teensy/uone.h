@@ -14,6 +14,8 @@
 #define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
+//#define USE_POT_MICRO
+
 //#define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
@@ -34,10 +36,6 @@
 #define TOUCH_TRESHOLD    100
 //#define TOUCH_TRESHOLD    110
 
-// learn support for pots?
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
 
 //============================================
 // PINOUT Setup

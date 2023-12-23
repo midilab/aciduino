@@ -15,6 +15,8 @@
 //#define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
+//#define USE_POT_MICRO
+
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
@@ -32,10 +34,6 @@
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 //#define USE_TOUCH_32    // uses 2x 4067 multiplexer
 
-// learn support for pots?
-#if defined (USE_POT_8) || defined (USE_POT_16)
-  #define LEARN_ENABLED
-#endif
 
 //============================================
 // PINOUT Setup
@@ -65,6 +63,25 @@
 // GPIO 15 - ADC2_3
 #define CHANGER_POT_PIN             15
 
+// 4 pot extension
+//#define POT_MICRO_1_PIN           15
+// GPIO 35 - ADC1_7
+/* #define POT_MICRO_1_PIN   35
+// GPIO 34 - ADC1_6
+#define POT_MICRO_2_PIN   34
+// GPIO 39 - ADC1_3
+#define POT_MICRO_3_PIN   39
+// GPIO 36 - ADC1_0
+#define POT_MICRO_4_PIN   36 */
+// + 4 pots extensions
+/* // GPIO 35 - ADC1_7 ???
+#define POT_MICRO_5_PIN   ??
+// GPIO 34 - ADC1_6  ???
+#define POT_MICRO_6_PIN   ??
+// GPIO 39 - ADC1_3  ???
+#define POT_MICRO_7_PIN   ??
+// GPIO 36 - ADC1_0  ??
+#define POT_MICRO_8_PIN   ?? */
 //============================================
 // Managed Devices Setup
 //============================================

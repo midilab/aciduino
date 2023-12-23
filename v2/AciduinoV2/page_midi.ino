@@ -310,9 +310,9 @@ void midiControllerHandle(uint8_t port, uint16_t value) {
   
   // anything into global learn map table?
   if (_control_map_global[port].ctrl != -1) {
-    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, 1);
+    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, 0);
   } else {
-    midiControllerComponent.sendCCData((int16_t)value, port, _selected_track, 1);
+    midiControllerComponent.sendCCData((int16_t)value, port, _selected_track, 0);
   }
 }
 

@@ -2,10 +2,10 @@
  *  @file       engine_808.cpp
  *  Project     Acid Sequencer
  *  @brief      Step Sequencer engine that emulates TR 808
- *  @version    0.8.0
+ *  @version    0.9.0
  *  @author     Romulo Silva
  *  @date       22/09/2022
- *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
+ *  @license    MIT - (c) 2024 - Romulo Silva - contact@midilab.co
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -122,8 +122,8 @@ void Engine808::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
 #endif
         // it this a roll? prepare the data
         if (roll) {
-          // a full one step in 96ppqn is 6 pulses. minus this shot one, we have 5 pulses left
-          _sequencer[track].voice[voice].trigger_ctrl = -5;
+          // a full one step in 96ppqn is 24 pulses. minus this shot one, we have 23 pulses left, put it 20
+          _sequencer[track].voice[voice].trigger_ctrl = -20;
         } else {
           _sequencer[track].voice[voice].trigger_ctrl = NOTE_LENGTH_808;
         }

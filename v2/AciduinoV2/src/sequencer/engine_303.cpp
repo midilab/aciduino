@@ -2,7 +2,7 @@
  *  @file       engine_303.cpp
  *  Project     Acid Sequencer
  *  @brief      Step Sequencer engine that emulates TB 303
- *  @version    0.8.0
+ *  @version    0.9.0
  *  @author     Romulo Silva
  *  @date       22/09/2022
  *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
@@ -331,7 +331,7 @@ void Engine303::acidRandomize(uint8_t track, uint8_t fill, uint8_t accent_probab
   ATOMIC(_sequencer[track].mute = false);
 }
 
-// The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
+// The callback function wich will be called by uClock each new step event time
 void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl) 
 {
   uint8_t step, next_step;
@@ -348,6 +348,7 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
     if (_sequencer[track].mute)
       continue;
 
+    // length based on 96PPQN (24 pulses in between each step)
     length = NOTE_LENGTH_303;
     
     // send note on only if this step are not in rest mode
@@ -360,10 +361,10 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
       for ( uint8_t i = 1; i < step_length; i++  ) {
         next_step = ++next_step % step_length;
         if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
-          length = NOTE_LENGTH_303 + 5;
+          length = NOTE_LENGTH_303 + 20;
           break;
         } else if (_sequencer[track].data.step[next_step].tie == 1 && _sequencer[track].data.step[next_step].rest == 1) {
-          length = NOTE_LENGTH_303 + (i * 6);
+          length = NOTE_LENGTH_303 + (i * 24);
         } else if ( _sequencer[track].data.step[next_step].rest == 0 || _sequencer[track].data.step[next_step].tie == 0) {
           break;
         }

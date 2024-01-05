@@ -21,30 +21,33 @@ void uClockSetup()
   // Inits the clock
   uClock.init();
   
+  // Set the callback function for the step sequencer on 96PPQN and for step sequencer feature
+  uClock.setOnPPQN(onPPQNCallback);
+  uClock.setOnStep(onStepCallback);
   // Set the callback function for the clock output to send MIDI Sync message.
-  uClock.setClock96PPQNOutput(ClockOut96PPQN);
-  
-  // Set the callback function for the step sequencer on 16ppqn
-  uClock.setClock16PPQNOutput(ClockOut16PPQN);  
-  
+  uClock.setOnSync24(onSync24Callback);
   // Set the callback function for MIDI Start and Stop messages.
-  uClock.setOnClockStartOutput(onClockStart);  
-  uClock.setOnClockStopOutput(onClockStop);
+  uClock.setOnClockStart(onClockStart);  
+  uClock.setOnClockStop(onClockStop);
   
   // Set the clock BPM to 126 BPM
   uClock.setTempo(126);
   //uClock.setMode(uClock.EXTERNAL_CLOCK);
 }
 
-// The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-void ClockOut16PPQN(uint32_t tick) 
+// keep gears synced on 24PPQN resolution
+void onSync24Callback(uint32_t tick) 
 {
-  // sequencer tick
-  AcidSequencer.on16PPQN(tick, uClock.getShuffleLength());
+  // Send MIDI_CLOCK to external gears
+  sendMidiClock();
+#if defined(USE_BPM_LED)
+  // led clock monitor
+  handle_bpm_led(tick);
+#endif
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-void ClockOut96PPQN(uint32_t tick) 
+void onPPQNCallback(uint32_t tick) 
 {
   // Send MIDI_CLOCK to external gears
   sendMidiClock();
@@ -54,6 +57,13 @@ void ClockOut96PPQN(uint32_t tick)
   // led clock monitor
   handle_bpm_led(tick);
 #endif
+}
+
+// The callback function wich will be called by uClock each new step event time
+void onStepCallback(uint32_t step) 
+{
+  // sequencer tick
+  AcidSequencer.onStep(step, uClock.getShuffleLength());
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.

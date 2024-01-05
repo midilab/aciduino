@@ -20,8 +20,12 @@
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
+// enable ble-midi? needs USE_MIDI2
+#define USE_BT_MIDI_ESP32
+
 #define USE_MIDI1
-//#define USE_MIDI2
+#define USE_MIDI2
+//#define USE_MIDI3
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
@@ -61,7 +65,7 @@
 // Gpios 6, 7, 8, 9, 10 and 11 are a no go for ESP32 to use?
 // going to use changer pot?
 // GPIO 15 - ADC2_3
-#define CHANGER_POT_PIN           15
+//#define CHANGER_POT_PIN           15
 // 4 pot extension
 #define POT_MICRO_1_PIN           15
 // GPIO 35 - ADC1_7
@@ -92,17 +96,18 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 // Midi device
 // initing midi devices
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
+
+#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED)
+BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+#endif
+
 // in case we got USB native mode support builtin, use it!
 #if defined(CONFIG_TINYUSB_ENABLED)
-  ESPNATIVEUSBMIDI espNativeUsbMidi;
-  MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
-#else
-  //MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
-  //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+ESPNATIVEUSBMIDI espNativeUsbMidi;
+MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI3);
 #endif
-// #if defined(CONFIG_BT_ENABLED)...
 
 // SPI devices
 //#define PUSH_SPI          SPI

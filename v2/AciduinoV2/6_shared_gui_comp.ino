@@ -77,6 +77,10 @@ struct TopBar : PageComponent {
           uCtrl.oled->print(SUBPAGE, 1, i+9);
         }
       }
+
+      if (_ble_midi_connected) {
+        uCtrl.oled->print("B", 1, 17);
+      }
       
       // bpm display and setup
       //uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);

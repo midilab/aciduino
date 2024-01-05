@@ -20,8 +20,12 @@
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
+// enable ble-midi? needs USE_MIDI2
+//#define USE_BT_MIDI_ESP32
+
 #define USE_MIDI1
 //#define USE_MIDI2
+//#define USE_MIDI3
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
@@ -42,8 +46,8 @@
 // Some of the ADC2 pins are used as strapping pins (GPIO 0, 2, 15) thus cannot be used freely. Such is the case in the following official Development Kits:
 
 // going to use changer encoder?
-//#define NAV_ENCODER_DEC_PIN       5
-//#define NAV_ENCODER_INC_PIN       18
+//#define NAV_ENCODER_DEC_PIN       13
+//#define NAV_ENCODER_INC_PIN       4
 
 #define NAV_SHIFT_PIN             12
 
@@ -82,6 +86,7 @@
 #define POT_MICRO_7_PIN   ??
 // GPIO 36 - ADC1_0  ??
 #define POT_MICRO_8_PIN   ?? */
+
 //============================================
 // Managed Devices Setup
 //============================================
@@ -92,16 +97,18 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 // Midi device
 // initing midi devices
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
+
+#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED)
+BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+#endif
+
 // in case we got USB native mode support builtin, use it!
 #if defined(CONFIG_TINYUSB_ENABLED)
-  ESPNATIVEUSBMIDI espNativeUsbMidi;
-  MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
-#else
-  MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-  //BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+ESPNATIVEUSBMIDI espNativeUsbMidi;
+MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI3);
 #endif
-// #if defined(CONFIG_BT_ENABLED)...
 
 // SPI devices
 //#define PUSH_SPI          SPI

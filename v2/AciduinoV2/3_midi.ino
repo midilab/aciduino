@@ -99,13 +99,13 @@ void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_
     msg_interrupt_pots.data1 = cc;
     msg_interrupt_pots.data2 = value;
     msg_interrupt_pots.channel = channel;
-    uCtrl.midi->write(&msg_interrupt_pots, port+1, 0);
+    uCtrl.midi->write(&msg_interrupt_pots, port+1, 1);
   } else {
     msg.type = uctrl::protocol::midi::ControlChange;
     msg.data1 = cc;
     msg.data2 = value;
     msg.channel = channel;
-    uCtrl.midi->write(&msg, port+1, interrupted);
+    uCtrl.midi->write(&msg, port+1, 0);
   }
 }
 
@@ -120,7 +120,7 @@ void sendNote(uint8_t note, uint8_t channel, uint8_t port, uint8_t velocity) {
     msg.type = uctrl::protocol::midi::NoteOn;
   }
 
-   uCtrl.midi->write(&msg, port+1, 0);
+  uCtrl.midi->write(&msg, port+1, 0);
 }
 
 // a port to read midi notes 1ms

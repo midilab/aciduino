@@ -98,6 +98,9 @@ typedef enum {
 #define LEARN_ENABLED
 #endif
 
+// esp32 ble midi connection status
+uint8_t _ble_midi_connected = 0;
+
 void uCtrlSetup() {
   //
   // OLED setup
@@ -314,9 +317,17 @@ void uCtrlSetup() {
   USB.productName("aciduinov2");
   USB.begin();
 #endif
-#if defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
-  //BLEMIDI.setHandleConnected(OnConnected); // void OnConnected() {}
-  //BLEMIDI.setHandleDisconnected(OnDisconnected); // void OnDisconnected() {}
+#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+
+  BLEMIDI2.setHandleConnected([]() {
+    //uCtrl.dout->write(BPM_LED, HIGH, 0);
+    _ble_midi_connected = 1;
+  });
+  
+  BLEMIDI2.setHandleDisconnected([]() {
+    //uCtrl.dout->write(BPM_LED, LOW, 0);
+    _ble_midi_connected = 0;
+  });
 #endif
 
   // Plugin MIDI interfaces to handle

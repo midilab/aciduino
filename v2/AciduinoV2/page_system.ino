@@ -204,6 +204,7 @@ struct ShuffleControl : PageComponent {
 struct ShuffleSignature : PageComponent {
 
   // MPC60 groove signatures?
+  // Same as 909
   uint8_t current_shuffle = 0;
   uint8_t template_size = 2;
   int8_t shuffle_50[2] = {0, 0};

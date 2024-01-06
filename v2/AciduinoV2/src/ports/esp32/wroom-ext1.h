@@ -23,9 +23,14 @@
 // enable ble-midi? needs USE_MIDI2
 #define USE_BT_MIDI_ESP32
 
-#define USE_MIDI1
-#define USE_MIDI2
-//#define USE_MIDI3
+// enable Serial to be able to use on serial-to-midi bridges on PCs
+// like hairless midi or ttymidi
+// does it needs USE_MIDI1
+#define USE_SERIAL_MIDI_115200
+
+#define USE_MIDI1 // USB MIDI, needs a serial-to-midi bridge on the other side: hariless midi or ttymidi
+#define USE_MIDI2 // BLE MIDI: bluetooth is not a good option to run realtime application like midi, so be aware of shit timming and issues(good for a midi controller only)
+#define USE_MIDI3 // real MIDI serial port: connect to your hardware synths via MIDI cable(check midi out schematics for 3.3v)
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
@@ -96,18 +101,25 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 // Midi device
 // initing midi devices
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI1);
+#if defined(USE_MIDI1) // USB
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+#endif
 
-#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED)
+#if defined(USE_MIDI2) // Bluetooth
+#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED) 
 BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
 #endif
-
-// in case we got USB native mode support builtin, use it!
-#if defined(CONFIG_TINYUSB_ENABLED)
-ESPNATIVEUSBMIDI espNativeUsbMidi;
-MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI3);
 #endif
+
+#if defined(USE_MIDI3) // Hardware midi 
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI3); 
+#endif
+
+// in case we got USB native mode support builtin, use it! note the case of wroom, keep this setup for later other boards
+//#if defined(CONFIG_TINYUSB_ENABLED)
+//ESPNATIVEUSBMIDI espNativeUsbMidi;
+//MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
+//#endif
 
 // SPI devices
 //#define PUSH_SPI          SPI

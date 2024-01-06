@@ -115,7 +115,7 @@ class Engine303 : public Engine
       void onStepCall(uint32_t tick, int8_t shuffle_length_ctrl);
 
       // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-      void onClockCall(uint32_t tick);
+      void on96PPQNCall(uint32_t tick);
 
       void clearStackNote(int8_t track);
 

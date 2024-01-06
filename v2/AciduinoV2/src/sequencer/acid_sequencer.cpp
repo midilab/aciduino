@@ -67,9 +67,9 @@ void AcidSequencerClass::on96PPQN(uint32_t tick)
 {
   _tick = tick;
   // 303 clock call
-  _engine303.onClockCall(tick);
+  _engine303.on96PPQNCall(tick);
   // 808 clock call
-  _engine808.onClockCall(tick);
+  _engine808.on96PPQNCall(tick);
 }
 
 uint16_t AcidSequencerClass::get303PatternMemorySize()

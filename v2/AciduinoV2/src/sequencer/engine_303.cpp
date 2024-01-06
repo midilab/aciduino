@@ -404,7 +404,7 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-void Engine303::onClockCall(uint32_t tick) 
+void Engine303::on96PPQNCall(uint32_t tick) 
 {
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
 

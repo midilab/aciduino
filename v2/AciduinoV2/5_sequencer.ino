@@ -19,8 +19,8 @@ void initSequencer()
   }
 
   // load shuffle form memory pattern?
-  int8_t init_template[2] = {0,1};
-  uClock.setShuffleTemplate(init_template);
+  int8_t init_template[2] = {0,0};
+  uClock.setShuffleTemplate(init_template, 2);
 
   // load epprom saved session
   loadSession();

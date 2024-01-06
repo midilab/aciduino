@@ -317,7 +317,7 @@ void uCtrlSetup() {
   USB.productName("aciduinov2");
   USB.begin();
 #endif
-#if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+#if defined(USE_BT_MIDI_ESP32) && defined(USE_MIDI2) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
 
   BLEMIDI2.setHandleConnected([]() {
     //uCtrl.dout->write(BPM_LED, HIGH, 0);

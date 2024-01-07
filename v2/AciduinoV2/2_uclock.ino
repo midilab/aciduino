@@ -49,8 +49,6 @@ void onSync24Callback(uint32_t tick)
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
 void onPPQNCallback(uint32_t tick) 
 {
-  // Send MIDI_CLOCK to external gears
-  sendMidiClock();
   // sequencer tick
   AcidSequencer.on96PPQN(tick);
 #if defined(USE_BPM_LED)

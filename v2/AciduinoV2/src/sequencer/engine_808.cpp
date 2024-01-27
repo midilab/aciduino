@@ -2,10 +2,10 @@
  *  @file       engine_808.cpp
  *  Project     Acid Sequencer
  *  @brief      Step Sequencer engine that emulates TR 808
- *  @version    0.8.0
+ *  @version    0.9.0
  *  @author     Romulo Silva
  *  @date       22/09/2022
- *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
+ *  @license    MIT - (c) 2024 - Romulo Silva - contact@midilab.co
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -122,23 +122,24 @@ void Engine808::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
 #endif
         // it this a roll? prepare the data
         if (roll) {
-          // a full one step in 96ppqn is 6 pulses. minus this shot one, we have 5 pulses left
-          _sequencer[track].voice[voice].trigger_ctrl = -5;
+          // a full one step in 96ppqn is 24 pulses. minus this shot one, we have 23 pulses left
+          _sequencer[track].voice[voice].trigger_ctrl = -24;
+          if (_sequencer[track].roll_type >= SUB_STEP_1)
+            return; // handle on 96ppqn only
         } else {
           _sequencer[track].voice[voice].trigger_ctrl = NOTE_LENGTH_808;
         }
         
         // send the drum triger
         _onEventCallback(NOTE_ON, _sequencer[track].voice[voice].note, accent ? ACCENT_VELOCITY_808 : NOTE_VELOCITY_808, track+TRACK_NUMBER_303);   
-
       } 
     }
     
   } 
 }
 
-// The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-void Engine808::onClockCall(uint32_t tick) 
+// The callback function wich will be called by uClock each Pulse of 96PPQN
+void Engine808::on96PPQNCall(uint32_t tick) 
 {
   for ( uint8_t track = 0; track < TRACK_NUMBER_808; track++ ) {
 
@@ -168,17 +169,17 @@ void Engine808::onClockCall(uint32_t tick)
         } else {
           // SUB_STEP_1
           if (_sequencer[track].roll_type == SUB_STEP_1) {
-            if (_sequencer[track].voice[i].trigger_ctrl == -3 || _sequencer[track].voice[i].trigger_ctrl == -1)
+            if (_sequencer[track].voice[i].trigger_ctrl%8 == 0) 
               shot_the_moon = true;
           // SUB_STEP_2
           } else if (_sequencer[track].roll_type == SUB_STEP_2) {
-            shot_the_moon = true;
+            if (_sequencer[track].voice[i].trigger_ctrl%4 == 0) 
+              shot_the_moon = true;
           }
-
         }
 
         if (shot_the_moon)
-          _onEventCallback(NOTE_ON, _sequencer[track].voice[i].note, NOTE_VELOCITY_808, track+TRACK_NUMBER_303);
+          _onEventCallback(NOTE_ON, _sequencer[track].voice[i].note, ACCENT_VELOCITY_808, track+TRACK_NUMBER_303);
       }
 
     }

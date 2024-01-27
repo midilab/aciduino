@@ -296,15 +296,23 @@ void midi_page_destroy()
 }
 
 // used by ain in case any POT_X registred
-void midiControllerHandle(uint8_t port, uint16_t value, uint8_t interrupted) {
+void midiControllerHandle(uint8_t port, uint16_t value) {
+
+#if defined(USE_CHANGER_POT)
+  // let pot changer out of this controller
+  if (port == 0)
+    return;
+  --port;
+#endif
+
   // check for learn request
   midiControllerComponent.learnCtrl(port);
   
   // anything into global learn map table?
   if (_control_map_global[port].ctrl != -1) {
-    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, interrupted);
+    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, 0);
   } else {
-    midiControllerComponent.sendCCData((int16_t)value, port, _selected_track, interrupted);
+    midiControllerComponent.sendCCData((int16_t)value, port, _selected_track, 0);
   }
 }
 

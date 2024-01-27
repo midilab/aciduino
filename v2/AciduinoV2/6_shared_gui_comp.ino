@@ -77,6 +77,10 @@ struct TopBar : PageComponent {
           uCtrl.oled->print(SUBPAGE, 1, i+9);
         }
       }
+
+      if (_ble_midi_connected) {
+        uCtrl.oled->print("B", 1, 17);
+      }
       
       // bpm display and setup
       //uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
@@ -137,12 +141,15 @@ struct Transpose : PageComponent {
 } transposeComponent;
 
 struct RollType : PageComponent {
-  
+
+    uint8_t current_roll = 0;
+    ROLL_TYPE rollTypes[7] = {FLAM_1, FLAM_2, FLAM_3, FLAM_4, FLAM_5, SUB_STEP_1, SUB_STEP_2};
+
     String options;
     void view() {
-      uint8_t roll_type = AcidSequencer.getRollType(_selected_track);
+      uint8_t roll_type = rollTypes[current_roll]; //AcidSequencer.getRollType(_selected_track);
       if (roll_type <= FLAM_5) {
-        options = "f"  + String(roll_type+1);
+        options = "f"  + String(roll_type);
       } else {
         options = "s"  + String(roll_type - FLAM_5);
       }
@@ -152,8 +159,8 @@ struct RollType : PageComponent {
 
     void change(int16_t data) {
       //clearStackNote(_selected_track);
-      data = parseData(data, 0, 6, AcidSequencer.getRollType(_selected_track));
-      AcidSequencer.setRollType(_selected_track, data);
+      current_roll = parseData(data, 0, 6, current_roll); //AcidSequencer.getRollType(_selected_track));
+      AcidSequencer.setRollType(_selected_track, rollTypes[current_roll]);
     }
     
 } rollTypeComponent;

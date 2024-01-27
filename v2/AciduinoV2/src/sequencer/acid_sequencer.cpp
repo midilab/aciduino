@@ -54,12 +54,12 @@ AcidSequencerClass::AcidSequencerClass()
 }
 
 // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-void AcidSequencerClass::on16PPQN(uint32_t tick, int8_t shuffle_lenght_ctrl) 
+void AcidSequencerClass::onStep(uint32_t step, int8_t shuffle_lenght_ctrl) 
 {
   // 303 sequencer call
-  _engine303.onStepCall(tick, shuffle_lenght_ctrl);
+  _engine303.onStepCall(step, shuffle_lenght_ctrl);
   // 808 sequencer call
-  _engine808.onStepCall(tick, shuffle_lenght_ctrl);
+  _engine808.onStepCall(step, shuffle_lenght_ctrl);
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
@@ -67,9 +67,9 @@ void AcidSequencerClass::on96PPQN(uint32_t tick)
 {
   _tick = tick;
   // 303 clock call
-  _engine303.onClockCall(tick);
+  _engine303.on96PPQNCall(tick);
   // 808 clock call
-  _engine808.onClockCall(tick);
+  _engine808.on96PPQNCall(tick);
 }
 
 uint16_t AcidSequencerClass::get303PatternMemorySize()

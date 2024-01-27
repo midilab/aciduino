@@ -32,12 +32,13 @@
 #include "setup.h"
 #include "engine.h"
 
+// based on 96PPQN place the pulse location of each FLAM option
 typedef enum {
-  FLAM_1,
-  FLAM_2,
-  FLAM_3,
-  FLAM_4,
-  FLAM_5,
+  FLAM_1 = 1,
+  FLAM_2 = 3,
+  FLAM_3 = 6,
+  FLAM_4 = 9,
+  FLAM_5 = 13,
   SUB_STEP_1,
   SUB_STEP_2,  
 } ROLL_TYPE;
@@ -142,7 +143,7 @@ class Engine808 : public Engine
       uint16_t getPatternTrackSize();
 
       // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-      void onClockCall(uint32_t tick);
+      void on96PPQNCall(uint32_t tick);
       void clearStackNote(int8_t track);
 
     private:

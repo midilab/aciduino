@@ -56,30 +56,7 @@ A oled screen to get access to all parameters that matters in realtime, a easy t
 
 ## How to use?
 
-The interface presents you simple schema to navigate and interact with you aciduino.
-
-**Navigation buttons:** UP, DOWN, LEFT. RIGTH. use to navigate thru page elements.  
-*4 right most buttons*  
-
-**Element buttons:** If the current selected element has an action, it will show up at bottom of your display with the action name for each button.  
-*2 upper buttons*  
-
-**Generic buttons:** Acts as value changer, a decrementer and incrementer for almost all elements.  
-*2 lower buttons*  
-
-**Pot:** Acts as a value changer just like generic buttons, most of elements can be changed using generic buttons or the pot as wish.  
-
-**Shift button** Hold it while press another interface button.  
-*1 alone button at left*  
-
-**Shift + Nav UP/DOWN:** Change page  
-**Shift + Nav LEFT/RIGHT:** Changes subpage  
-**Shift + Generic button 1:** Previous track  
-**Shift + Generic button 2:** Next track  
-
-**Step Sequencer Pot, Shift + Pot**  
-303: [Pot] Changes notes [Shift + Pot] Changes octave   
-808: [Pot] Changes voice [Shift + Pot] Changes voice config(midi cc or cv port)  
+Please reffer to [user manual](https://github.com/midilab/aciduino/tree/master/v2/docs/aciduinoV2-midi_sequencer-user_manual.md)
 
 ## Assembly
 

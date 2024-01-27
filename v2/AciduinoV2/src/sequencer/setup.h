@@ -31,3 +31,4 @@
 //#define GLOBAL_ACCENT           // if you choose to go with global accent you can save some ram and epprom/sdcard in size for pattern
 
 #endif
+

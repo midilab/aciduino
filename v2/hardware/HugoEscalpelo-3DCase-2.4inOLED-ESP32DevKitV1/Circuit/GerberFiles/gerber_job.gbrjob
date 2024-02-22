@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2024-02-22T00:57:55Z",
+        "GenerationSoftware": {
+            "Application": "Fusion Electronics",
+            "Vendor": "Autodesk",
+            "Version": "9.7.0"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "Aciduino Schematic v17"
+        },
+        "Owner": "Hugo Escalpelo <hugoescalpelo@gmail.com>",
+        "Size": {
+            "X": 90.15,
+            "Y": 86.03
+        }
+    }
+}

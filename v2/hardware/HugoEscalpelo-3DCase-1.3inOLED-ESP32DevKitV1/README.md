@@ -32,11 +32,11 @@ The files are provided in `.stl` for direct 3D printing and `.step` for modifica
 | 1 | Base |
 | 1 | Top |
 | 1 | Faceplate |
-| 1 | wheel |
+| 1 | Wheel |
 
-All the parts can be printed without support, dont forget to rotate them with the mos flat part facing down.
+All the parts can be printed without support, don't forget to rotate them with the most flat part facing down.
 
-This was origially tested on Creality K1 printer and Creality Print Software with both, Normal and High Quality default Settings. PLA filament was used, any rigid filament should do the trick.
+This was originally tested on Creality K1 printer and Creality Print Software with both, Normal and High Quality default Settings. PLA filament was used, any rigid filament should do the trick.
 
 If you have an Open Cage Printer, 5 milimiters of brim is needed for Base and Top parts.
 

@@ -2,7 +2,7 @@
  *  @file       AciduinoV2.ino
  *  Project     Aciduino V2
  *  @brief      Roland 303 and 808 step sequencer clone
- *  @version    2.0.0
+ *  @version    2.1.0
  *  @author     Romulo Silva
  *  @date       11/01/22
  *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
@@ -25,20 +25,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE. 
  */
-//
-// BPM Clock support
-//
-#include "src/uClock/src/uClock.h"
-
-//
-// Controlling interfaces support
-//
-#include "src/uCtrl/uCtrl.h"
+#include <Arduino.h>
 
 //
 // Acid step sequencer
 //
-#include "src/sequencer/acid_sequencer.h"
+#include "src/aciduino.hpp"
 
 //
 // Select your platform port
@@ -46,24 +38,15 @@
 //#include "src/ports/avr/mega.h"
 //#include "src/ports/teensy/protoboard.h"
 //#include "src/ports/esp32/wroom.h"
-#include "src/ports/esp32/wroom-ext1.h"
+//#include "src/ports/esp32/wroom-ext1.h"
 //#include "src/ports/teensy/uone.h"
-//#include "src/ports/avr/midilab_mega.h"
-
-// globals
-bool _playing = false;
-uint8_t _selected_track = 0;
+#include "src/ports/avr/midilab_mega.h"
 
 void setup() {
-  // setup uctrl hardware and control interfaces
-  uCtrlSetup();
-  // setup clock system
-  uClockSetup();
-  // init the sequencer
-  initSequencer();
+  // inits all hardware setup for the selected port
+  initPort();
 }
 
 void loop() {
-  // let uCtrl do his job
-  uCtrl.run();
+  aciduino.run();
 }

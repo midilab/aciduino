@@ -1,23 +1,20 @@
 #include "../../uCtrl/uCtrl.h"
 
+#include "../../aciduino.hpp"
+
 //============================================
 // Aciduino Features Setup
 //============================================
 
 // make use of bpm led?
 // change for another pin if use any spi module
-//#define USE_BPM_LED       LED_BUILTIN
+//#define USE_BPM_LED ??
 
 // main navigation
 // choose you changer! only one please...
 //#define USE_CHANGER_POT
 #define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
-
-//#define USE_POT_MICRO
-
-#define FLIP_DISPLAY
-//#define INVERT_POT_READ
 
 #define USE_MIDI1
 #define USE_MIDI2
@@ -91,3 +88,140 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 // SPI devices
 #define PUSH_SPI          SPI
 #define LED_SPI           SPI
+
+// the main interface choice
+#include "../../interface/midilab/main.h"
+
+void initPort()
+{
+
+  //
+  // OLED setup
+  //
+  uCtrl.initOled(&u8g2);
+  uCtrl.oled->flipDisplay(1);
+
+  //
+  // Storage setup
+  //
+  uCtrl.oled->print(">init storage...", 8, 1);
+  uCtrl.initStorage();
+  //uCtrl.initStorage(&STORAGE_SPI, 7);
+
+  //
+  // DIN Module
+  //
+  uCtrl.oled->print(">init din...", 8, 1);
+  uCtrl.initDin(&PUSH_SPI, PUSH_LATCH_PIN);
+  // dec
+  uCtrl.din->plug(NAV_ENCODER_DEC_PIN);
+  // inc
+  uCtrl.din->plug(NAV_ENCODER_INC_PIN);
+  // shift button
+  uCtrl.din->plug(NAV_SHIFT_PIN);
+  // page button 1
+  uCtrl.din->plug(NAV_FUNCTION1_PIN);
+  // page button 2
+  uCtrl.din->plug(NAV_FUNCTION2_PIN);
+  // decrementer button
+  uCtrl.din->plug(NAV_GENERAL1_PIN);
+  // incrementer button
+  uCtrl.din->plug(NAV_GENERAL2_PIN);
+  // next
+  uCtrl.din->plug(NAV_RIGHT_PIN);
+  // up
+  uCtrl.din->plug(NAV_UP_PIN);
+  // down
+  uCtrl.din->plug(NAV_DOWN_PIN);
+  // previous
+  uCtrl.din->plug(NAV_LEFT_PIN);
+  // any shiftregister to plug?
+  uCtrl.din->plugSR(1);
+
+  // encoders setup
+  // in pair order always! and pairs starting with odd ids
+  uCtrl.din->encoder(ENCODER_DEC, ENCODER_INC);
+
+  //
+  // DOUT Module
+  //
+  uCtrl.oled->print(">init dout...", 8, 1);
+  uCtrl.initDout(&LED_SPI, LED_LATCH_PIN);
+
+/* #if defined(USE_BPM_LED)
+  // builtin led for BPM led
+  uCtrl.dout->plug(USE_BPM_LED);
+#endif */
+
+  uCtrl.dout->plugSR(1);
+
+  //
+  // AIN Module
+  //
+  uCtrl.oled->print(">init ain...", 8, 1);
+  uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
+  uCtrl.ain->plugMux(POT_MUX_COMM1);
+  uCtrl.ain->plugMux(POT_MUX_COMM2);
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
+
+  //
+  // MIDI Module
+  //
+  uCtrl.oled->print(">init midi...", 8, 1);
+  uCtrl.initMidi();
+  uCtrl.midi->plug(&MIDI1);
+  uCtrl.midi->plug(&MIDI2);
+  //uCtrl.midi->plug(&MIDI3);
+  //uCtrl.midi->plug(&MIDI4);
+  uCtrl.midi->setMidiInputCallback(midiInputHandler);
+  // uCtrl realtime deals
+  // process midi at 250 microseconds speed
+  uCtrl.setOn250usCallback(midiHandleSync);
+  // process midi input at 1ms speed
+  uCtrl.setOn1msCallback(midiHandle);
+
+  //
+  // SdCard Module
+  //
+  //uCtrl.initSdCard(&SPI, 7);
+
+  //
+  // Page Module for UI
+  //
+  uCtrl.initPage(5);
+  // syst | seqr | gene | ptrn | midi
+  system_page_init();
+  step_sequencer_page_init();
+  generative_page_init();
+  pattern_page_init();
+  midi_page_init();
+  // component UI interface setup
+  uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
+  // hook button callback setup
+  // previous track
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
+  // next track
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
+  // transport play/stop and shifted rec on/off
+  //uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
+  //uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recToggle);
+  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, playStop);
+  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, recToggle);
+  // bottom bar for f1 and f2 functions draw function
+  uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
+
+  // init uCtrl modules and memory
+  uCtrl.init();
+
+  // get all leds off
+  uCtrl.dout->writeAll(LOW);
+
+  // default page to call at init
+  uCtrl.page->setPage(0);
+
+  // sequencer parameters could be initialized here?
+  // how many 303 tracks? 808 tracks? 
+  aciduino.init();
+}
+

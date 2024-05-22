@@ -104,14 +104,13 @@ void initPort()
   //
   // Storage setup
   //
-  uCtrl.oled->print(">init storage...", 8, 1);
   uCtrl.initStorage();
   //uCtrl.initStorage(&STORAGE_SPI, 7);
 
   //
   // DIN Module
   //
-  uCtrl.oled->print(">init din...", 8, 1);
+  // inits with shift register support
   uCtrl.initDin(&PUSH_SPI, PUSH_LATCH_PIN);
   // dec
   uCtrl.din->plug(NAV_ENCODER_DEC_PIN);
@@ -145,7 +144,6 @@ void initPort()
   //
   // DOUT Module
   //
-  uCtrl.oled->print(">init dout...", 8, 1);
   uCtrl.initDout(&LED_SPI, LED_LATCH_PIN);
 
 /* #if defined(USE_BPM_LED)
@@ -158,7 +156,6 @@ void initPort()
   //
   // AIN Module
   //
-  uCtrl.oled->print(">init ain...", 8, 1);
   uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
   uCtrl.ain->plugMux(POT_MUX_COMM1);
   uCtrl.ain->plugMux(POT_MUX_COMM2);
@@ -168,7 +165,6 @@ void initPort()
   //
   // MIDI Module
   //
-  uCtrl.oled->print(">init midi...", 8, 1);
   uCtrl.initMidi();
   uCtrl.midi->plug(&MIDI1);
   uCtrl.midi->plug(&MIDI2);

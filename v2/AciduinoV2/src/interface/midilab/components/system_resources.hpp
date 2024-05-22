@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 struct SystemResources : PageComponent {
 
     uint8_t resource_id = 0;
@@ -12,7 +10,7 @@ struct SystemResources : PageComponent {
 
       switch(resource_id) {
         case 0:
-          genericOptionView("free ram", String(freeRam()), line, col, selected, true);
+          genericOptionView("free ram", String(aciduino.freeRam()), line, col, selected, true);
           break;
         case 1:
           genericOptionView("epprom", String(EPPROM_SIZE), line, col, selected, true);

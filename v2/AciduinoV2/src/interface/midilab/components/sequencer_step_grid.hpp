@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 struct StepSequencer : PageComponent {
 
     // step sequencer theme editor
@@ -38,7 +36,7 @@ struct StepSequencer : PageComponent {
       if (full_size != full_size_view) {
         full_size_view = full_size;
         selected_locator = selected_step / (full_size_view ? 64 : 16); 
-        step_size = AcidSequencer.getTrackLength(_selected_track);
+        step_size = aciduino.seq.getTrackLength(aciduino.getSelectedTrack());
         line_size = full_size_view ? (selected_locator == locator_length-1 ? ceil((step_size - (selected_locator * 64)) / 16) : 4) + 1 : 2;
       }
     }
@@ -48,8 +46,8 @@ struct StepSequencer : PageComponent {
       uint8_t line_idx = 0, step_on = 0;
       uint8_t max_steps_per_view = full_size_view ? 64 : 16;
 
-      curr_step = AcidSequencer.getCurrentStep(_selected_track);
-      step_size = AcidSequencer.getTrackLength(_selected_track);
+      curr_step = aciduino.seq.getCurrentStep(aciduino.getSelectedTrack());
+      step_size = aciduino.seq.getTrackLength(aciduino.getSelectedTrack());
       locator_current = curr_step == 0 ? 0 : curr_step / max_steps_per_view;
       locator_length = ceil((float)step_size/max_steps_per_view);
       // fix selected step changes on tracks with different track length
@@ -80,7 +78,7 @@ struct StepSequencer : PageComponent {
       uint16_t first_step = selected ? selected_locator * max_steps_per_view : locator_current * max_steps_per_view;
       uint16_t last_step = first_step + max_steps_per_view > step_size ? step_size : first_step + max_steps_per_view;
       for (uint16_t step_idx=first_step; step_idx < last_step; step_idx++) {
-        step_on = AcidSequencer.stepOn(_selected_track, step_idx);
+        step_on = aciduino.seq.stepOn(aciduino.getSelectedTrack(), step_idx);
         line_idx = step_idx % 16;
 
         // only use this in full sized mode
@@ -107,7 +105,7 @@ struct StepSequencer : PageComponent {
         }
     
         // step current?
-        if (curr_step == step_idx && _playing) {
+        if (curr_step == step_idx && aciduino.isPlaying()) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED);
 #if defined(USE_LED_16) || defined(USE_LED_24)
           uCtrl.dout->write(line_idx+STEP_LED_1, step_on ? LOW : HIGH);
@@ -128,38 +126,38 @@ struct StepSequencer : PageComponent {
       // step info
       uint8_t info_line_idx = full_size_view ? 5 : 2;
       // 303
-      if (AcidSequencer.is303(_selected_track)) {
+      if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
         if (selected_line >= 2) {
-          uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, selected_step)), line+info_line_idx, 1);
+          uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(aciduino.getSelectedTrack(), selected_step)), line+info_line_idx, 1);
         } else{
-          if (AcidSequencer.stepOn(_selected_track, curr_step) && _playing) {
-            uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getStepData(_selected_track, curr_step)), line+info_line_idx, 1);
+          if (aciduino.seq.stepOn(aciduino.getSelectedTrack(), curr_step) && aciduino.isPlaying()) {
+            uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(aciduino.getSelectedTrack(), curr_step)), line+info_line_idx, 1);
           }
         }
       // 808
       } else {
-        uCtrl.oled->print(AcidSequencer.getTrackVoiceName(_selected_track, AcidSequencer.getTrackVoice(_selected_track)), line+info_line_idx, 1);
-        //uCtrl.oled->print(AcidSequencer.getNoteString(AcidSequencer.getTrackVoiceConfig(_selected_track)), line+info_line_idx, 1);
+        uCtrl.oled->print(aciduino.seq.getTrackVoiceName(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())), line+info_line_idx, 1);
+        //uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack())), line+info_line_idx, 1);
       }
 
       // f1 and f2
       // Selectors
       if (selected_line == 1) {
           setF1("clear");
-          setF2("mute", AcidSequencer.is303(_selected_track) ? AcidSequencer.getMute(_selected_track) : AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
+          setF2("mute", aciduino.seq.is303(aciduino.getSelectedTrack()) ? aciduino.seq.getMute(aciduino.getSelectedTrack()) : aciduino.seq.getMute(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())));
       // Steps
       } else if (selected_line >= 2) {
-        setF1("accent", AcidSequencer.accentOn(_selected_track, selected_step));
+        setF1("accent", aciduino.seq.accentOn(aciduino.getSelectedTrack(), selected_step));
         // 303
-        if (AcidSequencer.is303(_selected_track)) {
-          if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {
-            setF2("tie", AcidSequencer.tieOn(_selected_track, selected_step));
+        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+          if ((aciduino.seq.stepOn(aciduino.getSelectedTrack(), selected_step-1) || aciduino.seq.tieOn(aciduino.getSelectedTrack(), selected_step-1)) && !aciduino.seq.stepOn(aciduino.getSelectedTrack(), selected_step) && selected_step != 0) {
+            setF2("tie", aciduino.seq.tieOn(aciduino.getSelectedTrack(), selected_step));
           } else {
-            setF2("slide", AcidSequencer.slideOn(_selected_track, selected_step));
+            setF2("slide", aciduino.seq.slideOn(aciduino.getSelectedTrack(), selected_step));
           }
         // 808
         } else {
-          setF2("roll", AcidSequencer.rollOn(_selected_track, selected_step));
+          setF2("roll", aciduino.seq.rollOn(aciduino.getSelectedTrack(), selected_step));
         }
       }
 
@@ -263,26 +261,26 @@ struct StepSequencer : PageComponent {
 
         // toggle on/off step with generic button 2(INCREMENT)
         if (data == INCREMENT && selected_line != 1) {
-          AcidSequencer.rest(_selected_track, selected_step, AcidSequencer.stepOn(_selected_track, selected_step));
+          aciduino.seq.rest(aciduino.getSelectedTrack(), selected_step, aciduino.seq.stepOn(aciduino.getSelectedTrack(), selected_step));
         // tap button for preview and realtime record with generic button 1(DECREMENT)
         } else {
           // step or realtime record
           // keep track to avoid changes on note while note on state
-          rec_track = _selected_track;
-          rec_note = AcidSequencer.is303(_selected_track) ? pot_last_note : AcidSequencer.getTrackVoiceConfig(_selected_track);
-          AcidSequencer.input(rec_track, NOTE_ON, rec_note, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
+          rec_track = aciduino.getSelectedTrack();
+          rec_note = aciduino.seq.is303(aciduino.getSelectedTrack()) ? pot_last_note : aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack());
+          aciduino.seq.input(rec_track, NOTE_ON, rec_note, aciduino.seq.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
         }
 
       // secondary inc/dec or pot nav action
       } else {
         
         // 303?
-        if (AcidSequencer.is303(_selected_track)) {
+        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
 
           uint8_t octave, note;
         
-          octave = floor(AcidSequencer.getStepData(_selected_track, selected_step) / 12);
-          note = AcidSequencer.getStepData(_selected_track, selected_step) - (octave * 12);
+          octave = floor(aciduino.seq.getStepData(aciduino.getSelectedTrack(), selected_step) / 12);
+          note = aciduino.seq.getStepData(aciduino.getSelectedTrack(), selected_step) - (octave * 12);
   
           // shift sets octave
           if (uCtrl.page->isShiftPressed()) {
@@ -296,7 +294,7 @@ struct StepSequencer : PageComponent {
           
           if(selected_line >= 2) {
             // select step note
-            AcidSequencer.setStepData(_selected_track, selected_step, pot_last_note);
+            aciduino.seq.setStepData(aciduino.getSelectedTrack(), selected_step, pot_last_note);
           }
         // 808
         } else {
@@ -304,16 +302,16 @@ struct StepSequencer : PageComponent {
           // shift sets voice config
           if (uCtrl.page->isShiftPressed()) {
             // select voice note[midi] or port[cv]
-            data = parseData(data, 0, 127, AcidSequencer.getTrackVoiceConfig(_selected_track));
-            AcidSequencer.setTrackVoiceConfig(_selected_track, data);
+            data = parseData(data, 0, 127, aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack()));
+            aciduino.seq.setTrackVoiceConfig(aciduino.getSelectedTrack(), data);
             // send note for preview while change data
-            sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, NOTE_VELOCITY_808);
-            sendNote(data, _track_output_setup[_selected_track].channel, _track_output_setup[_selected_track].port, 0);
+            aciduino.sendNote(data, _track_output_setup[aciduino.getSelectedTrack()].channel, _track_output_setup[aciduino.getSelectedTrack()].port, NOTE_VELOCITY_808);
+            aciduino.sendNote(data, _track_output_setup[aciduino.getSelectedTrack()].channel, _track_output_setup[aciduino.getSelectedTrack()].port, 0);
           // no shift select voice
           } else {
             // select voice
-            data = parseData(data, 0, VOICE_MAX_SIZE_808-1, AcidSequencer.getTrackVoice(_selected_track));
-            AcidSequencer.setTrackVoice(_selected_track, data);
+            data = parseData(data, 0, VOICE_MAX_SIZE_808-1, aciduino.seq.getTrackVoice(aciduino.getSelectedTrack()));
+            aciduino.seq.setTrackVoice(aciduino.getSelectedTrack(), data);
           }
 
         }
@@ -326,7 +324,7 @@ struct StepSequencer : PageComponent {
       if(selected_line >= 2) {
         // preview note release for note off
         if (data == DECREMENT) {
-          AcidSequencer.input(rec_track, NOTE_OFF, rec_note, AcidSequencer.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
+          aciduino.seq.input(rec_track, NOTE_OFF, rec_note, aciduino.seq.is303(rec_track) ? NOTE_VELOCITY_303 : NOTE_VELOCITY_808);
         }
       }
     }
@@ -334,35 +332,35 @@ struct StepSequencer : PageComponent {
     void function1() {
       if (selected_line == 1) {
         // clear track
-        AcidSequencer.clearTrack(_selected_track);
+        aciduino.seq.clearTrack(aciduino.getSelectedTrack());
       } else if (selected_line >= 2) {
         // 303 and 808 uses the same accent button f1
-        AcidSequencer.setAccent(_selected_track, selected_step, !AcidSequencer.accentOn(_selected_track, selected_step));
+        aciduino.seq.setAccent(aciduino.getSelectedTrack(), selected_step, !aciduino.seq.accentOn(aciduino.getSelectedTrack(), selected_step));
       }
     }
 
     void function2() {
       if (selected_line == 1) {
         // mute track(voice for 808)
-        if (AcidSequencer.is303(_selected_track)) {
-          AcidSequencer.setMute(_selected_track, !AcidSequencer.getMute(_selected_track));
+        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+          aciduino.seq.setMute(aciduino.getSelectedTrack(), !aciduino.seq.getMute(aciduino.getSelectedTrack()));
           // keep mutePatternComponent updated for current mute state
-          mutePatternComponent.updateCurrentMuteState(_selected_track);
+          mutePatternComponent.updateCurrentMuteState(aciduino.getSelectedTrack());
         } else {
-          AcidSequencer.setMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track), !AcidSequencer.getMute(_selected_track, AcidSequencer.getTrackVoice(_selected_track)));
-          mutePatternComponent.updateCurrentMuteState(_selected_track, AcidSequencer.getTrackVoice(_selected_track));
+          aciduino.seq.setMute(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack()), !aciduino.seq.getMute(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())));
+          mutePatternComponent.updateCurrentMuteState(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack()));
         }
       } else if (selected_line >= 2) {
         // 303
-        if (AcidSequencer.is303(_selected_track)) {
-          if ((AcidSequencer.stepOn(_selected_track, selected_step-1) || AcidSequencer.tieOn(_selected_track, selected_step-1)) && !AcidSequencer.stepOn(_selected_track, selected_step) && selected_step != 0) {
-            AcidSequencer.setTie(_selected_track, selected_step, !AcidSequencer.tieOn(_selected_track, selected_step));
+        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+          if ((aciduino.seq.stepOn(aciduino.getSelectedTrack(), selected_step-1) || aciduino.seq.tieOn(aciduino.getSelectedTrack(), selected_step-1)) && !aciduino.seq.stepOn(aciduino.getSelectedTrack(), selected_step) && selected_step != 0) {
+            aciduino.seq.setTie(aciduino.getSelectedTrack(), selected_step, !aciduino.seq.tieOn(aciduino.getSelectedTrack(), selected_step));
           } else {
-            AcidSequencer.setSlide(_selected_track, selected_step, !AcidSequencer.slideOn(_selected_track, selected_step));
+            aciduino.seq.setSlide(aciduino.getSelectedTrack(), selected_step, !aciduino.seq.slideOn(aciduino.getSelectedTrack(), selected_step));
           }
         // 808
         } else {
-          AcidSequencer.setRoll(_selected_track, selected_step, !AcidSequencer.rollOn(_selected_track, selected_step));
+          aciduino.seq.setRoll(aciduino.getSelectedTrack(), selected_step, !aciduino.seq.rollOn(aciduino.getSelectedTrack(), selected_step));
         }
       }
     }
@@ -373,7 +371,7 @@ struct StepSequencer : PageComponent {
 
     void stepButton(uint8_t number) {
       uint8_t step = number + ((full_size_view && selected_line != 1 ? selected_line-2 : selected_locator) * 16);
-      AcidSequencer.rest(_selected_track, step, AcidSequencer.stepOn(_selected_track, step));
+      aciduino.seq.rest(aciduino.getSelectedTrack(), step, aciduino.seq.stepOn(aciduino.getSelectedTrack(), step));
     }
     
 } stepSequencerComponent;

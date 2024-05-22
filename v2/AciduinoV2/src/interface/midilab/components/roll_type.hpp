@@ -1,5 +1,3 @@
-#include "../../../uCtrl/uCtrl.h"
-
 struct RollType : PageComponent {
 
     uint8_t current_roll = 0;
@@ -7,7 +5,7 @@ struct RollType : PageComponent {
 
     String options;
     void view() {
-      uint8_t roll_type = rollTypes[current_roll]; //AcidSequencer.getRollType(_selected_track);
+      uint8_t roll_type = rollTypes[current_roll]; //aciduino.seq.getRollType(aciduino.getSelectedTrack());
       if (roll_type <= FLAM_5) {
         options = "f"  + String(roll_type);
       } else {
@@ -18,9 +16,9 @@ struct RollType : PageComponent {
     }
 
     void change(int16_t data) {
-      //clearStackNote(_selected_track);
-      current_roll = parseData(data, 0, 6, current_roll); //AcidSequencer.getRollType(_selected_track));
-      AcidSequencer.setRollType(_selected_track, rollTypes[current_roll]);
+      //clearStackNote(aciduino.getSelectedTrack());
+      current_roll = parseData(data, 0, 6, current_roll); //aciduino.seq.getRollType(aciduino.getSelectedTrack()));
+      aciduino.seq.setRollType(aciduino.getSelectedTrack(), rollTypes[current_roll]);
     }
     
 } rollTypeComponent;

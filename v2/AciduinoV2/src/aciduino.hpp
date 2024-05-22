@@ -38,10 +38,10 @@
 //
 // common pattern data definitions
 //
-#define PATTERN_303_TRACK_SIZE      AcidSequencer.get303PatternTrackSize()
-#define PATTERN_808_TRACK_SIZE      AcidSequencer.get808PatternTrackSize()
-#define PATTERN_303_MEM_SIZE        AcidSequencer.get303PatternMemorySize()
-#define PATTERN_808_MEM_SIZE        AcidSequencer.get808PatternMemorySize()
+#define PATTERN_303_TRACK_SIZE      aciduino.seq.get303PatternTrackSize()
+#define PATTERN_808_TRACK_SIZE      aciduino.seq.get808PatternTrackSize()
+#define PATTERN_303_MEM_SIZE        aciduino.seq.get303PatternMemorySize()
+#define PATTERN_808_MEM_SIZE        aciduino.seq.get808PatternMemorySize()
 #define PATTERN_TOTAL_MEM_SIZE      (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_pattern))
 #define EPRROM_PATTERN_ADDRESS      (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE)
 #define EPRROM_PATTERN_AVAILABLE    (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (PATTERN_TOTAL_MEM_SIZE)
@@ -69,17 +69,12 @@ typedef struct
   uint8_t roll_probability = 0;
 } GENERATIVE_808_DATA; 
 
-GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
-GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
-
 // for global learn feature to keep track of controls setup by user
 typedef struct
 {
     int8_t ctrl = -1;
     uint8_t track;
 } MIDI_CTRL_GLOBAL_MAP;
-
-volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
 
 // track output setup: midi/cv/gate/osc
 typedef enum {
@@ -95,7 +90,6 @@ typedef struct
   uint8_t port;
 } TRACK_OUTPUT_DATA;
 
-volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
 
 // pattern and mute automation grid
 typedef struct
@@ -104,15 +98,6 @@ typedef struct
   uint16_t map_808[TRACK_NUMBER_808] = {0xFFFF};
 } MUTE_PATTERN;
 
-MUTE_PATTERN _mute_pattern[4];
-
-// TODO: should goes to session data?
-uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
-
-// helpers for copy and paste pattern
-uint8_t _copy_pattern = 0;
-int8_t _copy_track = -1;
-    
 
 class Aciduino
 {
@@ -127,6 +112,12 @@ public:
   void previousTrack();
   void nextTrack();
 
+  //AcidSequencerClass * seq() { return &_seq; };
+
+  uint8_t getSelectedTrack() { return _selected_track; };
+  uint8_t setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
+  uint8_t isPlaying() { return _playing; };
+
   // session
   void loadSession();
   void saveSession();
@@ -136,10 +127,38 @@ public:
   void copyPattern(uint8_t pattern, int8_t track = -1);
   bool pastePattern(uint8_t pattern, int8_t track = -1);
 
+  // midi
+  void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0);
+  void sendNote(uint8_t note, uint8_t channel, uint8_t port, uint8_t velocity);
+  inline void sendMidiClock();
+  void sendMidiStart();
+  void sendMidiStop();
+
+  uint8_t getMidiClockPort() { return _midi_clock_port; }
+  void setMidiClockPort(uint8_t port) { ATOMIC(_midi_clock_port = port) }
+  uint8_t getMidiRecPort() { return _midi_rec_port; }
+  void setMidiRecPort(uint8_t port) { ATOMIC(_midi_rec_port = port) }
+
+  int freeRam();
+  
+  AcidSequencerClass seq;
+
   // create acessors later.. TODO
   // globals
   bool _playing = false;
   uint8_t _selected_track = 0;
+
+  //
+  // midi handling
+  //
+  // ussing 3 midi_messages data structure to
+  // keep interrupted and non interrupted memory area safe
+  uctrl::protocol::midi::MIDI_MESSAGE msg;
+  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
+  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
+
+  volatile uint8_t _midi_clock_port = 0; // 0 = internal
+  volatile uint8_t _midi_rec_port = 1;
 
 private:
   void initSequencer();
@@ -149,8 +168,21 @@ private:
   uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
   bool checkEppromDataLayoutChange();
   void eppromInit();
-  int freeRam();
-  
+
+  // todo: create acessors and modify usage 
+  GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
+  GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
+
+  volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
+  volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
+  MUTE_PATTERN _mute_pattern[4];
+  // TODO: should goes to session data?
+  uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
+
+  // helpers for copy and paste pattern
+  uint8_t _copy_pattern = 0;
+  int8_t _copy_track = -1;
+    
 };
 
 

@@ -1,4 +1,5 @@
-#include "../../uCtrl.h"
+#ifndef __SHARED_GUI_FUNCS_H__
+#define __SHARED_GUI_FUNCS_H__
 
 //
 // uCtrl Shared PageComponent 
@@ -37,3 +38,5 @@ void functionDrawCallback(const char * f1, const char * f2, uint8_t f1_state, ui
   // vertical separator
   //uCtrl.oled->display->drawBox(64, 59, 1, 5);
 }
+
+#endif // __SHARED_GUI_FUNCS_H__

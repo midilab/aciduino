@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 // the control knob will handle midi cc for the last selected midi cc of selected track inside this component
 struct PatternControl : PageComponent {
     
@@ -31,7 +29,7 @@ struct PatternControl : PageComponent {
 
     void view() {
       // update selected mute block based on selected track(fast nav using track change)
-      selected_track = _selected_track;
+      selected_track = aciduino.getSelectedTrack();
       selected_pattern = selected_line-2+pattern_index;
       uint8_t line_count = 1;
 
@@ -89,14 +87,14 @@ struct PatternControl : PageComponent {
               if (track_index != 0) {
                 --track_index;
               } else {
-                //selected_track = AcidSequencer.is303(_selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
+                //selected_track = aciduino.seq.is303(selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
               }
             } else {
               --selected_track;
             }      
             
-            _selected_track = selected_track + track_index;
-            selected_track_ref = _selected_track;
+            aciduino.setSelectedTrack(selected_track + track_index);
+            selected_track_ref = aciduino.getSelectedTrack();
           break;
         case RIGHT:
             if (selected_track < max_elements-1) {
@@ -109,8 +107,8 @@ struct PatternControl : PageComponent {
               ++selected_track;
             }*/
 
-            _selected_track = selected_track + track_index;
-            selected_track_ref = _selected_track;
+            aciduino.setSelectedTrack(selected_track + track_index);
+            selected_track_ref = aciduino.getSelectedTrack();
           break;
         case UP:
             if (selected_line == 1) {
@@ -143,7 +141,7 @@ struct PatternControl : PageComponent {
       if (data == INCREMENT) {
         changePattern(selected_pattern);
       } else if (data == DECREMENT) {
-        changePattern(selected_pattern, _selected_track);
+        changePattern(selected_pattern, selected_track);
       }
     }
     
@@ -159,10 +157,10 @@ struct PatternControl : PageComponent {
           // copy
           if (select_all) {
             // copy all
-            copyPattern(selected_pattern);
+            aciduino.copyPattern(selected_pattern);
           } else {
             // copy track
-            copyPattern(selected_pattern, _selected_track);
+            aciduino.copyPattern(selected_pattern, selected_track);
           }
           copy_state = true;
         }
@@ -174,21 +172,21 @@ struct PatternControl : PageComponent {
       if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         // save the grid as it is selected per track
         for (uint8_t i=0; i < max_elements; i++) {
-          savePattern(_pattern_grid[i], i);
+          aciduino.savePattern(_pattern_grid[i], i);
         }
         // save _mute_grid for current_pattern only
-        saveMuteGrid(current_pattern);
+        aciduino.saveMuteGrid(current_pattern);
       // paste/all, save as selection
       } else {
         if (copy_state) {
           // paste all
           if(select_all) {
-            if (pastePattern(selected_pattern)) {
+            if (aciduino.pastePattern(selected_pattern)) {
               
             }
           // paste track
           } else {
-            if (pastePattern(selected_pattern, _selected_track)) {
+            if (aciduino.pastePattern(selected_pattern, selected_track)) {
               
             }
           }
@@ -196,7 +194,7 @@ struct PatternControl : PageComponent {
         } else if (save_as_state) {
           // save as: gets all current memory and saves on selected pattern(all tracks)
           // save all memory current into selected pattern line
-          savePattern(selected_line-2+pattern_index);
+          aciduino.savePattern(selected_line-2+pattern_index);
           save_as_state = false;
         } else {
           // copy all selection
@@ -208,13 +206,13 @@ struct PatternControl : PageComponent {
     void changePattern(uint8_t pattern, int8_t track = -1) {
       if (track == -1) {
         // load all tracks pattern
-        loadPattern(pattern);
+        aciduino.loadPattern(pattern);
         for (uint8_t i=0; i < max_elements; i++) {
           _pattern_grid[i] = pattern;
         }
       } else {
         // loads only a track pattern
-        loadPattern(pattern, track);
+        aciduino.loadPattern(pattern, track);
         _pattern_grid[track] = pattern;
       }
       

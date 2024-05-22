@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 struct SessionConfig : PageComponent {
   
     SessionConfig() {
@@ -13,16 +11,16 @@ struct SessionConfig : PageComponent {
     }
     
     void change(int16_t data) {
-      //data = parseData(data, 0, 15, _track_output_setup[_selected_track].channel);
-      //_track_output_setup[_selected_track].channel = data;
+      //data = parseData(data, 0, 15, _track_output_setup[aciduino.getSelectedTrack()].channel);
+      //_track_output_setup[aciduino.getSelectedTrack()].channel = data;
     }
 
     void function1() {
-      loadSession();
+      aciduino.loadSession();
     }
 
     void function2() {
-      saveSession();
+      aciduino.saveSession();
     }
 
 } sessionConfigComponent;

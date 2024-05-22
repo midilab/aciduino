@@ -1,4 +1,5 @@
-#include "../../../uCtrl/uCtrl.h"
+// esp32 ble midi connection status
+uint8_t _ble_midi_connected = 0;
 
 struct TopBar : PageComponent {
 
@@ -20,20 +21,20 @@ struct TopBar : PageComponent {
       uint8_t selected_subpage = uCtrl.page->getSubPage();
 
       // track number and type
-      //uCtrl.oled->display->drawUTF8(2, 0, atoi(_selected_track+1)); 
+      //uCtrl.oled->display->drawUTF8(2, 0, atoi(aciduino.getSelectedTrack()+1)); 
       uCtrl.oled->print("T", 1, 1); 
-      uCtrl.oled->print(String(_selected_track+1), 1, 2); 
+      uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
-      uCtrl.oled->print(AcidSequencer.is303(_selected_track) ? "303" : "808", 1, 4); 
+      uCtrl.oled->print(aciduino.seq.is303(aciduino.getSelectedTrack()) ? "303" : "808", 1, 4); 
 /*
       uCtrl.oled->display->drawBox(0, 0, 15, 8);
       //uCtrl.oled->drawBox();
-      if (_selected_track < 9) {
+      if (aciduino.getSelectedTrack() < 9) {
         uCtrl.oled->print("T0", 1, 1); 
-        uCtrl.oled->print(String(_selected_track+1), 1, 3); 
+        uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), 1, 3); 
       } else {
         uCtrl.oled->print("T", 1, 1); 
-        uCtrl.oled->print(String(_selected_track+1), 1, 2); 
+        uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), 1, 2); 
       }
  */
 /*
@@ -69,7 +70,7 @@ struct TopBar : PageComponent {
       //uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21, selected);
       uCtrl.oled->display->drawBox(88, 0, 8, 8);
       uCtrl.oled->print(String(uClock.getTempo(), 1), 1, 21);
-      if (_playing) {
+      if (aciduino.isPlaying()) {
         uCtrl.oled->print(PLAYING, 1, 19);
       } else {
         uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);  

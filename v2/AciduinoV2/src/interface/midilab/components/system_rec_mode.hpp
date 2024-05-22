@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 struct RecMode : PageComponent {
 
     uint8_t rec_mode = 0;

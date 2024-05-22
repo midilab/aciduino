@@ -1,36 +1,19 @@
-#include "../components/topbar.hpp"
-#include "../components/track_length.hpp"
-#include "../components/sequence_shift.hpp"
-#include "../components/generative_fill_amount.hpp"
-#include "../components/track_tune_303.hpp"
-#include "../components/transpose.hpp"
-#include "../components/voice_select_808.hpp"
-#include "../components/roll_type.hpp"
-#include "../components/generative_accent_amount.hpp"
-#include "../components/generative_slide_amount.hpp"
-#include "../components/generative_tie_amount.hpp"
-#include "../components/generative_tones_number.hpp"
-#include "../components/generative_low_octave.hpp"
-#include "../components/generative_range_octave.hpp"
-#include "../components/generative_scale_selector.hpp"
-#include "../components/generative_roll_amount.hpp"
-
 const char * f1_page = "clear";
 const char * f2_page = "generate";
 
 void generativeFunction1()
 {
   // clear track
-  AcidSequencer.clearTrack(_selected_track);
+  aciduino.seq.clearTrack(aciduino.getSelectedTrack());
 }
 
 void generativeFunction2()
 { 
   // generate new sequence
-  if (AcidSequencer.is303(_selected_track)) {
-    AcidSequencer.acidRandomize(_selected_track, _generative_303[_selected_track].generative_fill, _generative_303[_selected_track].accent_probability, _generative_303[_selected_track].slide_probability, _generative_303[_selected_track].tie_probability, _generative_303[_selected_track].number_of_tones, _generative_303[_selected_track].lower_octave*12, _generative_303[_selected_track].range_octave*12);
+  if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+    aciduino.seq.acidRandomize(aciduino.getSelectedTrack(), _generative_303[aciduino.getSelectedTrack()].generative_fill, _generative_303[aciduino.getSelectedTrack()].accent_probability, _generative_303[aciduino.getSelectedTrack()].slide_probability, _generative_303[aciduino.getSelectedTrack()].tie_probability, _generative_303[aciduino.getSelectedTrack()].number_of_tones, _generative_303[aciduino.getSelectedTrack()].lower_octave*12, _generative_303[aciduino.getSelectedTrack()].range_octave*12);
   } else {
-    AcidSequencer.acidRandomize(_selected_track, _generative_808[_selected_track-TRACK_NUMBER_303].generative_fill, _generative_808[_selected_track-TRACK_NUMBER_303].accent_probability, _generative_808[_selected_track-TRACK_NUMBER_303].roll_probability);
+    aciduino.seq.acidRandomize(aciduino.getSelectedTrack(), _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].generative_fill, _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].accent_probability, _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].roll_probability);
   }
 }
 
@@ -66,7 +49,7 @@ void generative_page_refresh(uint8_t subpage)
     // for 808(fill): with common options. 4/4, tripplets...
     uCtrl.page->component(fillComponent, 6, 1);
       
-    if (AcidSequencer.is303(_selected_track)) {
+    if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
       // randomizer type: classic, bjulrk
       uCtrl.page->component(tuneComponent, 4, 1);
       uCtrl.page->component(transposeComponent, 4, 2);
@@ -87,7 +70,7 @@ void generative_page_refresh(uint8_t subpage)
 
     uCtrl.page->component(accentAmountComponent, 3, 1, true);
     
-    if (AcidSequencer.is303(_selected_track)) {
+    if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
       uCtrl.page->component(slideAmountComponent, 3, 2);
       
       uCtrl.page->component(tieAmountComponent, 4, 1);

@@ -1,12 +1,10 @@
-#include "../../uCtrl.h"
-
 struct TempoTransport : PageComponent {
 
     void view() {
       genericOptionView("tempo", String(uClock.getTempo(), 1), line, col, selected);
 
-      setF1("rec", AcidSequencer.getRecStatus());
-      setF2("play", _playing ? true : false);
+      setF1("rec", aciduino.seq.getRecStatus());
+      setF2("play", aciduino.isPlaying() ? true : false);
     }
 
     void change(int16_t data) {
@@ -23,12 +21,12 @@ struct TempoTransport : PageComponent {
 
     void function1() {
       // rec mode
-      AcidSequencer.setRecStatus(!AcidSequencer.getRecStatus());
+      aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());
     }
 
     void function2() {
       // play/stop
-      if (_playing)
+      if (aciduino.isPlaying())
         uClock.stop();
       else
         uClock.start();

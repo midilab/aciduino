@@ -1,5 +1,3 @@
-#include "../../uCtrl.h"
-
 struct ShuffleControl : PageComponent {
 
   void view() {

@@ -28,7 +28,7 @@
 #include <Arduino.h>
 
 //
-// Acid step sequencer
+// Aciduino
 //
 #include "src/aciduino.hpp"
 

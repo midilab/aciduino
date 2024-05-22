@@ -147,6 +147,6 @@ class AcidSequencerClass
       void setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track));
 };
 
-extern AcidSequencerClass AcidSequencer;
+//extern AcidSequencerClass AcidSequencer;
 
 #endif

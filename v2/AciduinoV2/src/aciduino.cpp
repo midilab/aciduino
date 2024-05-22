@@ -19,7 +19,7 @@ void Aciduino::run() {
 
 void Aciduino::playStop()
 {
-  if (_playing)
+  if (aciduino.isPlaying())
     uClock.stop();
   else
     uClock.start();
@@ -27,13 +27,13 @@ void Aciduino::playStop()
 
 void Aciduino::recToggle()
 {
-  AcidSequencer.setRecStatus(!AcidSequencer.getRecStatus());
+  aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());
 }
 
 void Aciduino::previousTrack()
 {
   if (_selected_track == 0) {
-    _selected_track = AcidSequencer.getTrackNumber() - 1;
+    _selected_track = aciduino.seq.getTrackNumber() - 1;
   } else {
     --_selected_track;
   }
@@ -41,7 +41,7 @@ void Aciduino::previousTrack()
 
 void Aciduino::nextTrack()
 {
-  if (_selected_track == AcidSequencer.getTrackNumber() - 1) {
+  if (_selected_track == aciduino.seq.getTrackNumber() - 1) {
     _selected_track = 0;
   } else {
     ++_selected_track;
@@ -61,7 +61,7 @@ void Aciduino::initSequencer()
   }
   
   // the acid sequencer main output callback
-  AcidSequencer.setOutputCallback(sequencerOutHandler);
+  aciduino.seq.setOutputCallback(sequencerOutHandler);
 
   // we're going to init epprom in two cases:
   // if track layout changes || if no aciduino data present at epprom
@@ -100,6 +100,55 @@ void Aciduino::uClockSetup()
   //uClock.setMode(uClock.EXTERNAL_CLOCK);
 }
 
+//
+// Midi utils
+//
+// 3 realtime messages used by uClock object inside interruption
+inline void Aciduino::sendMidiClock() {
+  msg_interrupt.type = uctrl::protocol::midi::Clock;
+  uCtrl.midi->writeAllPorts(&msg_interrupt, 1);
+}
+
+void Aciduino::sendMidiStart() {
+  msg.type = uctrl::protocol::midi::Start;
+  uCtrl.midi->writeAllPorts(&msg, 0);  
+}
+
+void Aciduino::sendMidiStop() {
+  msg.type = uctrl::protocol::midi::Stop;
+  uCtrl.midi->writeAllPorts(&msg, 0);
+}
+
+// this is used inside interruption and outside, controlled by interrupted var
+void Aciduino::sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0) {
+  if (interrupted) {
+    msg_interrupt_pots.type = uctrl::protocol::midi::ControlChange;
+    msg_interrupt_pots.data1 = cc;
+    msg_interrupt_pots.data2 = value;
+    msg_interrupt_pots.channel = channel;
+    uCtrl.midi->write(&msg_interrupt_pots, port+1, 1);
+  } else {
+    msg.type = uctrl::protocol::midi::ControlChange;
+    msg.data1 = cc;
+    msg.data2 = value;
+    msg.channel = channel;
+    uCtrl.midi->write(&msg, port+1, 0);
+  }
+}
+
+void Aciduino::sendNote(uint8_t note, uint8_t channel, uint8_t port, uint8_t velocity) {
+  msg.data1 = note;
+  msg.data2 = velocity;
+  msg.channel = channel;
+  
+  if (velocity == 0) {
+    msg.type = uctrl::protocol::midi::NoteOff;
+  } else {
+    msg.type = uctrl::protocol::midi::NoteOn;
+  }
+
+  uCtrl.midi->write(&msg, port+1, 0);
+}
 
 // 
 // storage schema
@@ -128,7 +177,7 @@ uint16_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
 {
   uint16_t pattern_address = EPRROM_PATTERN_ADDRESS + (pattern * PATTERN_TOTAL_MEM_SIZE);
   if (track != -1) {
-    pattern_address += AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (track-TRACK_NUMBER_303));
+    pattern_address += aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (track-TRACK_NUMBER_303));
   }
   return pattern_address;
 }
@@ -145,10 +194,10 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     if (to_track != -1)
       track = to_track;
       
-    AcidSequencer.setMute(track, true);
-    AcidSequencer.clearStackNote(track);
-    uCtrl.storage->load((void*)AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
-    AcidSequencer.setMute(track, false);
+    aciduino.seq.setMute(track, true);
+    aciduino.seq.clearStackNote(track);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    aciduino.seq.setMute(track, false);
 
     // load _mute_pattern only for track?
     //...
@@ -158,22 +207,22 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     
     // mute all before load into memory(its volatile! here a mute is enongth)
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
-      AcidSequencer.setMute(i, true);
+      aciduino.seq.setMute(i, true);
     }
     // clear all floating notes around
-    AcidSequencer.clearStackNote();
+    aciduino.seq.clearStackNote();
     
     // get 303 whole pattern data first
-    uCtrl.storage->load((void*)AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->load((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
 
     // load _mute_pattern
     uCtrl.storage->load((void*)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
-      AcidSequencer.setMute(i, false);
+      aciduino.seq.setMute(i, false);
     }
   }
 }
@@ -189,7 +238,7 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     if (from_track != -1)
       track = from_track;
       
-    uCtrl.storage->save((void*)AcidSequencer.getPatternData(track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
 
     // save _mute_pattern for a specific patern
     //...
@@ -197,9 +246,9 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     // saves the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
     // save 303 whole pattern data first
-    uCtrl.storage->save((void*)AcidSequencer.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->save((void*)AcidSequencer.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
     // _mute_grid data
     uCtrl.storage->save((void *)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
   }
@@ -224,7 +273,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
   
   if (track == -1 || _copy_track == - 1) {
     // paste whole pattern track per track
-    for (uint8_t i=0; i < AcidSequencer.getTrackNumber(); i++) {
+    for (uint8_t i=0; i < aciduino.seq.getTrackNumber(); i++) {
       // update _copy_track with current track
       _copy_track = i;
       pastePattern(pattern, i);
@@ -235,7 +284,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
   }
 
   // check if track types are different
-  if (AcidSequencer.is303(_copy_track) != AcidSequencer.is303(track)) {
+  if (aciduino.seq.is303(_copy_track) != aciduino.seq.is303(track)) {
     // cant copy.. handle UI
     return false;
   }
@@ -255,10 +304,10 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
     // we paste to current memory
     if (copy_memory) {
       // if paste is from memory to memory
-      AcidSequencer.setMute(track, true);
-      AcidSequencer.clearStackNote(track);
-      memcpy(AcidSequencer.getPatternData(track), AcidSequencer.getPatternData(_copy_track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
-      AcidSequencer.setMute(track, false);
+      aciduino.seq.setMute(track, true);
+      aciduino.seq.clearStackNote(track);
+      memcpy(aciduino.seq.getPatternData(track), aciduino.seq.getPatternData(_copy_track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
+      aciduino.seq.setMute(track, false);
     } else {
       // if paste is from storage to memory
       loadPattern(_copy_pattern, _copy_track, track);
@@ -270,7 +319,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       savePattern(pattern, track, _copy_track);
     } else {
       // if paste is from storage to storage
-      uCtrl.storage->copy(getPatternEppromAddress(_copy_pattern, _copy_track), getPatternEppromAddress(pattern, track), (AcidSequencer.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
+      uCtrl.storage->copy(getPatternEppromAddress(_copy_pattern, _copy_track), getPatternEppromAddress(pattern, track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
     }
   }
 
@@ -331,7 +380,7 @@ int Aciduino::freeRam ()
 #endif
 
 // CALLBACKS
-// used by AcidSequencer object as callback to spill data out
+// used by aciduino.seq object as callback to spill data out
 void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
 {
   switch(_track_output_setup[track].output) {
@@ -346,18 +395,6 @@ void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8
       break;
   }
 }
-
-//
-// midi handling
-//
-// ussing 3 midi_messages data structure to
-// keep interrupted and non interrupted memory area safe
-uctrl::protocol::midi::MIDI_MESSAGE msg;
-uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
-uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
-
-volatile uint8_t _midi_clock_port = 0; // 0 = internal
-volatile uint8_t _midi_rec_port = 1;
 
 // All midi interface registred thru uCtrl get incomming data thru this callback
 void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
@@ -387,7 +424,7 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
     //  
     case uctrl::protocol::midi::NoteOn:
     case uctrl::protocol::midi::NoteOff:
-      AcidSequencer.input(_selected_track, msg->type == uctrl::protocol::midi::NoteOn ? NOTE_ON : NOTE_OFF, msg->data1, msg->data2, interrupted);
+      aciduino.seq.input(_selected_track, msg->type == uctrl::protocol::midi::NoteOn ? NOTE_ON : NOTE_OFF, msg->data1, msg->data2, interrupted);
       break;
 
     //
@@ -418,7 +455,7 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
   }  
 }
 
-// used by AcidSequencer object as callback to spill midi messages out
+// used by aciduino.seq object as callback to spill midi messages out
 void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
 {
   msg_interrupt.type = msg_type == NOTE_ON ? uctrl::protocol::midi::NoteOn : uctrl::protocol::midi::NoteOff;
@@ -426,53 +463,6 @@ void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uin
   msg_interrupt.data2 = byte2;
   msg_interrupt.channel = channel;
   uCtrl.midi->write(&msg_interrupt, port+1, 1);
-}
-
-// 3 realtime messages used by uClock object inside interruption
-inline void sendMidiClock() {
-  msg_interrupt.type = uctrl::protocol::midi::Clock;
-  uCtrl.midi->writeAllPorts(&msg_interrupt, 1);
-}
-
-void sendMidiStart() {
-  msg.type = uctrl::protocol::midi::Start;
-  uCtrl.midi->writeAllPorts(&msg, 0);  
-}
-
-void sendMidiStop() {
-  msg.type = uctrl::protocol::midi::Stop;
-  uCtrl.midi->writeAllPorts(&msg, 0);
-}
-
-// this is used inside interruption and outside, controlled by interrupted var
-void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0) {
-  if (interrupted) {
-    msg_interrupt_pots.type = uctrl::protocol::midi::ControlChange;
-    msg_interrupt_pots.data1 = cc;
-    msg_interrupt_pots.data2 = value;
-    msg_interrupt_pots.channel = channel;
-    uCtrl.midi->write(&msg_interrupt_pots, port+1, 1);
-  } else {
-    msg.type = uctrl::protocol::midi::ControlChange;
-    msg.data1 = cc;
-    msg.data2 = value;
-    msg.channel = channel;
-    uCtrl.midi->write(&msg, port+1, 0);
-  }
-}
-
-void Aciduino::sendNote(uint8_t note, uint8_t channel, uint8_t port, uint8_t velocity) {
-  msg.data1 = note;
-  msg.data2 = velocity;
-  msg.channel = channel;
-  
-  if (velocity == 0) {
-    msg.type = uctrl::protocol::midi::NoteOff;
-  } else {
-    msg.type = uctrl::protocol::midi::NoteOn;
-  }
-
-  uCtrl.midi->write(&msg, port+1, 0);
 }
 
 // a port to read midi notes 1ms
@@ -527,21 +517,21 @@ void onSync24Callback(uint32_t tick)
 void onPPQNCallback(uint32_t tick) 
 {
   // sequencer tick
-  AcidSequencer.on96PPQN(tick);
+  aciduino.seq.on96PPQN(tick);
 }
 
 // The callback function wich will be called by uClock each new step event time
 void onStepCallback(uint32_t step) 
 {
   // sequencer tick
-  AcidSequencer.onStep(step, uClock.getShuffleLength());
+  aciduino.seq.onStep(step, uClock.getShuffleLength());
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
 void onClockStart() 
 {
   sendMidiStart();
-  _playing = true;
+  aciduino.isPlaying() = true;
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
@@ -549,8 +539,8 @@ void onClockStop()
 {
   sendMidiStop();
   // clear all tracks stack note(all floating notes off!)
-  AcidSequencer.clearStackNote();
-  _playing = false;
+  aciduino.seq.clearStackNote();
+  aciduino.isPlaying() = false;
 #if defined(USE_BPM_LED)
   // force to turn bpm led off
   uCtrl.dout->write(BPM_LED, LOW);

@@ -28,7 +28,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // sequence variation A/B
     //uCtrl.page->component(variationComponent, 4, 1);
     
-    if (AcidSequencer.is303(_selected_track)) {
+    if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
       // randomizer type: classic, bjulrk
       uCtrl.page->component(tuneComponent, 4, 1);
       uCtrl.page->component(transposeComponent, 4, 2);

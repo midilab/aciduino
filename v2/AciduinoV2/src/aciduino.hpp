@@ -143,11 +143,6 @@ public:
   
   AcidSequencerClass seq;
 
-  // create acessors later.. TODO
-  // globals
-  bool _playing = false;
-  uint8_t _selected_track = 0;
-
   //
   // midi handling
   //
@@ -165,9 +160,9 @@ private:
   void uClockSetup();
 
   // session and storage
+  void eppromInit();
   uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
   bool checkEppromDataLayoutChange();
-  void eppromInit();
 
   // todo: create acessors and modify usage 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
@@ -182,7 +177,10 @@ private:
   // helpers for copy and paste pattern
   uint8_t _copy_pattern = 0;
   int8_t _copy_track = -1;
-    
+
+  // state
+  bool _playing = false;
+  uint8_t _selected_track = 0;
 };
 
 

@@ -26,7 +26,7 @@ void initPort()
   uCtrl.initDin();
   uCtrl.din->plug(/* uc_din_pin */);
   // set callback for ain data input
-  uCtrl.din->setCallback(midiControllerHandle);
+  uCtrl.din->setCallback(dinHandle);
 
   //
   // DOUT Module
@@ -40,7 +40,7 @@ void initPort()
   uCtrl.initAin();
   uCtrl.din->plug(/* uc_ain_pin */);
   // set callback for ain data input
-  uCtrl.ain->setCallback(midiControllerHandle);
+  uCtrl.ain->setCallback(ainHandle);
 
   //
   // MIDI Module
@@ -51,10 +51,8 @@ void initPort()
   //uCtrl.midi->plug(&MIDI3);
   //uCtrl.midi->plug(&MIDI4);
 
-  //
-  // Page Module for UI
-  //
-  uCtrl.initPage(1);
+  // our main loop program callback
+  uCtrl.setLoopCallback(mainLoop);
 
   // init uCtrl modules and memory
   uCtrl.init();
@@ -63,4 +61,3 @@ void initPort()
   // how many 303 tracks? 808 tracks? 
   aciduino.init();
 }
-

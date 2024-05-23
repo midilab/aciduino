@@ -1,10 +1,10 @@
 #ifndef __MIDILAB_INTERFACE_H__
 #define __MIDILAB_INTERFACE_H__
 
-// shared common gui functions used around
-#include "components/shared_gui_funcs.hpp"
 // interface controls definitions
 #include "consts.h"
+// shared common gui functions used around
+#include "components/shared_gui_funcs.hpp"
 // page components
 #include "components/topbar.hpp"
 #include "components/track_length.hpp"

@@ -199,8 +199,8 @@ struct MidiCCControl : PageComponent {
     {
       uint8_t data_idx = aciduino.seq.is303(aciduino.getSelectedTrack()) ? aciduino.getSelectedTrack() : aciduino.getSelectedTrack() - TRACK_NUMBER_303;
       if (learn == true) {
-          _control_map_global[port].ctrl = ctrl_selected;
-          _control_map_global[port].track = aciduino.getSelectedTrack();
+          aciduino.setMidiControlParam(MIDI_CTRL, ctrl_selected, port);
+          aciduino.setMidiControlParam(MIDI_TRACK, aciduino.getSelectedTrack(), port);
           if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
             control_map_303[ctrl_selected].pot_map[data_idx] = port;
           } else {
@@ -212,11 +212,14 @@ struct MidiCCControl : PageComponent {
 
     void clearCtrl(uint8_t port)
     {
+      uint8_t idx = 0;
       if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-        _control_map_global[control_map_303[port].pot_map[aciduino.getSelectedTrack()]].ctrl = -1;  
+        idx = control_map_303[port].pot_map[aciduino.getSelectedTrack()];
+        aciduino.setMidiControlParam(MIDI_CTRL, -1, idx);
         control_map_303[port].pot_map[aciduino.getSelectedTrack()] = -1;
       } else {
-        _control_map_global[control_map_808[port].pot_map[aciduino.getSelectedTrack()]].ctrl = -1;  
+        idx = control_map_808[port].pot_map[aciduino.getSelectedTrack()];
+        aciduino.setMidiControlParam(MIDI_CTRL, -1, idx);
         control_map_808[port].pot_map[aciduino.getSelectedTrack()-TRACK_NUMBER_303] = -1;
       }
     }
@@ -224,11 +227,13 @@ struct MidiCCControl : PageComponent {
     void updateControlMap() {
       // update track control reference for pot map global
       for (uint8_t i=0; i < 16; i++) {
-        if (_control_map_global[i].ctrl != -1) {
-          if (_control_map_global[i].track < TRACK_NUMBER_303) {
-            control_map_303[_control_map_global[i].ctrl].pot_map[_control_map_global[i].track] = i;
+        uint8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, i);
+        if (ctrl != -1) {
+          uint8_t track = aciduino.getMidiControlParam(MIDI_TRACK, i);
+          if (track < TRACK_NUMBER_303) {
+            control_map_303[ctrl].pot_map[track] = i;
           } else {
-            control_map_808[_control_map_global[i].ctrl].pot_map[_control_map_global[i].track-TRACK_NUMBER_303] = i;
+            control_map_808[ctrl].pot_map[track-TRACK_NUMBER_303] = i;
           }
         }
       }
@@ -250,8 +255,10 @@ void midiControllerHandle(uint8_t port, uint16_t value) {
   midiControllerComponent.learnCtrl(port);
   
   // anything into global learn map table?
-  if (_control_map_global[port].ctrl != -1) {
-    midiControllerComponent.sendCCData((int16_t)value, _control_map_global[port].ctrl, _control_map_global[port].track, 0);
+  uint8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, port);
+  uint8_t track = aciduino.getMidiControlParam(MIDI_TRACK, port);
+  if (ctrl != -1) {
+    midiControllerComponent.sendCCData((int16_t)value, ctrl, track, 0);
   } else {
     midiControllerComponent.sendCCData((int16_t)value, port, aciduino.getSelectedTrack(), 0);
   }

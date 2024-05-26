@@ -211,15 +211,46 @@ void Aciduino::setTrackOutputParam(uint8_t param, uint8_t data, int8_t track)
   switch (param) {
     case TRACK_OUTPUT:
       ATOMIC(_track_output_setup[track_change].output = data)
+      break;
     case TRACK_CHANNEL:
       ATOMIC(_track_output_setup[track_change].channel = data)
+      break;
     case TRACK_PORT:
       ATOMIC(_track_output_setup[track_change].port = data)
+      break;
     default:
       break;
   }
 }
 
+//
+// midi controller data accessors
+//
+int8_t Aciduino::getMidiControlParam(uint8_t param, uint8_t idx)
+{
+  switch (param) {
+    case MIDI_CTRL:
+      return _control_map_global[idx].ctrl;
+    case MIDI_TRACK:
+      return (int8_t)_control_map_global[idx].track;
+    default:
+      break;
+  }
+}
+
+void Aciduino::setMidiControlParam(uint8_t param, int8_t data, uint8_t idx)
+{
+  switch (param) {
+    case MIDI_CTRL:
+      _control_map_global[idx].ctrl = data;
+      break;
+    case MIDI_TRACK:
+      _control_map_global[idx].track = (uint8_t)data;
+      break;
+    default:
+      break;
+  }
+}
 
 //
 // Midi utils
@@ -320,7 +351,7 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     uCtrl.storage->load((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
     aciduino.seq.setMute(track, false);
 
-    // load _mute_pattern only for track?
+    // load _mute_grid only for track?
     //...
   } else {
     // load the whole pattern for all tracks
@@ -338,8 +369,8 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     // then 808 whole pattern data last
     uCtrl.storage->load((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
 
-    // load _mute_pattern
-    uCtrl.storage->load((void*)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    // load _mute_grid
+    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
@@ -361,7 +392,7 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
       
     uCtrl.storage->save((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
 
-    // save _mute_pattern for a specific patern
+    // save _mute_grid for a specific patern
     //...
   } else {
     // saves the whole pattern for all tracks
@@ -371,14 +402,14 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     // then 808 whole pattern data last
     uCtrl.storage->save((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
     // _mute_grid data
-    uCtrl.storage->save((void *)_mute_pattern, sizeof(_mute_pattern), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void *)_mute_grid, sizeof(_mute_grid), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
   }
 }
 
 void Aciduino::saveMuteGrid(uint8_t pattern)
 {
   // _mute_grid data
-  uCtrl.storage->save((void*)_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+  uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
 }
 
 // copy current track data into same or another track pattern memory
@@ -400,7 +431,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       pastePattern(pattern, i);
     }
     // paste _mute_grid too!
-    uCtrl.storage->save((void*)_mute_pattern, sizeof(_mute_pattern), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
     return true;
   }
 

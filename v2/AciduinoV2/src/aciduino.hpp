@@ -42,7 +42,7 @@
 #define PATTERN_808_TRACK_SIZE      aciduino.seq.get808PatternTrackSize()
 #define PATTERN_303_MEM_SIZE        aciduino.seq.get303PatternMemorySize()
 #define PATTERN_808_MEM_SIZE        aciduino.seq.get808PatternMemorySize()
-#define PATTERN_TOTAL_MEM_SIZE      (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_pattern))
+#define PATTERN_TOTAL_MEM_SIZE      (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_grid))
 #define EPRROM_PATTERN_ADDRESS      (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE)
 #define EPRROM_PATTERN_AVAILABLE    (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (PATTERN_TOTAL_MEM_SIZE)
 
@@ -86,6 +86,11 @@ typedef struct
     int8_t ctrl = -1;
     uint8_t track;
 } MIDI_CTRL_GLOBAL_MAP;
+
+typedef enum {
+  MIDI_CTRL,
+  MIDI_TRACK,
+} MIDI_CTRL_PARAM;
 
 // track output setup: midi/cv/gate/osc
 typedef enum {
@@ -159,6 +164,10 @@ public:
   uint8_t getGenerativeParam(uint8_t param, int8_t track = -1);
   void setGenerativeParam(uint8_t param, uint8_t data, int8_t track = -1);
 
+  // midi controller data accessors
+  int8_t getMidiControlParam(uint8_t param, uint8_t idx);
+  void setMidiControlParam(uint8_t param, int8_t data, uint8_t idx);
+
   // track output setup data accessors
   uint8_t getTrackOutputParam(uint8_t param, int8_t track = -1);
   void setTrackOutputParam(uint8_t param, uint8_t data, int8_t track = -1);
@@ -182,7 +191,7 @@ private:
   // todo: make private, create acessors and modify usage 
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
   volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
-  MUTE_PATTERN _mute_pattern[4];
+  MUTE_PATTERN _mute_grid[4];
   // TODO: should goes to session data?
   uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
 

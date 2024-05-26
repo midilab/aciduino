@@ -181,6 +181,45 @@ void Aciduino::setGenerativeParam(uint8_t param, uint8_t data, int8_t track)
   }
 }
 
+//
+// Track output setup
+//
+uint8_t Aciduino::getTrackOutputParam(uint8_t param, int8_t track)
+{
+  uint8_t track_change = track;
+  if (track == -1)
+    track_change = _selected_track;
+
+  switch (param) {
+    case TRACK_OUTPUT:
+      return _track_output_setup[track_change].output;
+    case TRACK_CHANNEL:
+      return _track_output_setup[track_change].channel;
+    case TRACK_PORT:
+      return _track_output_setup[track_change].port;
+    default:
+      break;
+  }
+}
+
+void Aciduino::setTrackOutputParam(uint8_t param, uint8_t data, int8_t track)
+{
+  uint8_t track_change = track;
+  if (track == -1)
+    track_change = _selected_track;
+
+  switch (param) {
+    case TRACK_OUTPUT:
+      ATOMIC(_track_output_setup[track_change].output = data)
+    case TRACK_CHANNEL:
+      ATOMIC(_track_output_setup[track_change].channel = data)
+    case TRACK_PORT:
+      ATOMIC(_track_output_setup[track_change].port = data)
+    default:
+      break;
+  }
+}
+
 
 //
 // Midi utils

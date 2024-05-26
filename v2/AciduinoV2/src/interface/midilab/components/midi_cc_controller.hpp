@@ -160,12 +160,12 @@ struct MidiCCControl : PageComponent {
         data = parseData(data, 0, 127, control_map_303[ctrl].control_data[data_idx]);
         control_map_303[ctrl].control_data[data_idx] = data;
         // send data
-        aciduino.sendMidiCC(control_map_303[ctrl].control_cc, data, _track_output_setup[track].channel, _track_output_setup[track].port, interrupted);
+        aciduino.sendMidiCC(control_map_303[ctrl].control_cc, data, aciduino.getTrackOutputParam(TRACK_CHANNEL, track), aciduino.getTrackOutputParam(TRACK_PORT, track), interrupted);
       } else {
         data = parseData(data, 0, 127, control_map_808[ctrl].control_data[data_idx]);
         control_map_808[ctrl].control_data[data_idx] = data;
         // send data
-        aciduino.sendMidiCC(control_map_808[ctrl].control_cc, data, _track_output_setup[track].channel, _track_output_setup[track].port, interrupted);
+        aciduino.sendMidiCC(control_map_808[ctrl].control_cc, data, aciduino.getTrackOutputParam(TRACK_CHANNEL, track), aciduino.getTrackOutputParam(TRACK_PORT, track), interrupted);
       }
     }
 

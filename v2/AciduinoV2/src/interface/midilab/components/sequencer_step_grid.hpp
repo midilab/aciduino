@@ -305,8 +305,8 @@ struct StepSequencer : PageComponent {
             data = parseData(data, 0, 127, aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack()));
             aciduino.seq.setTrackVoiceConfig(aciduino.getSelectedTrack(), data);
             // send note for preview while change data
-            aciduino.sendNote(data, _track_output_setup[aciduino.getSelectedTrack()].channel, _track_output_setup[aciduino.getSelectedTrack()].port, NOTE_VELOCITY_808);
-            aciduino.sendNote(data, _track_output_setup[aciduino.getSelectedTrack()].channel, _track_output_setup[aciduino.getSelectedTrack()].port, 0);
+            aciduino.sendNote(data, aciduino.getTrackOutputParam(TRACK_CHANNEL), aciduino.getTrackOutputParam(TRACK_PORT), NOTE_VELOCITY_808);
+            aciduino.sendNote(data, aciduino.getTrackOutputParam(TRACK_CHANNEL), aciduino.getTrackOutputParam(TRACK_PORT), 0);
           // no shift select voice
           } else {
             // select voice

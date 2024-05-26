@@ -101,6 +101,11 @@ typedef struct
   uint8_t port;
 } TRACK_OUTPUT_DATA;
 
+typedef enum {
+  TRACK_OUTPUT,
+  TRACK_CHANNEL,
+  TRACK_PORT,
+} TRACK_OUTPUT_PARAM;
 
 // pattern and mute automation grid
 typedef struct
@@ -153,6 +158,10 @@ public:
   // generative data accessors
   uint8_t getGenerativeParam(uint8_t param, int8_t track = -1);
   void setGenerativeParam(uint8_t param, uint8_t data, int8_t track = -1);
+
+  // track output setup data accessors
+  uint8_t getTrackOutputParam(uint8_t param, int8_t track = -1);
+  void setTrackOutputParam(uint8_t param, uint8_t data, int8_t track = -1);
 
   int freeRam();
   

@@ -69,6 +69,17 @@ typedef struct
   uint8_t roll_probability = 0;
 } GENERATIVE_808_DATA; 
 
+typedef enum {
+  GENERATIVE_FILL,
+  GENERATIVE_ACCENT,
+  GENERATIVE_SLIDE,
+  GENERATIVE_TIE,
+  GENERATIVE_LOWER_OCTAVE,
+  GENERATIVE_RANGE_OCTAVE,
+  GENERATIVE_NUM_TONES,
+  GENERATIVE_ROLL,
+} GENERATIVE_PARAM;
+
 // for global learn feature to keep track of controls setup by user
 typedef struct
 {
@@ -139,21 +150,13 @@ public:
   uint8_t getMidiRecPort() { return _midi_rec_port; }
   void setMidiRecPort(uint8_t port) { ATOMIC(_midi_rec_port = port) }
 
+  // generative data accessors
+  uint8_t getGenerativeParam(uint8_t param, int8_t track = -1);
+  void setGenerativeParam(uint8_t param, uint8_t data, int8_t track = -1);
+
   int freeRam();
   
   AcidSequencerClass seq;
-
-  //
-  // midi handling
-  //
-  // ussing 3 midi_messages data structure to
-  // keep interrupted and non interrupted memory area safe
-  uctrl::protocol::midi::MIDI_MESSAGE msg;
-  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
-  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
-
-  volatile uint8_t _midi_clock_port = 0; // 0 = internal
-  volatile uint8_t _midi_rec_port = 1;
 
 private:
   void initSequencer();
@@ -164,10 +167,10 @@ private:
   uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
   bool checkEppromDataLayoutChange();
 
-  // todo: create acessors and modify usage 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
 
+  // todo: make private, create acessors and modify usage 
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
   volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
   MUTE_PATTERN _mute_pattern[4];
@@ -181,6 +184,18 @@ private:
   // state
   bool _playing = false;
   uint8_t _selected_track = 0;
+
+  //
+  // midi handling
+  //
+  // ussing 3 midi_messages data structure to
+  // keep interrupted and non interrupted memory area safe
+  uctrl::protocol::midi::MIDI_MESSAGE msg;
+  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt;
+  uctrl::protocol::midi::MIDI_MESSAGE msg_interrupt_pots;
+
+  volatile uint8_t _midi_clock_port = 0; // 0 = internal
+  volatile uint8_t _midi_rec_port = 1;
 };
 
 

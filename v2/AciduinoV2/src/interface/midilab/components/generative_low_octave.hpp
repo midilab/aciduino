@@ -1,12 +1,12 @@
 struct LowOctave : PageComponent {
   
     void view() {
-      genericOptionView("octave", String(_generative_303[aciduino.getSelectedTrack()].lower_octave), line, col, selected);
+      genericOptionView("octave", String(aciduino.getGenerativeParam(GENERATIVE_LOWER_OCTAVE)), line, col, selected);
     }
 
     void change(int16_t data) {
-      data = parseData(data, 1, 11, _generative_303[aciduino.getSelectedTrack()].lower_octave);
-      _generative_303[aciduino.getSelectedTrack()].lower_octave = data;
+      data = parseData(data, 1, 11, aciduino.getGenerativeParam(GENERATIVE_LOWER_OCTAVE));
+      aciduino.setGenerativeParam(GENERATIVE_LOWER_OCTAVE, data);
     }
     
 } lowOctaveComponent;

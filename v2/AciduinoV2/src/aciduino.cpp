@@ -101,6 +101,88 @@ void Aciduino::uClockSetup()
 }
 
 //
+// Generative
+//
+uint8_t Aciduino::getGenerativeParam(uint8_t param, int8_t track)
+{
+  uint8_t track_change = track;
+  if (track == -1)
+    track_change = _selected_track;
+
+  // TODO: make it array idx safe access between 303 and 808 state access
+  switch (param) {
+    case GENERATIVE_FILL:
+      if (seq.is303(track)) 
+        return _generative_303[track_change].generative_fill;
+      else
+        return _generative_808[track_change-TRACK_NUMBER_303].generative_fill; 
+    case GENERATIVE_ACCENT:
+      if (seq.is303(track)) 
+        return _generative_303[track_change].accent_probability;
+      else
+        return _generative_808[track_change-TRACK_NUMBER_303].accent_probability; 
+    case GENERATIVE_SLIDE:
+      return _generative_303[track_change].slide_probability;
+    case GENERATIVE_TIE:
+      return _generative_303[track_change].tie_probability;
+    case GENERATIVE_LOWER_OCTAVE:
+      return _generative_303[track_change].lower_octave;
+    case GENERATIVE_RANGE_OCTAVE:
+      return _generative_303[track_change].range_octave;
+    case GENERATIVE_NUM_TONES:
+      return _generative_303[track_change].number_of_tones;
+    case GENERATIVE_ROLL:
+      return _generative_808[track_change-TRACK_NUMBER_303].roll_probability; 
+    default:
+      break;
+  }
+}
+
+void Aciduino::setGenerativeParam(uint8_t param, uint8_t data, int8_t track)
+{
+  uint8_t track_change = track;
+  if (track == -1)
+    track_change = _selected_track;
+
+  // TODO: make it array idx safe access between 303 and 808 state access
+  switch (param) {
+    case GENERATIVE_FILL:
+      if (aciduino.seq.is303(track_change))
+        _generative_303[track_change].generative_fill = data;
+      else
+        _generative_808[track_change-TRACK_NUMBER_303].generative_fill = data;
+      break;
+    case GENERATIVE_ACCENT:
+      if (aciduino.seq.is303(track_change))
+        _generative_303[track_change].accent_probability = data;
+      else
+        _generative_808[track_change-TRACK_NUMBER_303].accent_probability = data;
+      break;
+    case GENERATIVE_SLIDE:
+      _generative_303[track_change].slide_probability = data;
+      break;
+    case GENERATIVE_TIE:
+      _generative_303[track_change].tie_probability = data;
+      break;
+    case GENERATIVE_LOWER_OCTAVE:
+      _generative_303[track_change].lower_octave = data;
+      break;
+    case GENERATIVE_RANGE_OCTAVE:
+      _generative_303[track_change].range_octave = data;
+      break;
+    case GENERATIVE_NUM_TONES:
+      _generative_303[track_change].number_of_tones = data;
+      break;
+    case GENERATIVE_ROLL:
+        _generative_808[track_change-TRACK_NUMBER_303].roll_probability = data;
+      break;
+    default:
+      break;
+  }
+}
+
+
+//
 // Midi utils
 //
 // 3 realtime messages used by uClock object inside interruption

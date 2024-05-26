@@ -54,7 +54,7 @@
 #define NAV_UP_PIN                4
 #define NAV_DOWN_PIN              3
 #define NAV_LEFT_PIN              2
-  
+
 //#define TRANSPORT_BUTTON_1_PIN  7
 
 // Extension modules

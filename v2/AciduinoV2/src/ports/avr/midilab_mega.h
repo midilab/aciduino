@@ -170,12 +170,12 @@ void initPort()
   uCtrl.midi->plug(&MIDI2);
   //uCtrl.midi->plug(&MIDI3);
   //uCtrl.midi->plug(&MIDI4);
-  uCtrl.midi->setMidiInputCallback(midiInputHandler);
+  uCtrl.midi->setMidiInputCallback(Aciduino::midiInputHandler);
   // uCtrl realtime deals
   // process midi at 250 microseconds speed
-  uCtrl.setOn250usCallback(midiHandleSync);
+  uCtrl.setOn250usCallback(Aciduino::midiHandleSync);
   // process midi input at 1ms speed
-  uCtrl.setOn1msCallback(midiHandle);
+  uCtrl.setOn1msCallback(Aciduino::midiHandle);
 
   //
   // SdCard Module
@@ -196,14 +196,14 @@ void initPort()
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
   // hook button callback setup
   // previous track
-  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, Aciduino::previousTrack);
   // next track
-  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, Aciduino::nextTrack);
   // transport play/stop and shifted rec on/off
   //uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
   //uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recToggle);
-  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, playStop);
-  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, recToggle);
+  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, Aciduino::playStop);
+  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, Aciduino::recToggle);
   // bottom bar for f1 and f2 functions draw function
   uCtrl.page->setFunctionDrawCallback(functionDrawCallback);
 

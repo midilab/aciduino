@@ -9,12 +9,8 @@ void generativeFunction1()
 
 void generativeFunction2()
 { 
-  // generate new sequence
-  if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-    aciduino.seq.acidRandomize(aciduino.getSelectedTrack(), _generative_303[aciduino.getSelectedTrack()].generative_fill, _generative_303[aciduino.getSelectedTrack()].accent_probability, _generative_303[aciduino.getSelectedTrack()].slide_probability, _generative_303[aciduino.getSelectedTrack()].tie_probability, _generative_303[aciduino.getSelectedTrack()].number_of_tones, _generative_303[aciduino.getSelectedTrack()].lower_octave*12, _generative_303[aciduino.getSelectedTrack()].range_octave*12);
-  } else {
-    aciduino.seq.acidRandomize(aciduino.getSelectedTrack(), _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].generative_fill, _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].accent_probability, _generative_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303].roll_probability);
-  }
+  // generate new sequence, based on generative patterns set by the user
+  aciduino.generatePattern(aciduino.getSelectedTrack());
 }
 
 void generative_page_create()

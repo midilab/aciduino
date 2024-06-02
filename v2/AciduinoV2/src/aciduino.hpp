@@ -19,37 +19,9 @@
 //
 #include "sequencer/acid_sequencer.h"
 
-
-// 
-// storage schema
-//
-
-//
-// epprom memory layout setup
-//
-#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-#define EPPROM_SIZE                 4096
-#else
-#define EPPROM_SIZE                 EEPROM.length()
-#endif
-#define EPPROM_CHECK_DATA_ADDRESS   0
-#define EPPROM_SESSION_ADDRESS      2
-#define EPPROM_SESSION_SIZE         (sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup))
-//
-// common pattern data definitions
-//
-#define PATTERN_303_TRACK_SIZE      aciduino.seq.get303PatternTrackSize()
-#define PATTERN_808_TRACK_SIZE      aciduino.seq.get808PatternTrackSize()
-#define PATTERN_303_MEM_SIZE        aciduino.seq.get303PatternMemorySize()
-#define PATTERN_808_MEM_SIZE        aciduino.seq.get808PatternMemorySize()
-#define PATTERN_TOTAL_MEM_SIZE      (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_grid))
-#define EPRROM_PATTERN_ADDRESS      (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE)
-#define EPRROM_PATTERN_AVAILABLE    (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (PATTERN_TOTAL_MEM_SIZE)
-
 //
 // memory data structures for user data
 //
-
 // generative engine ui data
 typedef struct
 {
@@ -69,6 +41,7 @@ typedef struct
   uint8_t roll_probability = 0;
 } GENERATIVE_808_DATA; 
 
+// to be used with generativeParam accessors
 typedef enum {
   GENERATIVE_FILL,
   GENERATIVE_ACCENT,
@@ -128,16 +101,14 @@ public:
   void run();
 
   // public interface
-  void recToggle();
-  void playStop();
-  void previousTrack();
-  void nextTrack();
-
-  //AcidSequencerClass * seq() { return &_seq; };
-
+  static void recToggle();
+  static void playStop();
+  static void previousTrack();
+  static void nextTrack();
   uint8_t getSelectedTrack() { return _selected_track; };
   uint8_t setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
   uint8_t isPlaying() { return _playing; };
+  void generatePattern(int8_t track = -1);
 
   // session
   void loadSession();
@@ -172,18 +143,34 @@ public:
   uint8_t getTrackOutputParam(uint8_t param, int8_t track = -1);
   void setTrackOutputParam(uint8_t param, uint8_t data, int8_t track = -1);
 
+  // system
+  uint16_t getNumOfPatterns();
+  uint16_t getSessionSize();
+  uint16_t getStorageSize();
+
+  // utils
   int freeRam();
   
+  // midi input handles(mainly to be used as callback by external midi hanlders)
+  static void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted);
+  static void midiHandle(); // sync handle
+  static void midiHandleSync(); // note input handle
+
   AcidSequencerClass seq;
 
 private:
   void initSequencer();
   void uClockSetup();
+  void storageSetup();
 
   // session and storage
   void eppromInit();
   uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
   bool checkEppromDataLayoutChange();
+
+  // output handlers
+  void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
+  void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
@@ -214,6 +201,29 @@ private:
 
   volatile uint8_t _midi_clock_port = 0; // 0 = internal
   volatile uint8_t _midi_rec_port = 1;
+
+
+  // 
+  // storage schema
+  //
+
+  //
+  // epprom memory layout setup
+  //
+  uint16_t EPPROM_SIZE;
+  uint16_t EPPROM_CHECK_DATA_ADDRESS;
+  uint16_t EPPROM_SESSION_ADDRESS;
+  uint16_t EPPROM_SESSION_SIZE;
+  //
+  // common pattern data definitions
+  //
+  uint16_t PATTERN_303_TRACK_SIZE;
+  uint16_t PATTERN_808_TRACK_SIZE;
+  uint16_t PATTERN_303_MEM_SIZE;
+  uint16_t PATTERN_808_MEM_SIZE;
+  uint16_t PATTERN_TOTAL_MEM_SIZE;
+  uint16_t EPRROM_PATTERN_ADDRESS;
+  uint16_t EPRROM_PATTERN_AVAILABLE;
 };
 
 

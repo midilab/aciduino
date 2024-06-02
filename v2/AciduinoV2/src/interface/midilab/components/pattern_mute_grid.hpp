@@ -37,14 +37,15 @@ struct MutePatternControl : PageComponent {
     
     void view() {
       // update selected mute block based on selected track(fast nav using track change)
-      if (aciduino.getSelectedTrack() < TRACK_NUMBER_303) {
-        selected_mute_chn = aciduino.getSelectedTrack();
+      uint8_t selected_track = aciduino.getSelectedTrack();
+      if (selected_track < TRACK_NUMBER_303) {
+        selected_mute_chn = selected_track;
         element_index = 0;
       } else {
-        if (selected_track_ref != aciduino.getSelectedTrack()) {
+        if (selected_track_ref != selected_track) {
           selected_mute_chn = 0;
-          element_index = ((aciduino.getSelectedTrack() - TRACK_NUMBER_303) * VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
-          selected_track_ref = aciduino.getSelectedTrack();
+          element_index = ((selected_track - TRACK_NUMBER_303) * VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
+          selected_track_ref = selected_track;
         }
       }
       

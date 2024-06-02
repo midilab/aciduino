@@ -4,48 +4,15 @@
 // setup and runtime
 //
 void Aciduino::init() {
-  // setup uctrl hardware and control interfaces
-  uCtrlSetup();
   // setup clock system
   uClockSetup();
   // init the sequencer
   initSequencer();
 }
 
-void Aciduino::run() {
+static void Aciduino::run() {
   // let uCtrl do his job
   uCtrl.run();
-}
-
-void Aciduino::playStop()
-{
-  if (aciduino.isPlaying())
-    uClock.stop();
-  else
-    uClock.start();
-}
-
-void Aciduino::recToggle()
-{
-  aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());
-}
-
-void Aciduino::previousTrack()
-{
-  if (_selected_track == 0) {
-    _selected_track = aciduino.seq.getTrackNumber() - 1;
-  } else {
-    --_selected_track;
-  }
-}
-
-void Aciduino::nextTrack()
-{
-  if (_selected_track == aciduino.seq.getTrackNumber() - 1) {
-    _selected_track = 0;
-  } else {
-    ++_selected_track;
-  }
 }
 
 //
@@ -53,6 +20,9 @@ void Aciduino::nextTrack()
 //
 void Aciduino::initSequencer()
 {
+  // storage setup epprom/sdcard
+  storageSetup();
+
   // init default track output data
   for(uint8_t track=0; track < TRACK_NUMBER_303+TRACK_NUMBER_808; track++) {
     _track_output_setup[track].output = MIDI_OUTPUT;
@@ -100,9 +70,94 @@ void Aciduino::uClockSetup()
   //uClock.setMode(uClock.EXTERNAL_CLOCK);
 }
 
+void Aciduino::storageSetup()
+{
+  //
+  // initiate epprom memory layout setup
+  //
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
+  EPPROM_SIZE = 4096;
+#else
+  EPPROM_SIZE = EEPROM.length();
+#endif
+
+  EPPROM_CHECK_DATA_ADDRESS = 0;
+  EPPROM_SESSION_ADDRESS = 2;
+  EPPROM_SESSION_SIZE =(sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup));
+  
+  //
+  // common pattern data definitions
+  //
+  PATTERN_303_TRACK_SIZE = aciduino.seq.get303PatternTrackSize();
+  PATTERN_808_TRACK_SIZE = aciduino.seq.get808PatternTrackSize();
+  PATTERN_303_MEM_SIZE = aciduino.seq.get303PatternMemorySize();
+  PATTERN_808_MEM_SIZE = aciduino.seq.get808PatternMemorySize();
+  PATTERN_TOTAL_MEM_SIZE = (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_grid));
+  EPRROM_PATTERN_ADDRESS = (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE);
+  EPRROM_PATTERN_AVAILABLE = (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (PATTERN_TOTAL_MEM_SIZE);
+}
+
+uint16_t getNumOfPatterns() {
+  return EPRROM_PATTERN_AVAILABLE;
+}
+
+uint16_t getSessionSize() {
+  return EPPROM_SESSION_SIZE;
+}
+
+uint16_t getStorageSize() {
+  return EPPROM_SIZE;
+}
+
+//
+// Main interface
+//
+static void Aciduino::playStop()
+{
+  if (aciduino.isPlaying())
+    uClock.stop();
+  else
+    uClock.start();
+}
+
+static void Aciduino::recToggle()
+{
+  aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());
+}
+
+static void Aciduino::previousTrack()
+{
+  if (_selected_track == 0) {
+    _selected_track = aciduino.seq.getTrackNumber() - 1;
+  } else {
+    --_selected_track;
+  }
+}
+
+static void Aciduino::nextTrack()
+{
+  if (_selected_track == aciduino.seq.getTrackNumber() - 1) {
+    _selected_track = 0;
+  } else {
+    ++_selected_track;
+  }
+}
+
 //
 // Generative
 //
+void Aciduino::generatePattern(int8_t track)
+{
+  uint8_t track_gen = track;
+  if (track == -1)
+    track_gen = _selected_track;
+
+  if (seq.is303(track_gen)) 
+    aciduino.seq.acidRandomize(track_gen, _generative_303[track_gen].generative_fill, _generative_303[track_gen].accent_probability, _generative_303[track_gen].slide_probability, _generative_303[track_gen].tie_probability, _generative_303[track_gen].number_of_tones, _generative_303[track_gen].lower_octave*12, _generative_303[track_gen].range_octave*12);
+  else
+    aciduino.seq.acidRandomize(track_gen, _generative_808[track_gen-TRACK_NUMBER_303].generative_fill, _generative_808[track_gen-TRACK_NUMBER_303].accent_probability, _generative_808[track_gen-TRACK_NUMBER_303].roll_probability);
+}
+
 uint8_t Aciduino::getGenerativeParam(uint8_t param, int8_t track)
 {
   uint8_t track_change = track;
@@ -531,9 +586,8 @@ int Aciduino::freeRam ()
 }
 #endif
 
-// CALLBACKS
 // used by aciduino.seq object as callback to spill data out
-void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
+void Aciduino::sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
 {
   switch(_track_output_setup[track].output) {
     case MIDI_OUTPUT:
@@ -548,8 +602,17 @@ void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8
   }
 }
 
+void Aciduino::midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
+{
+  msg_interrupt.type = msg_type == NOTE_ON ? uctrl::protocol::midi::NoteOn : uctrl::protocol::midi::NoteOff;
+  msg_interrupt.data1 = byte1;
+  msg_interrupt.data2 = byte2;
+  msg_interrupt.channel = channel;
+  uCtrl.midi->write(&msg_interrupt, port+1, 1);
+}
+
 // All midi interface registred thru uCtrl get incomming data thru this callback
-void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
+static void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {
   if ( uClock.getMode() == uClock.EXTERNAL_CLOCK ) {
     // external tempo control
@@ -607,25 +670,15 @@ void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, u
   }  
 }
 
-// used by aciduino.seq object as callback to spill midi messages out
-void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
-{
-  msg_interrupt.type = msg_type == NOTE_ON ? uctrl::protocol::midi::NoteOn : uctrl::protocol::midi::NoteOff;
-  msg_interrupt.data1 = byte1;
-  msg_interrupt.data2 = byte2;
-  msg_interrupt.channel = channel;
-  uCtrl.midi->write(&msg_interrupt, port+1, 1);
-}
-
 // a port to read midi notes 1ms
-void midiHandle() {
+static void Aciduino::midiHandle() {
   //while (uCtrl.midi->read(2)) {
   //}
   uCtrl.midi->read(_midi_rec_port, 1);
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
-void midiHandleSync() {
+static void midiHandleSync() {
   if (_midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}

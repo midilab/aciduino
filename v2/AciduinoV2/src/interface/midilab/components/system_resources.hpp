@@ -13,14 +13,14 @@ struct SystemResources : PageComponent {
           genericOptionView("free ram", String(aciduino.freeRam()), line, col, selected, true);
           break;
         case 1:
-          genericOptionView("epprom", String(EPPROM_SIZE), line, col, selected, true);
+          genericOptionView("epprom", String(aciduino.getStorageSize()), line, col, selected, true);
           break;
         case 2:
           //genericOptionView("session", String(String((EPPROM_SESSION_SIZE/(float)EEPROM.length())*100) + String("%")), line, col, selected, true);
-          genericOptionView("session", String(EPPROM_SESSION_SIZE), line, col, selected, true);
+          genericOptionView("session", String(aciduino.getSessionSize()), line, col, selected, true);
           break;
         case 3:
-          genericOptionView("pattern", String(EPRROM_PATTERN_AVAILABLE), line, col, selected, true);
+          genericOptionView("pattern", String(aciduino.getNumOfPatterns()), line, col, selected, true);
           break;
       }
       

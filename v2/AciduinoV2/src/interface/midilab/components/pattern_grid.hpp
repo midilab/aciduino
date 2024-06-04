@@ -46,7 +46,7 @@ struct PatternControl : PageComponent {
         for (uint8_t j=0; j < max_elements_per_grid; j++) {
           // default block base
           uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
-          if (_pattern_grid[j+track_index] != i) {
+          if (aciduino.getPatternGrid(j+track_index) != i) {
             // playing pattern box
             uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
           }
@@ -120,7 +120,7 @@ struct PatternControl : PageComponent {
           break;
         case DOWN:
             if (selected_line == 6) {
-              if (pattern_index < EPRROM_PATTERN_AVAILABLE - 4) {
+              if (pattern_index < aciduino.getNumOfPatterns() - 4) {
                 pattern_index++;
               }
               selected_line = 5;
@@ -172,7 +172,7 @@ struct PatternControl : PageComponent {
       if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         // save the grid as it is selected per track
         for (uint8_t i=0; i < max_elements; i++) {
-          aciduino.savePattern(_pattern_grid[i], i);
+          aciduino.savePattern(aciduino.getPatternGrid(i), i);
         }
         // save _mute_grid for current_pattern only
         aciduino.saveMuteGrid(current_pattern);
@@ -208,12 +208,12 @@ struct PatternControl : PageComponent {
         // load all tracks pattern
         aciduino.loadPattern(pattern);
         for (uint8_t i=0; i < max_elements; i++) {
-          _pattern_grid[i] = pattern;
+          aciduino.setPatternGrid(i, pattern);
         }
       } else {
         // loads only a track pattern
         aciduino.loadPattern(pattern, track);
-        _pattern_grid[track] = pattern;
+        aciduino.setPatternGrid(track, pattern);
       }
       
       // update current pattern reference

@@ -105,6 +105,8 @@ public:
   static void playStop();
   static void previousTrack();
   static void nextTrack();
+  void play();
+  void stop();
   uint8_t getSelectedTrack() { return _selected_track; };
   uint8_t setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
   uint8_t isPlaying() { return _playing; };
@@ -134,7 +136,10 @@ public:
   // pattern grids
   // mute
   uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice = 0);
-  uint8_t setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice = 0);
+  void setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice = 0);
+  // pattern
+  uint8_t getPatternGrid(uint8_t track);
+  void setPatternGrid(uint8_t track, uint8_t pattern);
 
   // generative data accessors
   uint8_t getGenerativeParam(uint8_t param, int8_t track = -1);
@@ -161,6 +166,7 @@ public:
   static void midiHandle(); // sync handle
   static void midiHandleSync(); // note input handle
 
+  // check sequencer/acid_sequencer.h for interface
   AcidSequencerClass seq;
 
 private:
@@ -207,7 +213,6 @@ private:
   volatile uint8_t _midi_clock_port = 0; // 0 = internal
   volatile uint8_t _midi_rec_port = 1;
 
-
   // 
   // storage schema
   //
@@ -215,20 +220,21 @@ private:
   //
   // epprom memory layout setup
   //
-  uint16_t EPPROM_SIZE;
-  uint16_t EPPROM_CHECK_DATA_ADDRESS;
-  uint16_t EPPROM_SESSION_ADDRESS;
-  uint16_t EPPROM_SESSION_SIZE;
+  uint16_t _epprom_size;
+  uint16_t _epprom_check_data_address;
+  uint16_t _epprom_session_address;
+  uint16_t _epprom_session_size;
   //
   // common pattern data definitions
   //
-  uint16_t PATTERN_303_TRACK_SIZE;
-  uint16_t PATTERN_808_TRACK_SIZE;
-  uint16_t PATTERN_303_MEM_SIZE;
-  uint16_t PATTERN_808_MEM_SIZE;
-  uint16_t PATTERN_TOTAL_MEM_SIZE;
-  uint16_t EPRROM_PATTERN_ADDRESS;
-  uint16_t EPRROM_PATTERN_AVAILABLE;
+  uint16_t _pattern_303_track_size;
+  uint16_t _pattern_808_track_size;
+  uint16_t _pattern_303_mem_size;
+  uint16_t _pattern_808_mem_size;
+  uint16_t _pattern_total_mem_size;
+  uint16_t _eprrom_pattern_address;
+  uint16_t _eprrom_pattern_available;
+
 };
 
 

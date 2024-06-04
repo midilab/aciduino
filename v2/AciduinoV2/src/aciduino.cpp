@@ -84,37 +84,37 @@ void Aciduino::storageSetup()
   // initiate epprom memory layout setup
   //
 #if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
-  EPPROM_SIZE = 4096;
+  _epprom_size = 4096;
 #else
-  EPPROM_SIZE = EEPROM.length();
+  _epprom_size = EEPROM.length();
 #endif
 
-  EPPROM_CHECK_DATA_ADDRESS = 0;
-  EPPROM_SESSION_ADDRESS = 2;
-  EPPROM_SESSION_SIZE =(sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup));
+  _epprom_check_data_address = 0;
+  _epprom_session_address = 2;
+  _epprom_session_size =(sizeof(_generative_303) + sizeof(_generative_808) + sizeof(_control_map_global) + sizeof(_track_output_setup));
   
   //
   // common pattern data definitions
   //
-  PATTERN_303_TRACK_SIZE = aciduino.seq.get303PatternTrackSize();
-  PATTERN_808_TRACK_SIZE = aciduino.seq.get808PatternTrackSize();
-  PATTERN_303_MEM_SIZE = aciduino.seq.get303PatternMemorySize();
-  PATTERN_808_MEM_SIZE = aciduino.seq.get808PatternMemorySize();
-  PATTERN_TOTAL_MEM_SIZE = (PATTERN_303_MEM_SIZE + PATTERN_808_MEM_SIZE + sizeof(_mute_grid));
-  EPRROM_PATTERN_ADDRESS = (EPPROM_SESSION_ADDRESS + EPPROM_SESSION_SIZE);
-  EPRROM_PATTERN_AVAILABLE = (EPPROM_SIZE-EPPROM_SESSION_SIZE-EPPROM_SESSION_ADDRESS) / (PATTERN_TOTAL_MEM_SIZE);
+  _pattern_303_track_size = aciduino.seq.get303PatternTrackSize();
+  _pattern_808_track_size = aciduino.seq.get808PatternTrackSize();
+  _pattern_303_mem_size = aciduino.seq.get303PatternMemorySize();
+  _pattern_808_mem_size = aciduino.seq.get808PatternMemorySize();
+  _pattern_total_mem_size = (_pattern_303_mem_size + _pattern_808_mem_size + sizeof(_mute_grid));
+  _eprrom_pattern_address = (_epprom_session_address + _epprom_session_size);
+  _eprrom_pattern_available = (_epprom_size-_epprom_session_size-_epprom_session_address) / (_pattern_total_mem_size);
 }
 
-uint16_t getNumOfPatterns() {
-  return EPRROM_PATTERN_AVAILABLE;
+uint16_t Aciduino::getNumOfPatterns() {
+  return _eprrom_pattern_available;
 }
 
-uint16_t getSessionSize() {
-  return EPPROM_SESSION_SIZE;
+uint16_t Aciduino::getSessionSize() {
+  return _epprom_session_size;
 }
 
-uint16_t getStorageSize() {
-  return EPPROM_SIZE;
+uint16_t Aciduino::getStorageSize() {
+  return _epprom_size;
 }
 
 //
@@ -123,9 +123,21 @@ uint16_t getStorageSize() {
 static void Aciduino::playStop()
 {
   if (aciduino.isPlaying())
-    uClock.stop();
+    stop();
   else
-    uClock.start();
+    play();
+}
+
+void Aciduino::play()
+{
+  uClock.start();
+  _playing = true;
+}
+
+void Aciduino::stop()
+{
+  uClock.stop();
+  _playing = false;
 }
 
 static void Aciduino::recToggle()
@@ -155,7 +167,7 @@ static void Aciduino::nextTrack()
 // Pattern Grids
 //
 // MUTE GRID
-uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice)
+uint8_t Aciduino::getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice)
 {
   // 303
   if (aciduino.seq.is303(track)) {
@@ -166,7 +178,7 @@ uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice)
   }
 }
 
-uint8_t setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice)
+void Aciduino::setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice)
 {
   if (state == 0) {
     if (seq.is303(track)) {
@@ -181,6 +193,16 @@ uint8_t setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uin
       SET_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
     }
   }
+}
+// PATTERN GRID
+uint8_t Aciduino::getPatternGrid(uint8_t track)
+{
+  return _pattern_grid[track];
+}
+
+void Aciduino::setPatternGrid(uint8_t track, uint8_t pattern)
+{
+  _pattern_grid[track] = pattern;
 }
 
 //
@@ -405,7 +427,7 @@ void Aciduino::loadSession()
   // check if there is a session saved.. otherwise init one based on the defaults
   // we can use the last byte as version control
   // load session data
-  uCtrl.storage->load((void*)_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
+  uCtrl.storage->load((void*)_generative_303, sizeof(_generative_303), _epprom_session_address);
   uCtrl.storage->load((void*)_generative_808, sizeof(_generative_808));
   uCtrl.storage->load((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->load((void*)_track_output_setup, sizeof(_track_output_setup));
@@ -414,7 +436,7 @@ void Aciduino::loadSession()
 void Aciduino::saveSession()
 {
   // save session data
-  uCtrl.storage->save((void*)_generative_303, sizeof(_generative_303), EPPROM_SESSION_ADDRESS);
+  uCtrl.storage->save((void*)_generative_303, sizeof(_generative_303), _epprom_session_address);
   uCtrl.storage->save((void*)_generative_808, sizeof(_generative_808));
   uCtrl.storage->save((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->save((void*)_track_output_setup, sizeof(_track_output_setup));
@@ -422,9 +444,9 @@ void Aciduino::saveSession()
 
 uint16_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
 {
-  uint16_t pattern_address = EPRROM_PATTERN_ADDRESS + (pattern * PATTERN_TOTAL_MEM_SIZE);
+  uint16_t pattern_address = _eprrom_pattern_address + (pattern * _pattern_total_mem_size);
   if (track != -1) {
-    pattern_address += aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE * track : PATTERN_303_MEM_SIZE + (PATTERN_808_TRACK_SIZE * (track-TRACK_NUMBER_303));
+    pattern_address += aciduino.seq.is303(track) ? _pattern_303_track_size * track : _pattern_303_mem_size + (_pattern_808_track_size * (track-TRACK_NUMBER_303));
   }
   return pattern_address;
 }
@@ -443,7 +465,7 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
       
     aciduino.seq.setMute(track, true);
     aciduino.seq.clearStackNote(track);
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size), pattern_address);
     aciduino.seq.setMute(track, false);
 
     // load _mute_grid only for track?
@@ -460,12 +482,12 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     aciduino.seq.clearStackNote();
     
     // get 303 whole pattern data first
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(0), _pattern_303_mem_size, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->load((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), _pattern_808_mem_size, pattern_address+_pattern_303_mem_size);
 
     // load _mute_grid
-    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address+_pattern_303_mem_size+_pattern_808_mem_size);
     
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
@@ -485,7 +507,7 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     if (from_track != -1)
       track = from_track;
       
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE), pattern_address);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size), pattern_address);
 
     // save _mute_grid for a specific patern
     //...
@@ -493,18 +515,18 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     // saves the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
     // save 303 whole pattern data first
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(0), PATTERN_303_MEM_SIZE, pattern_address);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(0), _pattern_303_mem_size, pattern_address);
     // then 808 whole pattern data last
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), PATTERN_808_MEM_SIZE, pattern_address+PATTERN_303_MEM_SIZE);
+    uCtrl.storage->save((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), _pattern_808_mem_size, pattern_address+_pattern_303_mem_size);
     // _mute_grid data
-    uCtrl.storage->save((void *)_mute_grid, sizeof(_mute_grid), pattern_address+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void *)_mute_grid, sizeof(_mute_grid), pattern_address+_pattern_303_mem_size+_pattern_808_mem_size);
   }
 }
 
 void Aciduino::saveMuteGrid(uint8_t pattern)
 {
   // _mute_grid data
-  uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+  uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+_pattern_303_mem_size+_pattern_808_mem_size);
 }
 
 // copy current track data into same or another track pattern memory
@@ -526,7 +548,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       pastePattern(pattern, i);
     }
     // paste _mute_grid too!
-    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+PATTERN_303_MEM_SIZE+PATTERN_808_MEM_SIZE);
+    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+_pattern_303_mem_size+_pattern_808_mem_size);
     return true;
   }
 
@@ -553,7 +575,7 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       // if paste is from memory to memory
       aciduino.seq.setMute(track, true);
       aciduino.seq.clearStackNote(track);
-      memcpy(aciduino.seq.getPatternData(track), aciduino.seq.getPatternData(_copy_track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
+      memcpy(aciduino.seq.getPatternData(track), aciduino.seq.getPatternData(_copy_track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size));
       aciduino.seq.setMute(track, false);
     } else {
       // if paste is from storage to memory
@@ -566,12 +588,11 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       savePattern(pattern, track, _copy_track);
     } else {
       // if paste is from storage to storage
-      uCtrl.storage->copy(getPatternEppromAddress(_copy_pattern, _copy_track), getPatternEppromAddress(pattern, track), (aciduino.seq.is303(track) ? PATTERN_303_TRACK_SIZE : PATTERN_808_TRACK_SIZE));
+      uCtrl.storage->copy(getPatternEppromAddress(_copy_pattern, _copy_track), getPatternEppromAddress(pattern, track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size));
     }
   }
 
   return true;
-
 }
 
 /*
@@ -585,8 +606,8 @@ void Engine808::setBufferTrack(uint8_t track)
 bool Aciduino::checkEppromDataLayoutChange()
 {
   uint16_t pattern_size = 0;
-  uCtrl.storage->load((void*)&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
-  if (pattern_size == PATTERN_TOTAL_MEM_SIZE) {
+  uCtrl.storage->load((void*)&pattern_size, sizeof(pattern_size), _epprom_check_data_address);
+  if (pattern_size == _pattern_total_mem_size) {
     return false;
   } else {
     return true;
@@ -595,15 +616,15 @@ bool Aciduino::checkEppromDataLayoutChange()
 
 void Aciduino::eppromInit()
 {
-    uint16_t pattern_size = PATTERN_TOTAL_MEM_SIZE;
+    uint16_t pattern_size = _pattern_total_mem_size;
     // init epprom session/pattern memory
     // init all epprom slots to defaults
     saveSession();
-    for (uint8_t pattern=0; pattern < EPRROM_PATTERN_AVAILABLE; pattern++) {
+    for (uint8_t pattern=0; pattern < _eprrom_pattern_available; pattern++) {
       savePattern(pattern);
     }
     // mark epprom first bytes with pattern size to use as a checker for layout changes
-    uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), EPPROM_CHECK_DATA_ADDRESS);
+    uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), _epprom_check_data_address);
 }
 
 #if defined(TEENSYDUINO)
@@ -718,7 +739,7 @@ static void Aciduino::midiHandle() {
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
-static void midiHandleSync() {
+static void Aciduino::midiHandleSync() {
   if (_midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}
@@ -751,7 +772,7 @@ void handle_bpm_led(uint32_t tick)
 void onSync24Callback(uint32_t tick) 
 {
   // Send MIDI_CLOCK to external gears
-  sendMidiClock();
+  aciduino.sendMidiClock();
 #if defined(USE_BPM_LED)
   // led clock monitor
   handle_bpm_led(tick);
@@ -775,17 +796,17 @@ void onStepCallback(uint32_t step)
 // The callback function wich will be called when clock starts by using Clock.start() method.
 void onClockStart() 
 {
-  sendMidiStart();
-  aciduino.isPlaying() = true;
+  aciduino.sendMidiStart();
+  aciduino.play();
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
 void onClockStop() 
 {
-  sendMidiStop();
+  aciduino.sendMidiStop();
   // clear all tracks stack note(all floating notes off!)
   aciduino.seq.clearStackNote();
-  aciduino.isPlaying() = false;
+  aciduino.stop();
 #if defined(USE_BPM_LED)
   // force to turn bpm led off
   uCtrl.dout->write(BPM_LED, LOW);

@@ -16,7 +16,6 @@ struct SystemResources : PageComponent {
           genericOptionView("epprom", String(aciduino.getStorageSize()), line, col, selected, true);
           break;
         case 2:
-          //genericOptionView("session", String(String((EPPROM_SESSION_SIZE/(float)EEPROM.length())*100) + String("%")), line, col, selected, true);
           genericOptionView("session", String(aciduino.getSessionSize()), line, col, selected, true);
           break;
         case 3:

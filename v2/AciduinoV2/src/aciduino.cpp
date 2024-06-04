@@ -8,6 +8,14 @@ void Aciduino::init() {
   uClockSetup();
   // init the sequencer
   initSequencer();
+
+
+  // force initializatiron of mute pattern data
+  for (uint8_t i=0; i < 4; i++) {
+    for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
+      _mute_grid[i].map_808[j] = 0xFFFF;
+    }
+  }
 }
 
 static void Aciduino::run() {
@@ -140,6 +148,38 @@ static void Aciduino::nextTrack()
     _selected_track = 0;
   } else {
     ++_selected_track;
+  }
+}
+
+// 
+// Pattern Grids
+//
+// MUTE GRID
+uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice)
+{
+  // 303
+  if (aciduino.seq.is303(track)) {
+    return GET_BIT(_mute_grid[mute_pattern].map_303, track);
+  // 808
+  } else {
+    return GET_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+  }
+}
+
+uint8_t setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice)
+{
+  if (state == 0) {
+    if (seq.is303(track)) {
+      CLR_BIT(_mute_grid[mute_pattern].map_303, track);
+    } else {
+      CLR_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+    }
+  } else if (state == 1) {
+    if (seq.is303(track)) {
+      SET_BIT(_mute_grid[mute_pattern].map_303, track);
+    } else {
+      SET_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+    }
   }
 }
 

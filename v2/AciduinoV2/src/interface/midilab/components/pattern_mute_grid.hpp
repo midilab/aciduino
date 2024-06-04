@@ -26,13 +26,6 @@ struct MutePatternControl : PageComponent {
       grid_size = 2;
       // enable more complex nav by updating selector pointer of page component
       update_selector = true;
-
-      // force initializatiron of mute pattern data
-      for (uint8_t i=0; i < 4; i++) {
-        for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
-          _mute_grid[i].map_808[j] = 0xFFFF;
-        }
-      }
     }
     
     void view() {
@@ -59,13 +52,15 @@ struct MutePatternControl : PageComponent {
           
           // 303
           if (aciduino.seq.is303(j+element_index)) {
-            if (!GET_BIT(_mute_grid[i].map_303, j+element_index)) {
+            if (!aciduino.getMuteGridState(i, j+element_index)) {
               uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
             }
           // 808
           } else {
             uint8_t map_ref = (j+element_index-TRACK_NUMBER_303);
-            if (!GET_BIT(_mute_grid[i].map_808[map_ref/VOICE_MAX_SIZE_808], map_ref%VOICE_MAX_SIZE_808)) {
+            uint8_t track = (map_ref/VOICE_MAX_SIZE_808)+TRACK_NUMBER_303;
+            uint8_t voice = map_ref%VOICE_MAX_SIZE_808;
+            if (!aciduino.getMuteGridState(i, track, voice)) {
               uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
             }
           }
@@ -153,18 +148,18 @@ struct MutePatternControl : PageComponent {
       uint8_t pattern = selected_line-1;
       if (data == INCREMENT) {
         if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-          SET_BIT(_mute_grid[pattern].map_303, aciduino.getSelectedTrack());
+          aciduino.setMuteGridState(pattern, 1, aciduino.getSelectedTrack());
         } else {
-          SET_BIT(_mute_grid[pattern].map_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303], (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
+          aciduino.setMuteGridState(pattern, 1, aciduino.getSelectedTrack(), (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
         }
         // selected is same as current? update tracks mute state
         if (pattern == current_pattern)
           changePattern(current_pattern);
       } else if (data == DECREMENT) {
         if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-          CLR_BIT(_mute_grid[pattern].map_303, aciduino.getSelectedTrack());
+          aciduino.setMuteGridState(pattern, 0, aciduino.getSelectedTrack());
         } else {
-          CLR_BIT(_mute_grid[pattern].map_808[aciduino.getSelectedTrack()-TRACK_NUMBER_303], (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
+          aciduino.setMuteGridState(pattern, 0, aciduino.getSelectedTrack(), (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
         }
         if (pattern == current_pattern)
           changePattern(current_pattern);
@@ -188,13 +183,13 @@ struct MutePatternControl : PageComponent {
     void changePattern(uint8_t pattern) {
       // apply mute schema to 303s
       for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
-        aciduino.seq.setMute(i, !GET_BIT(_mute_grid[pattern].map_303, i));
+        aciduino.seq.setMute(i, !aciduino.getMuteGridState(pattern, i));
       }
 
       // apply mute schema to 808s
       for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
         for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
-          aciduino.seq.setMute(i+TRACK_NUMBER_303, j, !GET_BIT(_mute_grid[pattern].map_808[i], j));
+          aciduino.seq.setMute(i+TRACK_NUMBER_303, j, !aciduino.getMuteGridState(pattern, i+TRACK_NUMBER_303, j));
         }
       }
     }
@@ -203,15 +198,15 @@ struct MutePatternControl : PageComponent {
     {
       if (aciduino.seq.is303(track)) {
         if (aciduino.seq.getMute(track)) {
-          CLR_BIT(_mute_grid[current_pattern].map_303, track);
+          aciduino.setMuteGridState(current_pattern, 0, track);
         } else {
-          SET_BIT(_mute_grid[current_pattern].map_303, track);
+          aciduino.setMuteGridState(current_pattern, 1, track);
         }
       } else {
         if (aciduino.seq.getMute(track, aciduino.seq.getTrackVoice(track))) {
-          CLR_BIT(_mute_grid[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+          aciduino.setMuteGridState(current_pattern, 0, track, voice);
         } else {
-          SET_BIT(_mute_grid[current_pattern].map_808[track-TRACK_NUMBER_303], voice);
+          aciduino.setMuteGridState(current_pattern, 1, track, voice);
         }
         // update to selected voice too
         selected_mute_chn = voice;

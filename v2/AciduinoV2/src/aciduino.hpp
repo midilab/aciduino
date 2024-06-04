@@ -131,6 +131,11 @@ public:
   uint8_t getMidiRecPort() { return _midi_rec_port; }
   void setMidiRecPort(uint8_t port) { ATOMIC(_midi_rec_port = port) }
 
+  // pattern grids
+  // mute
+  uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice = 0);
+  uint8_t setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice = 0);
+
   // generative data accessors
   uint8_t getGenerativeParam(uint8_t param, int8_t track = -1);
   void setGenerativeParam(uint8_t param, uint8_t data, int8_t track = -1);
@@ -170,7 +175,7 @@ private:
 
   // output handlers
   void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
-  void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port)
+  void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port);
 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];

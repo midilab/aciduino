@@ -65,13 +65,13 @@ void Aciduino::uClockSetup()
   uClock.init();
   
   // Set the callback function for the step sequencer on 96PPQN and for step sequencer feature
-  uClock.setOnPPQN(onPPQNCallback);
-  uClock.setOnStep(onStepCallback);
+  uClock.setOnPPQN(Aciduino::onPPQNCallback);
+  uClock.setOnStep(Aciduino::onStepCallback);
   // Set the callback function for the clock output to send MIDI Sync message.
-  uClock.setOnSync24(onSync24Callback);
+  uClock.setOnSync24(Aciduino::onSync24Callback);
   // Set the callback function for MIDI Start and Stop messages.
-  uClock.setOnClockStart(onClockStart);  
-  uClock.setOnClockStop(onClockStop);
+  uClock.setOnClockStart(Aciduino::onClockStart);  
+  uClock.setOnClockStop(Aciduino::onClockStop);
   
   // Set the clock BPM to 126 BPM
   uClock.setTempo(126);
@@ -123,9 +123,9 @@ uint16_t Aciduino::getStorageSize() {
 static void Aciduino::playStop()
 {
   if (aciduino.isPlaying())
-    stop();
+    aciduino.stop();
   else
-    play();
+    aciduino.play();
 }
 
 void Aciduino::play()
@@ -147,19 +147,19 @@ static void Aciduino::recToggle()
 
 static void Aciduino::previousTrack()
 {
-  if (_selected_track == 0) {
-    _selected_track = aciduino.seq.getTrackNumber() - 1;
+  if (aciduino._selected_track == 0) {
+    aciduino._selected_track = aciduino.seq.getTrackNumber() - 1;
   } else {
-    --_selected_track;
+    --aciduino._selected_track;
   }
 }
 
 static void Aciduino::nextTrack()
 {
-  if (_selected_track == aciduino.seq.getTrackNumber() - 1) {
-    _selected_track = 0;
+  if (aciduino._selected_track == aciduino.seq.getTrackNumber() - 1) {
+    aciduino._selected_track = 0;
   } else {
-    ++_selected_track;
+    ++aciduino._selected_track;
   }
 }
 
@@ -648,11 +648,11 @@ int Aciduino::freeRam ()
 #endif
 
 // used by aciduino.seq object as callback to spill data out
-void Aciduino::sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
+static void Aciduino::sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
 {
-  switch(_track_output_setup[track].output) {
+  switch(aciduino._track_output_setup[track].output) {
     case MIDI_OUTPUT:
-      midiSequencerOutHandler(msg_type, note, velocity, _track_output_setup[track].channel, _track_output_setup[track].port);
+      aciduino.midiSequencerOutHandler(msg_type, note, velocity, aciduino._track_output_setup[track].channel, aciduino._track_output_setup[track].port);
       break;
     case CV_OUTPUT:
       // soon boy...
@@ -700,7 +700,7 @@ static void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg
     //  
     case uctrl::protocol::midi::NoteOn:
     case uctrl::protocol::midi::NoteOff:
-      aciduino.seq.input(_selected_track, msg->type == uctrl::protocol::midi::NoteOn ? NOTE_ON : NOTE_OFF, msg->data1, msg->data2, interrupted);
+      aciduino.seq.input(aciduino._selected_track, msg->type == uctrl::protocol::midi::NoteOn ? NOTE_ON : NOTE_OFF, msg->data1, msg->data2, interrupted);
       break;
 
     //
@@ -735,25 +735,20 @@ static void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg
 static void Aciduino::midiHandle() {
   //while (uCtrl.midi->read(2)) {
   //}
-  uCtrl.midi->read(_midi_rec_port, 1);
+  uCtrl.midi->read(aciduino._midi_rec_port, 1);
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
 static void Aciduino::midiHandleSync() {
-  if (_midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
+  if (aciduino._midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}
-    uCtrl.midi->read(_midi_clock_port, 1);
+    uCtrl.midi->read(aciduino._midi_clock_port, 1);
   }
 }
 
-//
-// clock schema setup
-//
-uint8_t _bpm_blink_timer = 1;
-
 #if defined(USE_BPM_LED)
-void handle_bpm_led(uint32_t tick)
+void Aciduino::handle_bpm_led(uint32_t tick)
 {
   // BPM led indicator
   if ( !(tick % (96)) || (tick == 1) ) {  // first compass step will flash longer
@@ -769,7 +764,7 @@ void handle_bpm_led(uint32_t tick)
 #endif
 
 // keep gears synced on 24PPQN resolution
-void onSync24Callback(uint32_t tick) 
+static void Aciduino::onSync24Callback(uint32_t tick) 
 {
   // Send MIDI_CLOCK to external gears
   aciduino.sendMidiClock();
@@ -780,28 +775,28 @@ void onSync24Callback(uint32_t tick)
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-void onPPQNCallback(uint32_t tick) 
+static void Aciduino::onPPQNCallback(uint32_t tick) 
 {
   // sequencer tick
   aciduino.seq.on96PPQN(tick);
 }
 
 // The callback function wich will be called by uClock each new step event time
-void onStepCallback(uint32_t step) 
+static void Aciduino::onStepCallback(uint32_t step) 
 {
   // sequencer tick
   aciduino.seq.onStep(step, uClock.getShuffleLength());
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
-void onClockStart() 
+static void Aciduino::onClockStart() 
 {
   aciduino.sendMidiStart();
   aciduino.play();
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
-void onClockStop() 
+static void Aciduino::onClockStop() 
 {
   aciduino.sendMidiStop();
   // clear all tracks stack note(all floating notes off!)

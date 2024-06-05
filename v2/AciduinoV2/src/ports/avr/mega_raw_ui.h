@@ -25,6 +25,7 @@ void initPort()
   //
   uCtrl.initDin();
   uCtrl.din->plug(/* uc_din_pin */);
+
   // set callback for ain data input
   uCtrl.din->setCallback(dinHandle);
 

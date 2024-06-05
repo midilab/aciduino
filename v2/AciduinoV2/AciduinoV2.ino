@@ -42,6 +42,7 @@
 //#include "src/ports/teensy/uone.h"
 #include "src/ports/avr/midilab_mega.h"
 //#include "src/ports/avr/mega_raw_ui.h"
+//#include "src/ports/avr/afourtrackmind_mega.h"
 
 void setup() {
   // inits all hardware setup for the selected port

@@ -180,8 +180,16 @@ private:
   bool checkEppromDataLayoutChange();
 
   // output handlers
-  void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
+  static void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
   void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port);
+
+  // uclock callback handlers
+  void handle_bpm_led(uint32_t tick);
+  static void onSync24Callback(uint32_t tick);
+  static void onPPQNCallback(uint32_t tick);
+  static void onStepCallback(uint32_t step);
+  static void onClockStart();
+  static void onClockStop();
 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
@@ -200,6 +208,9 @@ private:
   // state
   bool _playing = false;
   uint8_t _selected_track = 0;
+
+  // uclock
+  uint8_t _bpm_blink_timer = 1;
 
   //
   // midi handling

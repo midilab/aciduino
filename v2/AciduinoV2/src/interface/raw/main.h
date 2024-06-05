@@ -10,7 +10,7 @@ void mainLoop()
   // uint8_t voice = 0;
   //aciduino.seq.setTrackVoice(track, voice);
   // returns if the step/voice is on or off state
-  //aciduino.seq.stepOn(track, step, voice)
+  //aciduino.seq.stepOn(track, step)
   
   // display updates...
   // any output feedback update...

@@ -2,6 +2,12 @@
 #include "../../aciduino.hpp"
 #include "../../interface/raw/main.h"
 
+// only 808 interface
+// Start by configuring sequencer/setup.h
+// 0x 303 and 1x 808 to get start
+// 4 voices for 808
+// global or per voice accent?
+
 //============================================
 // Managed Devices Setup
 //============================================

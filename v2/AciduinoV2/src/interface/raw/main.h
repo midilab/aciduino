@@ -62,20 +62,20 @@ void ainHandle(uint8_t control_id, uint16_t value, uint8_t subpage)
   // direct access to analog inputs reads
   switch (control_id) {
     case 0:
-      // aciduino.sendMidiCC(CC, value)
-      aciduino.sendMidiCC(40, value);
+      // aciduino.sendMidiCC(CC, value, channel, port)
+      aciduino.sendMidiCC(40, value, 0, 0);
       break;
     case 1:
-      aciduino.sendMidiCC(41, value);
+      aciduino.sendMidiCC(41, value, 0, 0);
       break;
     case 2:
-      aciduino.sendMidiCC(42, value);
+      aciduino.sendMidiCC(42, value, 0, 0);
       break;
     case 3:
-      aciduino.sendMidiCC(43, value);
+      aciduino.sendMidiCC(43, value, 0, 0);
       break;
     case 4:
-      aciduino.sendMidiCC(44, value);
+      aciduino.sendMidiCC(44, value, 0, 0);
       break;
     default:
       break;

@@ -206,10 +206,11 @@ private:
   int8_t _copy_track = -1;
 
   // state
-  bool _playing = false;
+  uint8_t _playing = 0;
   uint8_t _selected_track = 0;
 
   // uclock
+  uint8_t _bpm_port = 0;
   uint8_t _bpm_blink_timer = 1;
 
   //

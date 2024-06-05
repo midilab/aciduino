@@ -9,7 +9,6 @@ void Aciduino::init() {
   // init the sequencer
   initSequencer();
 
-
   // force initializatiron of mute pattern data
   for (uint8_t i=0; i < 4; i++) {
     for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
@@ -131,13 +130,11 @@ static void Aciduino::playStop()
 void Aciduino::play()
 {
   uClock.start();
-  _playing = true;
 }
 
 void Aciduino::stop()
 {
   uClock.stop();
-  _playing = false;
 }
 
 static void Aciduino::recToggle()
@@ -792,7 +789,7 @@ static void Aciduino::onStepCallback(uint32_t step)
 static void Aciduino::onClockStart() 
 {
   aciduino.sendMidiStart();
-  aciduino.play();
+  aciduino._playing = 1;
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
@@ -801,7 +798,7 @@ static void Aciduino::onClockStop()
   aciduino.sendMidiStop();
   // clear all tracks stack note(all floating notes off!)
   aciduino.seq.clearStackNote();
-  aciduino.stop();
+  aciduino._playing = 0;
 #if defined(USE_BPM_LED)
   // force to turn bpm led off
   uCtrl.dout->write(BPM_LED, LOW);

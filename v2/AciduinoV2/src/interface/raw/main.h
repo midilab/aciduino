@@ -6,8 +6,11 @@ void mainLoop()
   // read sequencer states and feedback info to the user
 
   // fastLed updates...
+  // select the voice to view step data
+  // uint8_t voice = 0;
+  //aciduino.seq.setTrackVoice(track, voice);
   // returns if the step/voice is on or off state
-  // aciduino.seq.stepOn(track, step, voice)
+  //aciduino.seq.stepOn(track, step, voice)
   
   // display updates...
   // any output feedback update...
@@ -37,8 +40,10 @@ void dinHandle(uint8_t control_id, uint16_t value, uint8_t subpage)
         uint16_t step = control_id;
         uint8_t track = aciduino.getSelectedTrack();
         uint8_t voice = 0;
+        // select the voice to control
+        aciduino.seq.setTrackVoice(track, voice);
         // toggles step on/off: rest(track, step, state)
-        aciduino.seq.rest(track, step, aciduino.seq.stepOn(track, step), voice);
+        aciduino.seq.rest(track, step, aciduino.seq.stepOn(track, step));
       }
       break;
     case 17:

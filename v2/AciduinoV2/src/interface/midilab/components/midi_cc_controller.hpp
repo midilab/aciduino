@@ -1,5 +1,3 @@
-#include "shared_gui_funcs.hpp"
-
 // generic controler for 303 and 808 devices
 typedef struct
 {
@@ -227,7 +225,7 @@ struct MidiCCControl : PageComponent {
     void updateControlMap() {
       // update track control reference for pot map global
       for (uint8_t i=0; i < 16; i++) {
-        uint8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, i);
+        int8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, i);
         if (ctrl != -1) {
           uint8_t track = aciduino.getMidiControlParam(MIDI_TRACK, i);
           if (track < TRACK_NUMBER_303) {
@@ -255,8 +253,9 @@ void midiControllerHandle(uint8_t port, uint16_t value) {
   midiControllerComponent.learnCtrl(port);
   
   // anything into global learn map table?
-  uint8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, port);
+  int8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, port);
   uint8_t track = aciduino.getMidiControlParam(MIDI_TRACK, port);
+
   if (ctrl != -1) {
     midiControllerComponent.sendCCData((int16_t)value, ctrl, track, 0);
   } else {

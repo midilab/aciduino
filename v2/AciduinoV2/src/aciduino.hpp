@@ -56,8 +56,8 @@ typedef enum {
 // for global learn feature to keep track of controls setup by user
 typedef struct
 {
-    int8_t ctrl = -1;
-    uint8_t track;
+  int8_t ctrl = -1;
+  uint8_t track;
 } MIDI_CTRL_GLOBAL_MAP;
 
 typedef enum {
@@ -174,11 +174,6 @@ private:
   void uClockSetup();
   void storageSetup();
 
-  // session and storage
-  void eppromInit();
-  uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
-  bool checkEppromDataLayoutChange();
-
   // output handlers
   static void sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
   void midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t byte2, uint8_t channel, uint8_t port);
@@ -191,10 +186,14 @@ private:
   static void onClockStart();
   static void onClockStop();
 
+  // session and storage
+  void eppromInit();
+  uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
+  bool checkEppromDataLayoutChange();
+
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
 
-  // todo: make private, create acessors and modify usage 
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
   volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
   MUTE_PATTERN _mute_grid[4];

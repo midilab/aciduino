@@ -24,7 +24,7 @@ void initPort()
   // DIN Module
   //
   // initDin(spi_device, latch_pin)
-  uCtrl.initDin(&SPI, 12);
+  uCtrl.initDin(&SPI, 8);
   // how many 165 shiftregisters to connect?
   uCtrl.din->plugSR(12);
 
@@ -41,7 +41,7 @@ void initPort()
   // AIN Module
   //
   uCtrl.initAin();
-  uCtrl.din->plug(/* uc_ain_pin */);
+  //uCtrl.din->plug(/* uc_ain_pin */);
   // set callback for ain data input
   uCtrl.ain->setCallback(ainHandle);
 

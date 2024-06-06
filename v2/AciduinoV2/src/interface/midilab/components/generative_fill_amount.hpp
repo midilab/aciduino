@@ -10,7 +10,6 @@ struct TrackFill : PageComponent {
     }
 
     void change(int16_t data) {
-      //clearStackNote(aciduino.getSelectedTrack());
       data = parseData(data, 1, 100, aciduino.getGenerativeParam(GENERATIVE_FILL));
       aciduino.setGenerativeParam(GENERATIVE_FILL, data);
     }

@@ -147,7 +147,7 @@ void Aciduino::previousTrack()
   if (aciduino._selected_track == 0) {
     aciduino._selected_track = aciduino.seq.getTrackNumber() - 1;
   } else {
-    --aciduino._selected_track;
+    aciduino._selected_track -= 1;
   }
 }
 
@@ -156,7 +156,7 @@ void Aciduino::nextTrack()
   if (aciduino._selected_track == aciduino.seq.getTrackNumber() - 1) {
     aciduino._selected_track = 0;
   } else {
-    ++aciduino._selected_track;
+    aciduino._selected_track += 1;
   }
 }
 
@@ -220,36 +220,47 @@ void Aciduino::generatePattern(int8_t track)
 uint8_t Aciduino::getGenerativeParam(uint8_t param, int8_t track)
 {
   uint8_t track_change = track;
+  uint8_t value = 0;
   if (track == -1)
     track_change = _selected_track;
 
   // TODO: make it array idx safe access between 303 and 808 state access
   switch (param) {
     case GENERATIVE_FILL:
-      if (seq.is303(track)) 
-        return _generative_303[track_change].generative_fill;
+      if (seq.is303(track_change)) 
+        value = _generative_303[track_change].generative_fill;
       else
-        return _generative_808[track_change-TRACK_NUMBER_303].generative_fill; 
+        value = _generative_808[track_change-TRACK_NUMBER_303].generative_fill; 
+      break;
     case GENERATIVE_ACCENT:
-      if (seq.is303(track)) 
-        return _generative_303[track_change].accent_probability;
+      if (seq.is303(track_change)) 
+        value = _generative_303[track_change].accent_probability;
       else
-        return _generative_808[track_change-TRACK_NUMBER_303].accent_probability; 
+        value = _generative_808[track_change-TRACK_NUMBER_303].accent_probability; 
+      break;
     case GENERATIVE_SLIDE:
-      return _generative_303[track_change].slide_probability;
+      value = _generative_303[track_change].slide_probability;
+      break;
     case GENERATIVE_TIE:
-      return _generative_303[track_change].tie_probability;
+      value = _generative_303[track_change].tie_probability;
+      break;
     case GENERATIVE_LOWER_OCTAVE:
-      return _generative_303[track_change].lower_octave;
+      value = _generative_303[track_change].lower_octave;
+      break;
     case GENERATIVE_RANGE_OCTAVE:
-      return _generative_303[track_change].range_octave;
+      value = _generative_303[track_change].range_octave;
+      break;
     case GENERATIVE_NUM_TONES:
-      return _generative_303[track_change].number_of_tones;
+      value = _generative_303[track_change].number_of_tones;
+      break;
     case GENERATIVE_ROLL:
-      return _generative_808[track_change-TRACK_NUMBER_303].roll_probability; 
+      value = _generative_808[track_change-TRACK_NUMBER_303].roll_probability; 
+      break;
     default:
       break;
   }
+
+  return value;
 }
 
 void Aciduino::setGenerativeParam(uint8_t param, uint8_t data, int8_t track)
@@ -258,16 +269,15 @@ void Aciduino::setGenerativeParam(uint8_t param, uint8_t data, int8_t track)
   if (track == -1)
     track_change = _selected_track;
 
-  // TODO: make it array idx safe access between 303 and 808 state access
   switch (param) {
     case GENERATIVE_FILL:
-      if (aciduino.seq.is303(track_change))
+      if (seq.is303(track_change))
         _generative_303[track_change].generative_fill = data;
       else
         _generative_808[track_change-TRACK_NUMBER_303].generative_fill = data;
       break;
     case GENERATIVE_ACCENT:
-      if (aciduino.seq.is303(track_change))
+      if (seq.is303(track_change))
         _generative_303[track_change].accent_probability = data;
       else
         _generative_808[track_change-TRACK_NUMBER_303].accent_probability = data;

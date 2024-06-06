@@ -17,6 +17,7 @@
 //#define USE_TRANSPORT_BUTTON
 
 #define USE_MIDI1
+#define USE_SERIAL_MIDI_115200
 #define USE_MIDI2
 //#define USE_MIDI3
 //#define USE_MIDI4
@@ -166,6 +167,10 @@ void initPort()
   //
   uCtrl.initMidi();
   uCtrl.midi->plug(&MIDI1);
+  #if defined(USE_SERIAL_MIDI_115200)
+  // forces MidiInterface back to 115200
+  Serial.begin(115200);
+  #endif
   uCtrl.midi->plug(&MIDI2);
   //uCtrl.midi->plug(&MIDI3);
   //uCtrl.midi->plug(&MIDI4);

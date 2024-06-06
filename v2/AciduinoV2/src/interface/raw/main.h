@@ -35,7 +35,6 @@ void dinHandle(uint8_t control_id, uint16_t value, uint8_t subpage)
     case 13:
     case 14:
     case 15:
-    case 16:
       if (value == HIGH) {
         uint16_t step = control_id;
         uint8_t track = aciduino.getSelectedTrack();
@@ -46,7 +45,7 @@ void dinHandle(uint8_t control_id, uint16_t value, uint8_t subpage)
         aciduino.seq.rest(track, step, aciduino.seq.stepOn(track, step));
       }
       break;
-    case 17:
+    case 16:
       if (value == HIGH) {
         // toggles playStop state
         aciduino.playStop();

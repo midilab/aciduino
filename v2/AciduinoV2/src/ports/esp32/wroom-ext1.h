@@ -130,9 +130,6 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI3);
 // the main interface choice
 #include "../../interface/midilab/main.h"
 
-// esp32 ble midi connection status
-//uint8_t _ble_midi_connected = 0;
-
 void initPort() {
   //
   // OLED setup

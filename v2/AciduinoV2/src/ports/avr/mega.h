@@ -19,6 +19,7 @@
 //#define INVERT_POT_READ
 
 #define USE_MIDI1
+//#define USE_SERIAL_MIDI_115200
 #define USE_MIDI2
 //#define USE_MIDI3
 //#define USE_MIDI4
@@ -89,11 +90,10 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI2);
 //#define PUSH_SPI          SPI
 //#define LED_SPI           SPI
 
+// the main interface choice
+#include "../../interface/midilab/main.h"
 
-// esp32 ble midi connection status
-uint8_t _ble_midi_connected = 0;
-
-void uCtrlSetup() {
+void initPort() {
   //
   // OLED setup
   //
@@ -101,20 +101,16 @@ void uCtrlSetup() {
 #if defined(FLIP_DISPLAY)
   uCtrl.oled->flipDisplay(1);
 #endif
-  uCtrl.oled->print("booting", 4, 1);
-  uCtrl.oled->print("please wait...", 5, 1);
 
   //
   // Storage setup
   //
-  uCtrl.oled->print(">init storage...", 8, 1);
   uCtrl.initStorage();
   //uCtrl.initStorage(&STORAGE_SPI, 7);
 
   //
   // DIN Module
   //
-  uCtrl.oled->print(">init din...", 8, 1);
 #if defined(USE_PUSH_8) || defined(USE_PUSH_24) || defined(USE_PUSH_32)
   // going with shiftregister and SPI?
   uCtrl.initDin(&PUSH_SPI, PUSH_LATCH_PIN);
@@ -176,22 +172,9 @@ void uCtrlSetup() {
   uCtrl.din->encoder(ENCODER_DEC, ENCODER_INC);
 #endif
 
-// little hack to make the shift protoboard work, ground our gnd button pin -2 related to button pin to avoid floating noises around...
-#if defined(USE_TEENSY_PROTOBOARD_HACKS)
-  pinMode(NAV_SHIFT_PIN-2, OUTPUT);
-  digitalWrite(NAV_SHIFT_PIN-2, LOW);
-#if defined(USE_TRANSPORT_BUTTON)
-  // in case transport button
-  pinMode(TRANSPORT_BUTTON_1_PIN-2, OUTPUT);
-  digitalWrite(TRANSPORT_BUTTON_1_PIN-2, LOW);
-#endif
-#endif
-
   //
   // DOUT Module
   //
-  uCtrl.oled->print(">init dout...", 8, 1);
-
 #if defined(USE_LED_8) || defined(USE_LED_24)
   uCtrl.initDout(&LED_SPI, LED_LATCH_PIN);
 #else
@@ -212,15 +195,15 @@ void uCtrlSetup() {
   //
   // AIN Module
   //
-  uCtrl.oled->print(">init ain...", 8, 1);
 #if defined(USE_POT_8) || defined(USE_POT_16)
-
   uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
 
 #if defined(USE_CHANGER_POT)
   uCtrl.ain->plug(CHANGER_POT_PIN);
 #endif
+
   uCtrl.ain->plugMux(POT_MUX_COMM1);
+
 #if defined(USE_POT_16)
   uCtrl.ain->plugMux(POT_MUX_COMM2);
 #endif
@@ -230,7 +213,6 @@ void uCtrlSetup() {
 
 // else > no POT on mux
 #else
-
   uCtrl.initAin();
 
 #if defined(USE_CHANGER_POT)
@@ -264,64 +246,23 @@ void uCtrlSetup() {
   uCtrl.ain->plug(POT_MICRO_8_PIN);
 #endif
 
-
   // get a global entry point for our midi pot controllers
   uCtrl.ain->setCallback(midiControllerHandle);
 #endif
 
 #if defined(INVERT_POT_READ)
-  // our aciduino v2 protoboard can only connect with vcc and gnd swaped, lets inform that to uctrl ain driver
   uCtrl.ain->invertRead(true);
 #endif
 
-#if defined(USE_TEENSY_PROTOBOARD_HACKS)
-  // little hack to make the pot on aciduino protoboard work, ground our gnd pot pin 22 to avoid floating noises around...
-  pinMode(22, OUTPUT);
-  digitalWrite(22, LOW);
-#endif
   // raise the average reads for pot for better stability
   uCtrl.ain->setAvgReads(8);
 
 #endif // if defined(USE_POT_8) || defined(USE_POT_16) > else
 
   //
-  // Capacitive Touch Module
-  //
-#if defined(USE_TOUCH_32)
-  uCtrl.oled->print(">init ctouch...", 8, 1);
-  uCtrl.initCapTouch(TOUCH_CTRL_PIN1, TOUCH_CTRL_PIN2, TOUCH_CTRL_PIN3, TOUCH_CTRL_PIN4);
-  uCtrl.touch->setThreshold(TOUCH_TRESHOLD);
-  uCtrl.touch->plug(TOUCH_MUX_COMM1);
-  uCtrl.touch->plug(TOUCH_MUX_COMM2);
-#endif
-
-  //
   // MIDI Module
   //
-  uCtrl.oled->print(">init midi...", 8, 1);
   uCtrl.initMidi();
-
-  // ESP32 related
-#if defined(CONFIG_TINYUSB_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
-  // initing esp32nativeusbmidi
-  espNativeUsbMidi.begin();
-  // initing USB device
-  USB.productName("aciduinov2");
-  USB.begin();
-#endif
-#if defined(USE_BT_MIDI_ESP32) && defined(USE_MIDI2) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
-
-  BLEMIDI2.setHandleConnected([]() {
-    //uCtrl.dout->write(BPM_LED, HIGH, 0);
-    _ble_midi_connected = 1;
-  });
-  
-  BLEMIDI2.setHandleDisconnected([]() {
-    //uCtrl.dout->write(BPM_LED, LOW, 0);
-    _ble_midi_connected = 0;
-  });
-#endif
-
   // Plugin MIDI interfaces to handle
 #if defined(USE_MIDI1)
   uCtrl.midi->plug(&MIDI1);
@@ -339,12 +280,12 @@ void uCtrlSetup() {
 #if defined(USE_MIDI4)
   uCtrl.midi->plug(&MIDI4);
 #endif
-  uCtrl.midi->setMidiInputCallback(midiInputHandler);
+  uCtrl.midi->setMidiInputCallback(Aciduino::midiInputHandler);
   // uCtrl realtime deals
   // process midi at 250 microseconds speed
-  uCtrl.setOn250usCallback(midiHandleSync);
+  uCtrl.setOn250usCallback(Aciduino::midiHandleSync);
   // process midi input at 1ms speed
-  uCtrl.setOn1msCallback(midiHandle);
+  uCtrl.setOn1msCallback(Aciduino::midiHandle);
 
   //
   // SdCard Module
@@ -372,17 +313,17 @@ void uCtrlSetup() {
 #endif
   // hook button callback setup
   // previous track
-  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, previousTrack);
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, Aciduino::previousTrack);
   // next track
-  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, nextTrack);
+  uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_2, Aciduino::nextTrack);
 
   // transport play/stop and shifted rec on/off
 #if defined(USE_TRANSPORT_BUTTON)
-  uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, playStop);
-  uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, recToggle);
+  uCtrl.page->setCtrlAction(TRANSPORT_BUTTON_1, Aciduino::playStop);
+  uCtrl.page->setShiftCtrlAction(TRANSPORT_BUTTON_1, Aciduino::recToggle);
 #elif defined(USE_PUSH_8) || defined(USE_PUSH_16) || defined(USE_PUSH_32)
-  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, playStop);
-  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, recToggle);
+  uCtrl.page->setCtrlAction(SELECTOR_BUTTON_8, Aciduino::playStop);
+  uCtrl.page->setShiftCtrlAction(SELECTOR_BUTTON_8, Aciduino::recToggle);
 #endif
 
   // bottom bar for f1 and f2 functions draw function
@@ -396,4 +337,8 @@ void uCtrlSetup() {
 
   // default page to call at init
   uCtrl.page->setPage(0);
+
+  // sequencer parameters could be initialized here?
+  // how many 303 tracks? 808 tracks? 
+  aciduino.init();
 }

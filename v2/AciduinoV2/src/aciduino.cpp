@@ -17,7 +17,7 @@ void Aciduino::init() {
   }
 }
 
-static void Aciduino::run() {
+void Aciduino::run() {
   // let uCtrl do his job
   uCtrl.run();
 }
@@ -119,7 +119,7 @@ uint16_t Aciduino::getStorageSize() {
 //
 // Main interface
 //
-static void Aciduino::playStop()
+void Aciduino::playStop()
 {
   if (aciduino.isPlaying())
     aciduino.stop();
@@ -137,12 +137,12 @@ void Aciduino::stop()
   uClock.stop();
 }
 
-static void Aciduino::recToggle()
+void Aciduino::recToggle()
 {
   aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());
 }
 
-static void Aciduino::previousTrack()
+void Aciduino::previousTrack()
 {
   if (aciduino._selected_track == 0) {
     aciduino._selected_track = aciduino.seq.getTrackNumber() - 1;
@@ -151,7 +151,7 @@ static void Aciduino::previousTrack()
   }
 }
 
-static void Aciduino::nextTrack()
+void Aciduino::nextTrack()
 {
   if (aciduino._selected_track == aciduino.seq.getTrackNumber() - 1) {
     aciduino._selected_track = 0;
@@ -386,7 +386,7 @@ void Aciduino::sendMidiStop() {
 }
 
 // this is used inside interruption and outside, controlled by interrupted var
-void Aciduino::sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0) {
+void Aciduino::sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted) {
   if (interrupted) {
     msg_interrupt_pots.type = uctrl::protocol::midi::ControlChange;
     msg_interrupt_pots.data1 = cc;
@@ -645,7 +645,7 @@ int Aciduino::freeRam ()
 #endif
 
 // used by aciduino.seq object as callback to spill data out
-static void Aciduino::sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
+void Aciduino::sequencerOutHandler(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)
 {
   switch(aciduino._track_output_setup[track].output) {
     case MIDI_OUTPUT:
@@ -670,7 +670,7 @@ void Aciduino::midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t 
 }
 
 // All midi interface registred thru uCtrl get incomming data thru this callback
-static void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
+void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {
   if ( uClock.getMode() == uClock.EXTERNAL_CLOCK ) {
     // external tempo control
@@ -729,14 +729,14 @@ static void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg
 }
 
 // a port to read midi notes 1ms
-static void Aciduino::midiHandle() {
+void Aciduino::midiHandle() {
   //while (uCtrl.midi->read(2)) {
   //}
   uCtrl.midi->read(aciduino._midi_rec_port, 1);
 }
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
-static void Aciduino::midiHandleSync() {
+void Aciduino::midiHandleSync() {
   if (aciduino._midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}
@@ -761,7 +761,7 @@ void Aciduino::handle_bpm_led(uint32_t tick)
 #endif
 
 // keep gears synced on 24PPQN resolution
-static void Aciduino::onSync24Callback(uint32_t tick) 
+void Aciduino::onSync24Callback(uint32_t tick) 
 {
   // Send MIDI_CLOCK to external gears
   aciduino.sendMidiClock();
@@ -772,28 +772,28 @@ static void Aciduino::onSync24Callback(uint32_t tick)
 }
 
 // The callback function wich will be called by uClock each Pulse of 96PPQN clock resolution.
-static void Aciduino::onPPQNCallback(uint32_t tick) 
+void Aciduino::onPPQNCallback(uint32_t tick) 
 {
   // sequencer tick
   aciduino.seq.on96PPQN(tick);
 }
 
 // The callback function wich will be called by uClock each new step event time
-static void Aciduino::onStepCallback(uint32_t step) 
+void Aciduino::onStepCallback(uint32_t step) 
 {
   // sequencer tick
   aciduino.seq.onStep(step, uClock.getShuffleLength());
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
-static void Aciduino::onClockStart() 
+void Aciduino::onClockStart() 
 {
   aciduino.sendMidiStart();
   aciduino._playing = 1;
 }
 
 // The callback function wich will be called when clock stops by using Clock.stop() method.
-static void Aciduino::onClockStop() 
+void Aciduino::onClockStop() 
 {
   aciduino.sendMidiStop();
   // clear all tracks stack note(all floating notes off!)

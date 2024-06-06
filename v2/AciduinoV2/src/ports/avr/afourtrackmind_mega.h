@@ -34,22 +34,22 @@ void initPort()
   // how many 165 shiftregisters to connect?
   uCtrl.din->plugSR(12);
 
-  // set callback for ain data input
+  // set callback for din data input
   uCtrl.din->setCallback(dinHandle);
 
   //
   // DOUT Module
   //
-  uCtrl.initDout();
+  //uCtrl.initDout();
   //uCtrl.dout->plugFastLed(&fastled);
 
   //
   // AIN Module
   //
-  uCtrl.initAin();
+  //uCtrl.initAin();
   //uCtrl.din->plug(/* uc_ain_pin */);
   // set callback for ain data input
-  uCtrl.ain->setCallback(ainHandle);
+  //uCtrl.ain->setCallback(ainHandle);
 
   //
   // MIDI Module

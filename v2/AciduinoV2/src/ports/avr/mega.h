@@ -1,5 +1,7 @@
 #include "../../uCtrl/uCtrl.h"
 
+#include "../../aciduino.hpp"
+
 //============================================
 // Aciduino Features Setup
 //============================================

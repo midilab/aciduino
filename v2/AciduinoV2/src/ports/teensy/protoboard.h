@@ -284,10 +284,6 @@ void initPort() {
   // Plugin MIDI interfaces to handle
 #if defined(USE_MIDI1)
   uCtrl.midi->plug(&MIDI1);
-  #if defined(USE_SERIAL_MIDI_115200)
-  // forces MidiInterface back to 115200
-  Serial.begin(115200);
-  #endif
 #endif
 #if defined(USE_MIDI2)
   uCtrl.midi->plug(&MIDI2);

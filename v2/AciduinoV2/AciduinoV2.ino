@@ -2,7 +2,7 @@
  *  @file       AciduinoV2.ino
  *  Project     Aciduino V2
  *  @brief      Roland 303 and 808 step sequencer clone
- *  @version    2.1.0
+ *  @version    2.2.0
  *  @author     Romulo Silva
  *  @date       11/01/22
  *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co

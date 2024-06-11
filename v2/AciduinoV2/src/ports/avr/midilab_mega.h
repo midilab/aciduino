@@ -39,8 +39,8 @@
 //============================================
 
 // going to use changer encoder?
-#define NAV_ENCODER_DEC_PIN       26
-#define NAV_ENCODER_INC_PIN       28
+#define NAV_ENCODER_DEC_PIN       28
+#define NAV_ENCODER_INC_PIN       26
 
 // or use changer pot?
 //#define CHANGER_POT_PIN           A8

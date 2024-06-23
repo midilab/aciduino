@@ -15,9 +15,9 @@ If you want to get the latest on the edge features and keep in track with develo
 As this version utilizes uCtrl and uClock libraries as submodules, please remember to initialize the submodules immediately after cloning the repository.  
 
 ```console
-phuture@acidlab:~$ git clone https://github.com/midilab/aciduino.git
-phuture@acidlab:~$ cd aciduino/
-phuture@acidlab:~$ git submodule update --init --recursive
+you@acidlab:~$ git clone https://github.com/midilab/aciduino.git
+you@acidlab:~$ cd aciduino/
+you@acidlab:~$ git submodule update --init --recursive
 ```  
 
 Open v2/AciduinoV2/AciduinoV2.ino and uncomment only one of the following microcontroller ports depending on wich one you're going to use.

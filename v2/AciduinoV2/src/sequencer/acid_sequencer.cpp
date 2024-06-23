@@ -512,7 +512,7 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
 
     if (msg == NOTE_ON) {
 
-      if (AcidSequencer.is303(track)) {
+      if (is303(track)) {
 
         // if we have a note on waiting note off and receive a note on
         // check for slide:
@@ -531,26 +531,26 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
         setStepData(track, quantized_step, data1);
 
         // record note in!
-        AcidSequencer.rest(track, quantized_step, false);
-        AcidSequencer.setAccent(track, quantized_step, accent);
+        rest(track, quantized_step, false);
+        setAccent(track, quantized_step, accent);
         
       } else {
 
         // check wich voice we should record
         int8_t voice = _engine808.getTrackVoiceByNote(track-TRACK_NUMBER_303, data1);
         if (voice != -1) {
-          AcidSequencer.setTrackVoice(track, voice);
+          setTrackVoice(track, voice);
 
           // record note in!
-          AcidSequencer.rest(track, quantized_step, false);
-          AcidSequencer.setAccent(track, quantized_step, accent);
+          rest(track, quantized_step, false);
+          setAccent(track, quantized_step, accent);
         }
 
       }
 
     } else if (msg == NOTE_OFF) {
 
-      if (AcidSequencer.is303(track)) {
+      if (is303(track)) {
         
         //if (_rec_realtime_ctrl == -1) {
         //  return;
@@ -573,4 +573,4 @@ void AcidSequencerClass::input(uint8_t track, uint8_t msg, uint8_t data1, uint8_
 
 }
 
-AcidSequencerClass AcidSequencer;
+//AcidSequencerClass aciduino;

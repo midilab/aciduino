@@ -72,7 +72,21 @@ class HarmonizerClass
     public:
 
         HarmonizerClass() 
-            : _harmony_mode_table({
+            {
+                // temperament id 0 = IONIAN
+                setTemperament(0);
+            }
+
+        uint8_t getNoteByMaxNumOfTones(uint8_t note);
+        uint8_t harmonizer(uint8_t note);
+        const char * getTemperamentName(uint8_t temperament_id);
+        void setTemperament(uint8_t temperament_id);
+        uint8_t getTemperamentId();
+
+    private:
+        uint8_t _scale[8] = {0};
+        uint8_t _temperament_id = 0;
+        HARMONY_DATA _harmony_mode_table[14] = {
                     // major modes
                     {IONIAN, "ionian"},
                     {DORIAN, "dorian"},
@@ -89,22 +103,7 @@ class HarmonizerClass
                     {MIXOLYDIAN6, "mixolydian 6"},
                     {LOCRIAN2, "locrian 2"},    
                     {SUPER_LOCRIAN, "super locrian"}  
-                })
-            {
-                // temperament id 0 = IONIAN
-                setTemperament(0);
-            }
-
-        uint8_t getNoteByMaxNumOfTones(uint8_t note);
-        uint8_t harmonizer(uint8_t note);
-        const char * getTemperamentName(uint8_t temperament_id);
-        void setTemperament(uint8_t temperament_id);
-        uint8_t getTemperamentId();
-
-    private:
-        uint8_t _scale[8] = {0};
-        uint8_t _temperament_id = 0;
-        HARMONY_DATA _harmony_mode_table[14];
+                };
 };
 
 extern HarmonizerClass Harmonizer;

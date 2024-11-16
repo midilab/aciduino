@@ -2,7 +2,7 @@
 
 #include "../../aciduino.hpp"
 
-// wroom 30 pins on protoboard extended with 8 action buttons and 4 pots midi controller
+// wroom on protoboard
 
 //============================================
 // Aciduino Features Setup
@@ -13,16 +13,16 @@
 #define LED_BUILTIN       2
 #define USE_BPM_LED       LED_BUILTIN
 // main navigation
-//#define USE_CHANGER_POT
-#define USE_CHANGER_ENCODER
+#define USE_CHANGER_POT
+//#define USE_CHANGER_ENCODER
 //#define USE_TRANSPORT_BUTTON
 
-#define USE_POT_MICRO
+//#define USE_POT_MICRO
 
 #define FLIP_DISPLAY
 //#define INVERT_POT_READ
 
-// enable ble-midi? needs USE_MIDI2
+// enable usb-midi? will eneble USE_MIDI3
 //#define USE_BT_MIDI_ESP32
 
 // enable Serial to be able to use on serial-to-midi bridges on PCs
@@ -38,7 +38,6 @@
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
-//#define USE_ROW_8       // 8 uc digital input ports for buttons extension
 //#define USE_PUSH_8      // uses 165 shiftregister (buttons)
 //#define USE_PUSH_24     // uses 3x 165 shiftregister
 //#define USE_PUSH_32     // uses 4x 165 shiftregister
@@ -52,11 +51,12 @@
 //============================================
 // PINOUT Setup
 //============================================
-// https://lastminuteengineers.com/esp32-pinout-reference/
+
+// Some of the ADC2 pins are used as strapping pins (GPIO 0, 2, 15) thus cannot be used freely. Such is the case in the following official Development Kits:
 
 // going to use changer encoder?
-#define NAV_ENCODER_DEC_PIN       13
-#define NAV_ENCODER_INC_PIN       4
+//#define NAV_ENCODER_DEC_PIN       13
+//#define NAV_ENCODER_INC_PIN       4
 
 #define NAV_SHIFT_PIN             12
 
@@ -70,13 +70,14 @@
 #define NAV_LEFT_PIN              23
 
 //#define TRANSPORT_BUTTON_1_PIN    ??
-// https://github.com/espressif/arduino-esp32/issues/7072
-// Gpios 6, 7, 8, 9, 10 and 11 are a no go for ESP32 to use?
+
 // going to use changer pot?
+// esp32 30pins
 // GPIO 15 - ADC2_3
-//#define CHANGER_POT_PIN           15
+#define CHANGER_POT_PIN             15
+
 // 4 pot extension
-#define POT_MICRO_1_PIN           15
+//#define POT_MICRO_1_PIN           15
 // GPIO 35 - ADC1_7
 /* #define POT_MICRO_1_PIN   35
 // GPIO 34 - ADC1_6
@@ -106,11 +107,17 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // Midi device
 // initing midi devices
 #if defined(USE_MIDI1) // USB
+  // in case we got USB native mode support builtin, use it! note the case of wroom, keep this setup for later other boards
+  #if defined(CONFIG_TINYUSB_ENABLED)
+ESPNATIVEUSBMIDI espNativeUsbMidi;
+MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
+  #else
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
+  #endif
 #endif
 
 #if defined(USE_MIDI2) // Hardware midi 
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2); 
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2); 
 #endif
 
 #if defined(USE_MIDI3) // Bluetooth
@@ -297,6 +304,14 @@ void initPort() {
   // MIDI Module
   //
   uCtrl.initMidi();
+  // ESP32 related
+#if defined(CONFIG_TINYUSB_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+  // initing esp32nativeusbmidi
+  espNativeUsbMidi.begin();
+  // initing USB device
+  USB.productName("aciduinov2");
+  USB.begin();
+#endif
 #if defined(USE_BT_MIDI_ESP32) && defined(USE_MIDI3) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
   BLEMIDI3.setHandleConnected([]() {
     //uCtrl.dout->write(BPM_LED, HIGH, 0);
@@ -312,7 +327,7 @@ void initPort() {
   // Plugin MIDI interfaces to handle
 #if defined(USE_MIDI1)
   uCtrl.midi->plug(&MIDI1);
-  #if defined(USE_SERIAL_MIDI_115200)
+  #if defined(USE_SERIAL_MIDI_115200) && !defined(CONFIG_TINYUSB_ENABLED)
   // forces MidiInterface back to 115200
   Serial.begin(115200);
   #endif
@@ -322,6 +337,9 @@ void initPort() {
 #endif
 #if defined(USE_MIDI3)
   uCtrl.midi->plug(&MIDI3);
+#endif
+#if defined(USE_MIDI4)
+  uCtrl.midi->plug(&MIDI4);
 #endif
   uCtrl.midi->setMidiInputCallback(Aciduino::midiInputHandler);
   // uCtrl realtime deals

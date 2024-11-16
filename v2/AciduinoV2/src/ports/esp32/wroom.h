@@ -30,9 +30,11 @@
 // does it needs USE_MIDI1
 #define USE_SERIAL_MIDI_115200
 
-#define USE_MIDI1 // USB MIDI, needs a serial-to-midi bridge on the other side: hariless midi or ttymidi
-//#define USE_MIDI2 // BLE MIDI: bluetooth is not a good option to run realtime application like midi, so be aware of shit timming and issues(good for a midi controller only)
-#define USE_MIDI3 // real MIDI serial port: connect to your hardware synths via MIDI cable(check midi out schematics for 3.3v)
+#define USE_MIDI1 // USB MIDI, if no TINY_USB in use it needs a serial-to-midi bridge on the other side: hariless midi or ttymidi
+#define USE_MIDI2 // real MIDI serial port: connect to your hardware synths via MIDI cable(check midi out schematics for 3.3v)
+#if defined(USE_BT_MIDI_ESP32)
+#define USE_MIDI3 // BLE MIDI: bluetooth is not a good option to run realtime application like midi, so be aware of shit timming and issues(good for a midi controller only)
+#endif
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
@@ -108,21 +110,15 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI1);
 #endif
 
-#if defined(USE_MIDI2) // Bluetooth
+#if defined(USE_MIDI2) // Hardware midi 
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2); 
+#endif
+
+#if defined(USE_MIDI3) // Bluetooth
 #if defined(USE_BT_MIDI_ESP32) && defined(CONFIG_BT_ENABLED) 
-BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI2);
+BLEMIDI_CREATE_INSTANCE("Aciduino", MIDI3);
 #endif
 #endif
-
-#if defined(USE_MIDI3) // Hardware midi 
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI3); 
-#endif
-
-// in case we got USB native mode support builtin, use it! note the case of wroom, keep this setup for later other boards
-//#if defined(CONFIG_TINYUSB_ENABLED)
-//ESPNATIVEUSBMIDI espNativeUsbMidi;
-//MIDI_CREATE_INSTANCE(ESPNATIVEUSBMIDI, espNativeUsbMidi, MIDI1);
-//#endif
 
 // SPI devices
 //#define PUSH_SPI          SPI
@@ -303,20 +299,13 @@ void initPort() {
   //
   uCtrl.initMidi();
   // ESP32 related
-#if defined(CONFIG_TINYUSB_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
-  // initing esp32nativeusbmidi
-  espNativeUsbMidi.begin();
-  // initing USB device
-  USB.productName("aciduinov2");
-  USB.begin();
-#endif
-#if defined(USE_BT_MIDI_ESP32) && defined(USE_MIDI2) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
-  BLEMIDI2.setHandleConnected([]() {
+#if defined(USE_BT_MIDI_ESP32) && defined(USE_MIDI3) && defined(CONFIG_BT_ENABLED) && (defined(ARDUINO_ARCH_ESP32) || defined(ESP32))
+  BLEMIDI3.setHandleConnected([]() {
     //uCtrl.dout->write(BPM_LED, HIGH, 0);
     _ble_midi_connected = 1;
   });
   
-  BLEMIDI2.setHandleDisconnected([]() {
+  BLEMIDI3.setHandleDisconnected([]() {
     //uCtrl.dout->write(BPM_LED, LOW, 0);
     _ble_midi_connected = 0;
   });

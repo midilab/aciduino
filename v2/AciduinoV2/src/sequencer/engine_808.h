@@ -87,25 +87,6 @@ typedef struct
 class Engine808 : public Engine
 {
     public:
-
-      Engine808() 
-        : _default_voice_data_808({
-            {"bd", 36},
-            {"sd", 38},
-            {"lt", 41},
-            {"mt", 45},
-            {"ht", 48},
-            {"rs", 37},
-            {"cp", 39},
-            {"cb", 51},
-            {"cy", 49},
-            {"oh", 46},
-            {"ch", 42}
-          })
-        {
-          
-        }
-
       void init();
 
       void rest(uint8_t track, uint8_t step, bool state);
@@ -159,7 +140,19 @@ class Engine808 : public Engine
 #endif
 
       uint8_t _voice = 0;
-      CTRL_DATA _default_voice_data_808[11];
+      CTRL_DATA _default_voice_data_808[11] = {
+            {"bd", 36},
+            {"sd", 38},
+            {"lt", 41},
+            {"mt", 45},
+            {"ht", 48},
+            {"rs", 37},
+            {"cp", 39},
+            {"cb", 51},
+            {"cy", 49},
+            {"oh", 46},
+            {"ch", 42}
+          };
 
 };
 

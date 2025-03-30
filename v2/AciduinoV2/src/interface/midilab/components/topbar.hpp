@@ -73,7 +73,7 @@ struct TopBar : PageComponent {
       if (aciduino.isPlaying()) {
         uCtrl.oled->print(PLAYING, 1, 19);
       } else {
-        uCtrl.oled->print(uClock.getMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);  
+        uCtrl.oled->print(uClock.getClockMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);  
       }
 
       // top bar big line 

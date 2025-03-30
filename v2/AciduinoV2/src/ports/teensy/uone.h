@@ -30,8 +30,8 @@
 //============================================
 
 // going to use changer encoder?
-#define NAV_ENCODER_DEC_PIN       24
-#define NAV_ENCODER_INC_PIN       25
+#define NAV_ENCODER_DEC_PIN       25
+#define NAV_ENCODER_INC_PIN       24
 // teensy 3.2+
 // on 3.2+ there are no digital port only analog at 24 and 25 pins :(
 //#define NAV_ENCODER_DEC_PIN       A10

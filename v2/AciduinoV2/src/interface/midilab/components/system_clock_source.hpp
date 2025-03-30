@@ -8,9 +8,9 @@ struct TempoClockSource : PageComponent {
       data = parseData(data, 0, uCtrl.midi->sizeOf(), aciduino.getMidiClockPort());
       aciduino.setMidiClockPort(data);
       if (aciduino.getMidiClockPort() > 0) {
-        uClock.setMode(uClock.EXTERNAL_CLOCK);
+        uClock.setClockMode(uClock.EXTERNAL_CLOCK);
       } else {
-        uClock.setMode(uClock.INTERNAL_CLOCK);
+        uClock.setClockMode(uClock.INTERNAL_CLOCK);
       }
     }
     

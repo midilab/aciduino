@@ -64,17 +64,20 @@ void Aciduino::uClockSetup()
   uClock.init();
   
   // Set the callback function for the step sequencer on 96PPQN and for step sequencer feature
-  uClock.setOnPPQN(Aciduino::onPPQNCallback);
+  uClock.setOnOutputPPQN(Aciduino::onPPQNCallback);
   uClock.setOnStep(Aciduino::onStepCallback);
   // Set the callback function for the clock output to send MIDI Sync message.
   uClock.setOnSync24(Aciduino::onSync24Callback);
   // Set the callback function for MIDI Start and Stop messages.
   uClock.setOnClockStart(Aciduino::onClockStart);  
   uClock.setOnClockStop(Aciduino::onClockStop);
+
+  //uClock.setInputPPQN(uClock.PPQN_24);
+  //uClock.setOutputPPQN(uClock.PPQN_96);
   
   // Set the clock BPM to 126 BPM
   uClock.setTempo(126);
-  //uClock.setMode(uClock.EXTERNAL_CLOCK);
+  //uClock.setClockMode(uClock.EXTERNAL_CLOCK);
 }
 
 void Aciduino::storageSetup()
@@ -682,7 +685,7 @@ void Aciduino::midiSequencerOutHandler(uint8_t msg_type, uint8_t byte1, uint8_t 
 // All midi interface registred thru uCtrl get incomming data thru this callback
 void Aciduino::midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted) 
 {
-  if ( uClock.getMode() == uClock.EXTERNAL_CLOCK ) {
+  if ( uClock.getClockMode() == uClock.EXTERNAL_CLOCK ) {
     // external tempo control
     switch (msg->type) {
         case uctrl::protocol::midi::Clock:
@@ -747,7 +750,7 @@ void Aciduino::midiHandle() {
 
 // used by uCtrl at 250us speed to get MIDI sync input messages on time
 void Aciduino::midiHandleSync() {
-  if (aciduino._midi_clock_port > 0 && uClock.getMode() == uClock.EXTERNAL_CLOCK) {
+  if (aciduino._midi_clock_port > 0 && uClock.getClockMode() == uClock.EXTERNAL_CLOCK) {
     //while (uCtrl.midi->read(_midi_clock_port)) {
     //}
     uCtrl.midi->read(aciduino._midi_clock_port, 1);

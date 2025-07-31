@@ -32,14 +32,14 @@ typedef struct
   uint8_t lower_octave = 2;
   uint8_t range_octave = 3;
   uint8_t number_of_tones = 5;
-} GENERATIVE_303_DATA; 
+} GENERATIVE_303_DATA;
 
 typedef struct
 {
   uint8_t generative_fill = 80;
   uint8_t accent_probability = 50;
   uint8_t roll_probability = 0;
-} GENERATIVE_808_DATA; 
+} GENERATIVE_808_DATA;
 
 // to be used with generativeParam accessors
 typedef enum {
@@ -69,7 +69,7 @@ typedef enum {
 typedef enum {
   MIDI_OUTPUT,
   CV_OUTPUT,
-  GATE_OUTPUT, 
+  GATE_OUTPUT,
 } SEQUENCER_OUTPUT;
 
 typedef struct
@@ -107,6 +107,7 @@ public:
   static void nextTrack();
   void play();
   void stop();
+  void pause();
   uint8_t getSelectedTrack() { return _selected_track; };
   uint8_t setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
   uint8_t isPlaying() { return _playing; };
@@ -160,7 +161,7 @@ public:
 
   // utils
   int freeRam();
-  
+
   // midi input handles(mainly to be used as callback by external midi hanlders)
   static void midiInputHandler(uctrl::protocol::midi::MIDI_MESSAGE * msg, uint8_t port, uint8_t interrupted);
   static void midiHandle(); // sync handle
@@ -224,7 +225,7 @@ private:
   volatile uint8_t _midi_clock_port = 0; // 0 = internal
   volatile uint8_t _midi_rec_port = 1;
 
-  // 
+  //
   // storage schema
   //
 

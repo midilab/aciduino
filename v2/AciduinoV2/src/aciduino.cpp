@@ -142,6 +142,11 @@ void Aciduino::stop()
   uClock.stop();
 }
 
+void Aciduino::pause()
+{
+  uClock.pause();
+}
+
 void Aciduino::recToggle()
 {
   aciduino.seq.setRecStatus(!aciduino.seq.getRecStatus());

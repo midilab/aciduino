@@ -43,7 +43,8 @@ Open v2/AciduinoV2/AciduinoV2.ino and uncomment only one of the following microc
 Know to work environments:  
 
 ESP32: Espressif Arudino Core >= 3.0.5  
-
+Teensy: Teensyduino Version == 1.57.3
+s
 ## How does it looks like?
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)

@@ -60,17 +60,18 @@ void Aciduino::initSequencer()
 
 void Aciduino::uClockSetup()
 {
-  // Set the callback function for the step sequencer on 96PPQN and for step sequencer feature
+  // set main clock rate for output(sequencer resolution) and input(receiving sync signals)
+  uClock.setOutputPPQN(uClock.PPQN_96);
+  uClock.setInputPPQN(uClock.PPQN_24);
+  // set the callback function for the step sequencer on 96PPQN and for step sequencer feature
   uClock.setOnOutputPPQN(Aciduino::onPPQNCallback);
+  // set the callback function to send MIDI Sync message.
+  uClock.setOnSync(uClock.PPQN_24, Aciduino::onSync24Callback);
+  // support for step sequencer
   uClock.setOnStep(Aciduino::onStepCallback);
-  // Set the callback function for the clock output to send MIDI Sync message.
-  uClock.setOnSync24(Aciduino::onSync24Callback);
-  // Set the callback function for MIDI Start and Stop messages.
+  // set the callback function for MIDI Start and Stop messages.
   uClock.setOnClockStart(Aciduino::onClockStart);
   uClock.setOnClockStop(Aciduino::onClockStop);
-
-  //uClock.setInputPPQN(uClock.PPQN_24);
-  //uClock.setOutputPPQN(uClock.PPQN_96);
 
   // Set the clock BPM to 126 BPM
   uClock.setTempo(126);

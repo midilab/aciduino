@@ -56,6 +56,9 @@ void HarmonizerClass::setTemperament(uint8_t temperament_id)
 		interval++;
 
 	}    
+
+	// harmonizer() can pick interval 7 (pitch class 11): the next octave's tonic
+	_scale[7] = 12;
 }
 
 const char * HarmonizerClass::getTemperamentName(uint8_t temperament_id)

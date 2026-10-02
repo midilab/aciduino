@@ -1,0 +1,18 @@
+#pragma once
+// Host stand-in for Arduino.h: just what harmonizer.cpp needs.
+#include <cstdint>
+#include <cmath>
+#define B11011100 0b11011100
+#define B10111010 0b10111010
+#define B01110110 0b01110110
+#define B11101100 0b11101100
+#define B11011010 0b11011010
+#define B10110110 0b10110110
+#define B01101110 0b01101110
+#define B10111100 0b10111100
+#define B01111010 0b01111010
+#define B11110100 0b11110100
+#define B11101010 0b11101010
+#define B11010110 0b11010110
+#define B10101110 0b10101110
+#define B01011110 0b01011110

@@ -10,19 +10,19 @@ Find out more about at [official home page](https://midilab.co/aciduino/)
 2 Tracks TB303 sequencer and MIDI Controller.
 
 V1 on PCB
-[![](https://midilab.co/data/uploads/2022/05/aciduino_mk2-1024x632.jpg)](https://midilab.co/data/uploads/2022/05/aciduino_mk2.jpg)
-
-V1 on Protoboard
-[![](https://midilab.co/data/uploads/2023/03/aciduinov1-1024x576.jpg)](https://midilab.co/data/uploads/2023/03/aciduinov1.jpg)
+![Image of aciduino on pcb](https://raw.githubusercontent.com/midilab/aciduino/master/v1/hardware/ijnekenamay-PCB/mk2_image5.JPG)
 
 ## [Aciduino V2](https://github.com/midilab/aciduino/tree/master/v2/)  
 Up to 16 Tracks TB303/TR808 sequencer with step, pattern and mute automation grid system, MIDI Controller, OLED display and extensible modular design to plug more potentiometers, buttons, MIDI or CV/Gate interfaces.
 
 V2 on Protoboard
-[![](https://midilab.co/data/uploads/2023/01/aciduino_v2_teensy_bb-1024x696.jpg)](https://midilab.co/data/uploads/2023/01/aciduino_v2_teensy_bb-scaled.jpg)
+![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)
 
 V2 on PCB(prototype)
-[![](https://midilab.co/data/uploads/2023/03/uone_umodular-scaled.jpg)](https://midilab.co/data/uploads/2023/03/uone_umodular-scaled.jpg)
+
+![Image of aciduino on uone front](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_umodular.jpg)
+
+![Image of aciduino on uone back](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/uone_back.jpeg)
 
 Features
 ========

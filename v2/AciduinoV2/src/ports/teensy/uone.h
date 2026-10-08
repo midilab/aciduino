@@ -21,8 +21,8 @@
 //#define USE_POT_16      // uses 2x 4051 multiplexer
 #define USE_TOUCH_32    // uses 2x 4067 multiplexer
 //#define TOUCH_TRESHOLD    90
-#define TOUCH_TRESHOLD    100
-//#define TOUCH_TRESHOLD    110
+//#define TOUCH_TRESHOLD    100
+#define TOUCH_TRESHOLD    110
 
 
 //============================================
@@ -47,13 +47,22 @@
 // LED
 #define LED_LATCH_PIN             17
 // TOUCH
-// 4 and 3 needs a swap, fix it on rev 0.2
+// straight wiring on rev0.1 - the crossed line is POT's (see POT below)
 #define TOUCH_CTRL_PIN1           6
 #define TOUCH_CTRL_PIN2           5
 #define TOUCH_CTRL_PIN3           3
 #define TOUCH_CTRL_PIN4           4
 #define TOUCH_MUX_COMM1           A6
 #define TOUCH_MUX_COMM2           A7
+
+// POT
+// rev0.1 copper sends control line3 to pin4, swap lives in the board;
+// rev 0.2: fix copper and set this back to 3
+#define POT_CTRL_PIN1             6
+#define POT_CTRL_PIN2             5
+#define POT_CTRL_PIN3             4
+#define POT_MUX_COMM1             A1
+#define POT_MUX_COMM2             A0
 
 //============================================
 // Managed Devices Setup
@@ -67,6 +76,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // initing midi devices
 #define MIDI1         usbMIDI
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI3);
 
 // SPI devices
 #define PUSH_SPI          SPI
@@ -115,6 +125,14 @@ void initPort() {
   //uCtrl.ain->setCallback(midiControllerHandle);
   // raise the average reads for pot for better stability
   //uCtrl.ain->setAvgReads(8);
+  // 4051 or 4067 avaliable?
+  uCtrl.initAin(POT_CTRL_PIN1, POT_CTRL_PIN2, POT_CTRL_PIN3);
+  uCtrl.ain->plugMux(POT_MUX_COMM1);
+  uCtrl.ain->plugMux(POT_MUX_COMM2);
+  // get a global entry point for our midi pot controllers
+  uCtrl.ain->setCallback(midiControllerHandle);
+  // raise the average reads for pot for better stability
+  //uCtrl.ain->setAvgReads(8);
 
   //
   // Capacitive Touch Module
@@ -132,6 +150,7 @@ void initPort() {
   // Plugin MIDI interfaces to handle
   uCtrl.midi->plug(&MIDI1);
   uCtrl.midi->plug(&MIDI2);
+  uCtrl.midi->plug(&MIDI3);
   uCtrl.midi->setMidiInputCallback(Aciduino::midiInputHandler);
   // uCtrl realtime deals
   // process midi at 250 microseconds speed
@@ -174,6 +193,6 @@ void initPort() {
   uCtrl.page->setPage(0);
 
   // sequencer parameters could be initialized here?
-  // how many 303 tracks? 808 tracks? 
+  // how many 303 tracks? 808 tracks?
   aciduino.init();
 }

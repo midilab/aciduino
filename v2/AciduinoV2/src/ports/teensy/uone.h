@@ -4,6 +4,9 @@
 
 //uONE!
 
+// hardware fix:
+// ain1 solder joint probrably lossy(or short circuit)
+// resolder the touch 4067 chip because looks like there are some loosy ones.
 //============================================
 // Aciduino Features Setup
 //============================================
@@ -131,8 +134,6 @@ void initPort() {
   uCtrl.ain->plugMux(POT_MUX_COMM2);
   // get a global entry point for our midi pot controllers
   uCtrl.ain->setCallback(midiControllerHandle);
-  // raise the average reads for pot for better stability
-  //uCtrl.ain->setAvgReads(8);
 
   //
   // Capacitive Touch Module
@@ -161,7 +162,7 @@ void initPort() {
   //
   // SdCard Module
   //
-  //uCtrl.initSdCard(&SPI, 7);
+  uCtrl.initSdCard(&SPI, 7);
 
   //
   // Page Module for UI

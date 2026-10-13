@@ -45,6 +45,53 @@ Know to work environments:
 ESP32: Espressif Arudino Core >= 3.0.5  
 Teensy: Teensyduino Version == 1.57.3
 s
+
+# SD card
+
+Aciduino can use a microSD card as its main storage. When a card is present and holds aciduino data, it takes priority over the internal EEPROM; without a card everything runs from EEPROM exactly as before.
+
+If you insert a card with a filesystem the device cannot read (or a card that was never formatted), the device shows a **format** prompt at boot: press **F1** to format the card (this wipes everything on it) or **F2** to keep using EEPROM. After formatting, boot continues on the card as usual.
+
+- **Unlimited patterns**: the pattern grid grows on demand. Navigate past the last saved pattern and a new empty pattern slot appears ("new"); it only becomes a pattern once you save it.
+- **Sessions**: a session bundles the global settings (generative, MIDI map, track routing, tempo, shuffle and the pattern grid) together with its own set of patterns. Save, fork ("new") and load different sessions from the system page.
+- **Migration**: on the first boot with a card that has no aciduino data, whatever lives in EEPROM is automatically copied into a session on the card. EEPROM is left untouched and stays as the fallback when the card is removed.
+- **Track remix**: unchanged — you can still load a single track pattern from any pattern into any track, the same way EEPROM storage always worked.
+
+## Preparing the card
+
+Use a microSD card **up to 32GB**, formatted as **FAT32** (cards this size ship pre-formatted as FAT32 and every system below can re-create that format natively). Larger cards work if you force FAT32 with a third party tool, but offer no benefit here — one pattern uses 712 bytes.
+
+**Windows**: right-click the card in Explorer → *Format…* → File system **FAT32** → Start. Windows refuses FAT32 above 32GB; for larger cards use the free portable [FAT32 Format (guiformat)](https://ridgecrop.co.uk/index.htm?guiformat.htm). The [SD Card Formatter](https://www.sdcard.org/downloads/formatter/) from the SD Association is also fine (it formats cards ≤32GB as FAT32).
+
+**macOS**: Disk Utility → select the card → *Erase* → Format **MS-DOS (FAT)**.
+
+**Linux**:
+
+```console
+you@acidlab:~$ sudo umount /dev/sdX1
+you@acidlab:~$ sudo parted /dev/sdX mklabel msdos
+you@acidlab:~$ sudo parted -a optimal /dev/sdX mkpart primary fat32 1MiB 100%
+you@acidlab:~$ sudo mkfs.fat -F 32 -s 64 /dev/sdX1
+```
+
+(replace `sdX` with your card device — double check the device name, these commands erase whatever they are pointed at). The SD Card Formatter above also runs on Linux.
+
+## On card layout
+
+Aciduino keeps its files under a single folder at the card root, all plain binary files you can copy around as backups:
+
+```
+/ACIDUINO/
+  S000.BIN   session 0 image: settings + all its patterns
+  S000.CFG   session 0 extras: tempo, shuffle and pattern grid
+  S001.BIN   session 1 image ...
+  S001.CFG   session 1 extras ...
+  LAST.BIN   remembers the last active session across reboots
+```
+
+A session image (`.BIN`) mirrors the EEPROM layout: a 2 byte layout marker, the session settings block and then one 712 byte slot per pattern, in order. Saving the first pattern that does not exist yet appends a new slot to the file; there is no upper limit other than free card space.
+
+s
 ## How does it looks like?
 
 ![Image of aciduino on protoboard](https://raw.githubusercontent.com/midilab/aciduino/master/v2/hardware/imgs/aciduino_v2_teensy_bb.jpg)

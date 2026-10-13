@@ -40,6 +40,54 @@ void Aciduino::initSequencer()
   // the acid sequencer main output callback
   aciduino.seq.setOutputCallback(sequencerOutHandler);
 
+  // bring up storage: sdcard session select/import/factory init
+  // or epprom layout check/factory init when running on epprom
+  storageInit();
+
+  // load shuffle form memory pattern?
+  int8_t init_template[2] = {0,0};
+  uClock.setShuffleTemplate(init_template, 2);
+
+  // load saved session
+  // on sdcard this also restores the pattern grid and loads each session pattern
+  loadSession();
+  // no session pattern grid on epprom: load first pattern
+  if (!uCtrl.storage->isSdActive()) {
+    loadPattern(0);
+  }
+}
+
+// storage bring up: pick the backend, validate data layout and import/init as needed
+void Aciduino::storageInit()
+{
+#if defined(USE_SDCARD_MODULE) && defined(USE_PAGE_MODULE)
+  // card is physically there but its filesystem did not mount: ask the user
+  // if they want it formatted before falling back to epprom mode
+  if (uCtrl.sdcard != nullptr && uCtrl.sdcard->needsFormat()) {
+    if (formatSdCardDialog()) {
+      // formatted and remounted: boot proceeds into the sdcard flow below
+    }
+  }
+#endif
+  if (uCtrl.storage->isSdActive()) {
+    // restore last used session(create session file if missing)
+    uCtrl.storage->restoreSession();
+    // data layout check runs against the active session image
+    if (checkEppromDataLayoutChange()) {
+      if (uCtrl.storage->hasEppromData(_pattern_total_mem_size)) {
+        // epprom data avaliable: migrate it into the sdcard session image
+        uCtrl.storage->importFromEpprom(_epprom_size);
+      } else {
+        // fresh card: factory session image from current defaults
+        uint16_t pattern_size = _pattern_total_mem_size;
+        uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), _epprom_check_data_address);
+        saveSession();
+        savePattern(0);
+      }
+    }
+    return;
+  }
+
   // we're going to init epprom in two cases:
   // if track layout changes || if no aciduino data present at epprom
   // so if you want to keep your pattenrs and change layout consider backup pattenrs into another sequencer
@@ -47,16 +95,95 @@ void Aciduino::initSequencer()
   if (checkEppromDataLayoutChange()) {
     eppromInit();
   }
-
-  // load shuffle form memory pattern?
-  int8_t init_template[2] = {0,0};
-  uClock.setShuffleTemplate(init_template, 2);
-
-  // load epprom saved session
-  loadSession();
-  // load first pattern
-  loadPattern(0);
 }
+
+#if defined(USE_SDCARD_MODULE) && defined(USE_PAGE_MODULE) && (defined(USE_DIN_MODULE) || defined(USE_TOUCH_MODULE))
+// blocking boot dialog: ask the user if the unmounted sdcard should be formatted
+// returns true when the card got formatted and remounted
+bool Aciduino::formatSdCardDialog()
+{
+  bool format_card = false;
+  bool answered = false;
+
+  uCtrl.oled->clearDisplay();
+  uCtrl.oled->print("sdcard", 1, 1);
+  uCtrl.oled->print("needs format!", 3, 2);
+  uCtrl.oled->print("f1 yes", 8, 1);
+  uCtrl.oled->print("f2 no", 8, 15);
+  uCtrl.oled->refreshDisplay();
+
+  // drain the interrupt-driven event queues exactly like uCtrlClass::run() does
+  while (!answered) {
+#if defined(USE_DIN_MODULE)
+    if (uCtrl.din != nullptr) {
+      while (uCtrl.din->event_queue.head != uCtrl.din->event_queue.tail) {
+        uint8_t port = uCtrl.din->event_queue.event[uCtrl.din->event_queue.head].port;
+        uint16_t value = uCtrl.din->event_queue.event[uCtrl.din->event_queue.head].value;
+        uCtrl.din->event_queue.head = (uCtrl.din->event_queue.head+1) % (uCtrl.din->event_queue.size);
+
+        // din event value 1 = pressed
+        if (value != 0) {
+          if (port == uCtrl.page->_nav_ctrl_port.function1) {
+            format_card = true;
+            answered = true;
+          } else if (port == uCtrl.page->_nav_ctrl_port.function2) {
+            answered = true;
+          }
+        }
+      }
+    }
+#endif
+#if defined(USE_TOUCH_MODULE)
+    if (uCtrl.touch != nullptr) {
+      uint8_t port_ref = 0;
+#if defined(USE_DIN_MODULE)
+      if (uCtrl.din != nullptr) {
+        port_ref = uCtrl.din->sizeOf();
+      }
+#endif
+      while (uCtrl.touch->event_queue.head != uCtrl.touch->event_queue.tail) {
+        uint8_t port = uCtrl.touch->event_queue.event[uCtrl.touch->event_queue.head].port + port_ref;
+        uint16_t value = uCtrl.touch->event_queue.event[uCtrl.touch->event_queue.head].value;
+        uCtrl.touch->event_queue.head = (uCtrl.touch->event_queue.head+1) % (uCtrl.touch->event_queue.size);
+
+        // touch event value 1 = pressed
+        if (value != 0) {
+          if (port == uCtrl.page->_nav_ctrl_port.function1) {
+            format_card = true;
+            answered = true;
+          } else if (port == uCtrl.page->_nav_ctrl_port.function2) {
+            answered = true;
+          }
+        }
+      }
+    }
+#endif
+    delay(1);
+  }
+
+  if (!format_card) {
+    return false;
+  }
+
+  uCtrl.oled->clearDisplay();
+  uCtrl.oled->print("formatting...", 4, 2);
+  uCtrl.oled->refreshDisplay();
+
+  if (!uCtrl.sdcard->formatCard()) {
+    uCtrl.oled->clearDisplay();
+    uCtrl.oled->print("format failed", 4, 2);
+    uCtrl.oled->refreshDisplay();
+    delay(1500);
+    return false;
+  }
+
+  uCtrl.oled->clearDisplay();
+  uCtrl.oled->print("format done", 4, 2);
+  uCtrl.oled->refreshDisplay();
+  delay(500);
+  return true;
+}
+#endif
 
 void Aciduino::uClockSetup()
 {
@@ -111,7 +238,22 @@ void Aciduino::storageSetup()
 }
 
 uint16_t Aciduino::getNumOfPatterns() {
+  // sdcard patterns are only bounded by the session image file growth
+  if (uCtrl.storage->isSdActive()) {
+    uint32_t image_size = uCtrl.storage->size();
+    if (image_size <= _eprrom_pattern_address) {
+      return 0;
+    }
+    uint16_t count = (image_size - _eprrom_pattern_address) / _pattern_total_mem_size;
+    // pattern index is uint8_t across the code: cap the space at 255 saved patterns
+    return count > 255 ? 255 : count;
+  }
   return _eprrom_pattern_available;
+}
+
+bool Aciduino::hasPendingPatternSlot() {
+  // only sdcard storage grows: epprom pattern space is fixed
+  return uCtrl.storage->isSdActive();
 }
 
 uint16_t Aciduino::getSessionSize() {
@@ -119,7 +261,68 @@ uint16_t Aciduino::getSessionSize() {
 }
 
 uint16_t Aciduino::getStorageSize() {
+  if (uCtrl.storage->isSdActive()) {
+    return uCtrl.storage->size();
+  }
   return _epprom_size;
+}
+
+//
+// sdcard sessions
+//
+uint16_t Aciduino::getNumOfSessions() {
+  return uCtrl.storage->getSessionCount();
+}
+
+uint16_t Aciduino::getActiveSession() {
+  return uCtrl.storage->getActiveSession();
+}
+
+bool Aciduino::selectSession(uint16_t index) {
+  if (!uCtrl.storage->useSession(index)) {
+    return false;
+  }
+  // session slot has data for our current layout?
+  if (checkEppromDataLayoutChange()) {
+    return false;
+  }
+  loadSession();
+  return true;
+}
+
+// fork current state into a new session slot: settings copied over, patterns start empty
+bool Aciduino::newSession() {
+  uint16_t index = uCtrl.storage->getSessionCount();
+  if (!uCtrl.storage->useSession(index, true)) {
+    return false;
+  }
+  // mark image layout as valid for this firmware
+  uint16_t pattern_size = _pattern_total_mem_size;
+  uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), _epprom_check_data_address);
+  // reset pattern grid: no patterns saved on a new session yet
+  for (uint8_t i = 0; i < TRACK_NUMBER_303+TRACK_NUMBER_808; i++) {
+    _pattern_grid[i] = 0;
+  }
+  // fork session settings from current state
+  saveSession();
+  // factory pattern state for all tracks(pending slot 0)
+  loadPattern(0);
+  return true;
+}
+
+// shuffle signature accessors(session data driven state)
+uint8_t Aciduino::getShuffleSig() {
+  return _shuffle_sig;
+}
+
+void Aciduino::setShuffleSig(uint8_t sig, int8_t * shuff) {
+  if (sig > 6) {
+    sig = 0;
+  }
+  _shuffle_sig = sig;
+  _shuffle_template[0] = shuff[0];
+  _shuffle_template[1] = shuff[1];
+  uClock.setShuffleTemplate(_shuffle_template, 2);
 }
 
 //
@@ -449,6 +652,28 @@ void Aciduino::loadSession()
   uCtrl.storage->load((void*)_generative_808, sizeof(_generative_808));
   uCtrl.storage->load((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->load((void*)_track_output_setup, sizeof(_track_output_setup));
+
+  // sdcard sessions carry extras: tempo, shuffle and the pattern grid
+  if (uCtrl.storage->isSdActive()) {
+    if (uCtrl.storage->loadSessionConfig((void*)&_session_extras, sizeof(_session_extras))) {
+      applySessionExtras();
+    }
+    // patterns travel with the session: restore each track pattern from the grid
+    loadPattern(_pattern_grid[0]);
+    for (uint8_t i = 1; i < TRACK_NUMBER_303+TRACK_NUMBER_808; i++) {
+      if (_pattern_grid[i] != _pattern_grid[0]) {
+        loadPattern(_pattern_grid[i], i);
+      }
+    }
+  }
+}
+
+void Aciduino::applySessionExtras()
+{
+  uClock.setTempo(_session_extras.tempo);
+  uClock.setShuffle(_session_extras.shuffle_on);
+  setShuffleSig(_session_extras.shuffle_sig, _session_extras.shuffle_template);
+  memcpy((void*)_pattern_grid, (void*)_session_extras.pattern_grid, sizeof(_pattern_grid));
 }
 
 void Aciduino::saveSession()
@@ -458,11 +683,21 @@ void Aciduino::saveSession()
   uCtrl.storage->save((void*)_generative_808, sizeof(_generative_808));
   uCtrl.storage->save((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->save((void*)_track_output_setup, sizeof(_track_output_setup));
+
+  // sdcard sessions carry extras: tempo, shuffle and the pattern grid
+  if (uCtrl.storage->isSdActive()) {
+    _session_extras.tempo = uClock.getTempo();
+    _session_extras.shuffle_on = uClock.isShuffled();
+    _session_extras.shuffle_sig = _shuffle_sig;
+    memcpy((void*)_session_extras.shuffle_template, (void*)_shuffle_template, sizeof(_shuffle_template));
+    memcpy((void*)_session_extras.pattern_grid, (void*)_pattern_grid, sizeof(_pattern_grid));
+    uCtrl.storage->saveSessionConfig((void*)&_session_extras, sizeof(_session_extras));
+  }
 }
 
-uint16_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
+uint32_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
 {
-  uint16_t pattern_address = _eprrom_pattern_address + (pattern * _pattern_total_mem_size);
+  uint32_t pattern_address = _eprrom_pattern_address + ((uint32_t)pattern * _pattern_total_mem_size);
   if (track != -1) {
     pattern_address += aciduino.seq.is303(track) ? _pattern_303_track_size * track : _pattern_303_mem_size + (_pattern_808_track_size * (track-TRACK_NUMBER_303));
   }
@@ -471,7 +706,20 @@ uint16_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
 
 void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
 {
-  uint16_t pattern_address = 0;
+  uint32_t pattern_address = 0;
+  uint16_t saved_patterns = getNumOfPatterns();
+
+  // storage bounds: sdcard allows the pending empty slot right past the last saved pattern,
+  // epprom pattern space is fixed
+  if (uCtrl.storage->isSdActive() ? (pattern > saved_patterns) : (pattern >= saved_patterns)) {
+    return;
+  }
+
+  // pending empty slot: factory state into memory, waits to be saved to become a pattern
+  if (uCtrl.storage->isSdActive() && pattern == saved_patterns) {
+    loadDefaultPattern(track);
+    return;
+  }
 
   if (track != -1) {
     // load only a track patttern
@@ -514,9 +762,37 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
   }
 }
 
+// factory state for a not yet saved pattern slot(the pending empty pattern space)
+void Aciduino::loadDefaultPattern(int8_t track)
+{
+  if (track == -1) {
+    // whole pattern: engine factory state + unmuted mute grid
+    aciduino.seq.initPatternData();
+    for (uint8_t i=0; i < 4; i++) {
+      _mute_grid[i].map_303 = 0xFFFF;
+      for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
+        _mute_grid[i].map_808[j] = 0xFFFF;
+      }
+    }
+  } else {
+    // single track from the pending slot
+    aciduino.seq.setMute(track, true);
+    aciduino.seq.clearStackNote(track);
+    aciduino.seq.initPatternData(track);
+    aciduino.seq.setMute(track, false);
+  }
+}
+
 void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
 {
-  uint16_t pattern_address = 0;
+  uint32_t pattern_address = 0;
+  uint16_t saved_patterns = getNumOfPatterns();
+
+  // storage bounds: sdcard grows at the pending slot, epprom pattern space is fixed
+  if (uCtrl.storage->isSdActive() ? (pattern > saved_patterns) : (pattern >= saved_patterns)) {
+    return;
+  }
+
   if (track != -1) {
     // save only a track patttern
     pattern_address = getPatternEppromAddress(pattern, track);
@@ -543,6 +819,10 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
 
 void Aciduino::saveMuteGrid(uint8_t pattern)
 {
+  uint16_t saved_patterns = getNumOfPatterns();
+  if (uCtrl.storage->isSdActive() ? (pattern > saved_patterns) : (pattern >= saved_patterns)) {
+    return;
+  }
   // _mute_grid data
   uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+_pattern_303_mem_size+_pattern_808_mem_size);
 }

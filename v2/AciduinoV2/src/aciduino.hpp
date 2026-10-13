@@ -92,6 +92,17 @@ typedef struct
   uint16_t map_808[TRACK_NUMBER_808] = {0xFFFF};
 } MUTE_PATTERN;
 
+// sdcard session sidecar data: state that lives with the session but
+// is not part of the epprom compatible image(epprom layout must not change)
+typedef struct
+{
+  float tempo = 126.0f;
+  uint8_t shuffle_on = 0;
+  uint8_t shuffle_sig = 0;
+  int8_t shuffle_template[2] = {0, 0};
+  uint8_t pattern_grid[TRACK_NUMBER_303+TRACK_NUMBER_808] = {0};
+} SESSION_EXTRAS;
+
 
 class Aciduino
 {
@@ -109,18 +120,24 @@ public:
   void stop();
   void pause();
   uint8_t getSelectedTrack() { return _selected_track; };
-  uint8_t setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
+  void setSelectedTrack(uint8_t selected_track) { _selected_track = selected_track; };
   uint8_t isPlaying() { return _playing; };
   void generatePattern(int8_t track = -1);
 
   // session
   void loadSession();
   void saveSession();
+  bool selectSession(uint16_t index);
+  bool newSession();
+  uint16_t getNumOfSessions();
+  uint16_t getActiveSession();
   void loadPattern(uint8_t pattern, int8_t track = -1, int8_t to_track = -1);
   void savePattern(uint8_t pattern, int8_t track = -1, int8_t from_track = -1);
   void saveMuteGrid(uint8_t pattern);
   void copyPattern(uint8_t pattern, int8_t track = -1);
   bool pastePattern(uint8_t pattern, int8_t track = -1);
+  // sdcard grows patterns on demand: one pending empty slot past the last saved pattern
+  bool hasPendingPatternSlot();
 
   // midi
   void sendMidiCC(uint8_t cc, uint8_t value, uint8_t channel, uint8_t port, uint8_t interrupted = 0);
@@ -158,6 +175,9 @@ public:
   uint16_t getNumOfPatterns();
   uint16_t getSessionSize();
   uint16_t getStorageSize();
+  // shuffle signature(session data driven)
+  uint8_t getShuffleSig();
+  void setShuffleSig(uint8_t sig, int8_t * shuff);
 
   // utils
   int freeRam();
@@ -189,8 +209,14 @@ private:
 
   // session and storage
   void eppromInit();
-  uint16_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
+  void storageInit();
+  void applySessionExtras();
+  void loadDefaultPattern(int8_t track = -1);
+  uint32_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
   bool checkEppromDataLayoutChange();
+#if defined(USE_SDCARD_MODULE) && defined(USE_PAGE_MODULE) && (defined(USE_DIN_MODULE) || defined(USE_TOUCH_MODULE))
+  bool formatSdCardDialog();
+#endif
 
   GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
   GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
@@ -198,8 +224,11 @@ private:
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
   volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
   MUTE_PATTERN _mute_grid[4];
-  // TODO: should goes to session data?
   uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
+  // sdcard session extras(tempo/shuffle/pattern grid live here and travel with the session)
+  SESSION_EXTRAS _session_extras;
+  uint8_t _shuffle_sig = 0;
+  int8_t _shuffle_template[2] = {0, 0};
 
   // helpers for copy and paste pattern
   uint8_t _copy_pattern = 0;

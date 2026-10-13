@@ -84,22 +84,22 @@ class Engine
     virtual void setTrackChannel(uint8_t track, uint8_t channel) {}
 
     virtual void setTrackLength(uint8_t track, uint16_t length) {}
-    virtual uint16_t getTrackLength(uint8_t track) {}
+    virtual uint16_t getTrackLength(uint8_t track) { return 0; }
 
     virtual void rest(uint8_t track, uint8_t step, bool state) {}
 
-    virtual bool stepOn(uint8_t track, uint8_t step) {}
+    virtual bool stepOn(uint8_t track, uint8_t step) { return false; }
 
     virtual void setStepData(uint8_t track, uint8_t step, uint8_t data) {}
 
-    virtual uint8_t getStepData(uint8_t track, uint8_t step) {}
+    virtual uint8_t getStepData(uint8_t track, uint8_t step) { return 0; }
 
-    virtual uint8_t getCurrentStep(uint8_t track) {}
+    virtual uint8_t getCurrentStep(uint8_t track) { return 0; }
 
     // 808 only
     virtual void setTrackVoice(uint8_t track = 0, uint8_t voice = 0) {}
-    virtual uint8_t getTrackVoice(uint8_t track) {}
-    virtual const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0) {}
+    virtual uint8_t getTrackVoice(uint8_t track) { return 0; }
+    virtual const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0) { return ""; }
 
     void setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track)) {
       _onEventCallback = callback;

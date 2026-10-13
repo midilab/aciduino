@@ -13,7 +13,7 @@ struct SystemResources : PageComponent {
           genericOptionView("free ram", String(aciduino.freeRam()), line, col, selected, true);
           break;
         case 1:
-          genericOptionView("epprom", String(aciduino.getStorageSize()), line, col, selected, true);
+          genericOptionView(uCtrl.storage->isSdActive() ? "sdcard" : "epprom", String(aciduino.getStorageSize()), line, col, selected, true);
           break;
         case 2:
           genericOptionView("session", String(aciduino.getSessionSize()), line, col, selected, true);

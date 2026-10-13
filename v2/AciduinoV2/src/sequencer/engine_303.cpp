@@ -39,23 +39,26 @@ void Engine303::init()
 {
   // initing sequencer memory data
   for ( uint8_t track = 0; track < TRACK_NUMBER_303; track++ ) {
+    initTrack(track);
+  }
+}
 
-    _sequencer[track].data.shift = 0;
-    _sequencer[track].data.step_length = STEP_MAX_SIZE_303;
-    _sequencer[track].data.transpose = 0;
-    _sequencer[track].data.tune = 0;
-    _sequencer[track].step_location = 0;
-    _sequencer[track].mute = 0;
+void Engine303::initTrack(uint8_t track)
+{
+  _sequencer[track].data.shift = 0;
+  _sequencer[track].data.step_length = STEP_MAX_SIZE_303;
+  _sequencer[track].data.transpose = 0;
+  _sequencer[track].data.tune = 0;
+  _sequencer[track].step_location = 0;
+  _sequencer[track].mute = 0;
 
-    // clear step data
-    clearStepData(track, 0);
-  
-    // initing note stack data
-    for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
-      _sequencer[track].stack[i].note = 0;
-      _sequencer[track].stack[i].length = -1;
-    }
-    
+  // clear step data
+  clearStepData(track, 0);
+
+  // initing note stack data
+  for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
+    _sequencer[track].stack[i].note = 0;
+    _sequencer[track].stack[i].length = -1;
   }
 }
 

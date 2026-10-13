@@ -48,37 +48,41 @@ void Engine808::init()
 {
   // initing sequencer memory data
   for ( uint8_t track = 0; track < TRACK_NUMBER_808; track++ ) {
+    initTrack(track);
+  }
+}
 
-    _sequencer[track].step_location = 0;
-    _sequencer[track].step_length = STEP_MAX_SIZE_808;
-    _sequencer[track].mute = 0;
-    _sequencer[track].roll_type = SUB_STEP_1;
+void Engine808::initTrack(uint8_t track)
+{
+  _sequencer[track].step_location = 0;
+  _sequencer[track].step_length = STEP_MAX_SIZE_808;
+  _sequencer[track].mute = 0;
+  _sequencer[track].roll_type = SUB_STEP_1;
 
 #ifdef GLOBAL_ACCENT
-    for ( uint8_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
-      CLR_BIT(_sequencer[track].accent, i);
-    }
+  for ( uint8_t i = 0; i < STEP_MAX_SIZE_808; i++ ) {
+    CLR_BIT(_sequencer[track].accent, i);
+  }
 #endif
 
-    // initing voice data
-    for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
-      // avoid setup problems for our 11 pre defined names
-      if (i < 11) {
-        _sequencer[track].voice[i].name[0] = _default_voice_data_808[i].name[0]; 
-        _sequencer[track].voice[i].name[1] = _default_voice_data_808[i].name[1]; 
-      } else {
-        _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
-      }
-      _sequencer[track].voice[i].mute = 0;
-      _sequencer[track].voice[i].shift = 0;
-      _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
-      _sequencer[track].voice[i].trigger_ctrl = 0;
-      _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
-      clearStepData(track, i);
-      // if bd, fill 4/4 kick pattern;
-      if (i == 0) {
-        _sequencer[track].voice[i].steps = 1229782938247303441;
-      }
+  // initing voice data
+  for ( uint8_t i = 0; i < VOICE_MAX_SIZE_808; i++ ) {
+    // avoid setup problems for our 11 pre defined names
+    if (i < 11) {
+      _sequencer[track].voice[i].name[0] = _default_voice_data_808[i].name[0]; 
+      _sequencer[track].voice[i].name[1] = _default_voice_data_808[i].name[1]; 
+    } else {
+      _sequencer[track].voice[i].name[0] = (char)(i+97); // 97=a assci
+    }
+    _sequencer[track].voice[i].mute = 0;
+    _sequencer[track].voice[i].shift = 0;
+    _sequencer[track].voice[i].step_length = STEP_MAX_SIZE_808;
+    _sequencer[track].voice[i].trigger_ctrl = 0;
+    _sequencer[track].voice[i].note = _default_voice_data_808[i].note; //36+i; // general midi drums map #36 kick drum
+    clearStepData(track, i);
+    // if bd, fill 4/4 kick pattern;
+    if (i == 0) {
+      _sequencer[track].voice[i].steps = 1229782938247303441;
     }
   }
 }

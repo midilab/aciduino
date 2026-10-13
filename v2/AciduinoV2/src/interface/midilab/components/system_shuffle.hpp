@@ -30,13 +30,13 @@ struct ShuffleSignature : PageComponent {
   int8_t* shuffle_templates[7] = {shuffle_50, shuffle_54, shuffle_58, shuffle_62, shuffle_66, shuffle_71, shuffle_75};
 
   void view() {
-    genericOptionView("sig.", shuffle_name[current_shuffle], line, col, selected);
+    genericOptionView("sig.", shuffle_name[aciduino.getShuffleSig()], line, col, selected);
   }
 
   void change(int16_t data) {
-    current_shuffle = parseData(data, 0, 6, current_shuffle);
+    current_shuffle = parseData(data, 0, 6, aciduino.getShuffleSig());
     // uClock shuffle
-    uClock.setShuffleTemplate(shuffle_templates[current_shuffle], template_size);
+    aciduino.setShuffleSig(current_shuffle, shuffle_templates[current_shuffle]);
   }
 
 } shuffleSignatureComponent;

@@ -106,6 +106,27 @@ void * AcidSequencerClass::getPatternData(uint8_t track)
     return _engine808.getPatternData(track-TRACK_NUMBER_303);
 }
 
+void AcidSequencerClass::initPatternData(int8_t track)
+{
+  // factory state for the whole pattern(both engines)
+  if (track == -1) {
+    if (TRACK_NUMBER_303 > 0) {
+      _engine303.init();
+    }
+    if (TRACK_NUMBER_808 > 0) {
+      _engine808.init();
+    }
+    return;
+  }
+
+  // 303 request
+  if (track < TRACK_NUMBER_303)
+    _engine303.initTrack(track);
+  // 808 request?
+  else
+    _engine808.initTrack(track-TRACK_NUMBER_303);
+}
+
 void AcidSequencerClass::clearStackNote(int8_t track)
 {
   if (track == -1) {

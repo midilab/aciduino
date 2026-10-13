@@ -88,6 +88,7 @@ class Engine808 : public Engine
 {
     public:
       void init();
+      void initTrack(uint8_t track);
 
       void rest(uint8_t track, uint8_t step, bool state);
       bool stepOn(uint8_t track, uint8_t step);

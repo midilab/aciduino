@@ -92,6 +92,7 @@ class AcidSequencerClass
       void setRecMode(REC_MODE rec_mode);
 
       // general interface for UI/Sequencer for 303 and 808 generic access
+      void initPatternData(int8_t track = -1);
       void * getPatternData(uint8_t track);
       uint16_t get303PatternMemorySize();
       uint16_t get303PatternTrackSize();

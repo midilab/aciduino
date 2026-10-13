@@ -32,6 +32,9 @@ struct PatternControl : PageComponent {
       selected_track = aciduino.getSelectedTrack();
       selected_pattern = selected_line-2+pattern_index;
       uint8_t line_count = 1;
+      uint16_t saved_patterns = aciduino.getNumOfPatterns();
+      // last selectable pattern: the pending empty slot on sdcard, last saved pattern on epprom
+      uint16_t last_pattern = aciduino.hasPendingPatternSlot() ? saved_patterns : (saved_patterns ? saved_patterns - 1 : 0);
 
     
       if (selected_line == 1)
@@ -40,7 +43,13 @@ struct PatternControl : PageComponent {
       // ui for all vs single
       // for all blink twice fast as selected one for the pattern line
       // patterns
-      for (uint8_t i=pattern_index; i < pattern_index+4; i++) {
+      for (uint16_t i=pattern_index; i < (uint16_t)pattern_index+4; i++) {
+
+        // no pattern space here: leave the row blank
+        if (i > last_pattern) {
+          line_count++;
+          continue;
+        }
         
         // pattern grid
         for (uint8_t j=0; j < max_elements_per_grid; j++) {
@@ -52,9 +61,13 @@ struct PatternControl : PageComponent {
           }
         }
 
-        // pattern name
-        uCtrl.oled->print("ptrn", line+line_count, 20, line_count+1 == selected_line ? true : false);
-        uCtrl.oled->print(String(i+1), line+line_count, 25, line_count+1 == selected_line ? true : false);
+        // pattern name: the pending empty slot waits to be saved to become a pattern
+        if (aciduino.hasPendingPatternSlot() && i == saved_patterns) {
+          uCtrl.oled->print("new", line+line_count, 20, line_count+1 == selected_line ? true : false);
+        } else {
+          uCtrl.oled->print("ptrn", line+line_count, 20, line_count+1 == selected_line ? true : false);
+          uCtrl.oled->print(String(i+1), line+line_count, 25, line_count+1 == selected_line ? true : false);
+        }
 
         line_count++;
       }
@@ -120,7 +133,9 @@ struct PatternControl : PageComponent {
           break;
         case DOWN:
             if (selected_line == 6) {
-              if (pattern_index < aciduino.getNumOfPatterns() - 4) {
+              // +1 for the pending empty slot on sdcard
+              uint16_t pattern_slots = aciduino.getNumOfPatterns() + (aciduino.hasPendingPatternSlot() ? 1 : 0);
+              if (pattern_slots > 4 && pattern_index < (uint16_t)(pattern_slots - 4)) {
                 pattern_index++;
               }
               selected_line = 5;
@@ -204,6 +219,11 @@ struct PatternControl : PageComponent {
     }
 
     void changePattern(uint8_t pattern, int8_t track = -1) {
+      // beyond the pending empty slot? nothing to change to
+      if (pattern > aciduino.getNumOfPatterns()) {
+        return;
+      }
+
       if (track == -1) {
         // load all tracks pattern
         aciduino.loadPattern(pattern);

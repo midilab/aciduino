@@ -395,7 +395,7 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
       // slide into the same pitch is a single gate, as on tb303: drop the
       // still sounding note without a note off, the new step owns the release
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
-        if ( _sequencer[track].stack[i].length > 0 && _sequencer[track].stack[i].note == note ) {
+        if ( _sequencer[track].stack[i].length != -1 && _sequencer[track].stack[i].note == note ) {
           _sequencer[track].stack[i].length = -1;
         }
       }
@@ -424,12 +424,13 @@ void Engine303::on96PPQNCall(uint32_t tick)
 
     // handle note on stack
     for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
-      if ( _sequencer[track].stack[i].length != -1 ) {
+      // uClock calls onStepCall before this on the same pulse, so a note
+      // placed on this pulse is released only after its full length has passed
+      if ( _sequencer[track].stack[i].length == 0 ) {
+        _onEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, track);
+        _sequencer[track].stack[i].length = -1;
+      } else if ( _sequencer[track].stack[i].length != -1 ) {
         --_sequencer[track].stack[i].length;
-        if ( _sequencer[track].stack[i].length == 0 ) {
-          _onEventCallback(NOTE_OFF, _sequencer[track].stack[i].note, 0, track);
-          _sequencer[track].stack[i].length = -1;
-        }
       }  
     }
   

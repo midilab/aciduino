@@ -358,19 +358,21 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
     if ( _sequencer[track].data.step[_sequencer[track].step_location].rest == 0 ) {
 
       // check for slide or tie event ahead of _sequencer[track].step_location
+      // each tied rest adds one step. slide belongs to the note, as on tb303, so it
+      // carries across tied rests and overlaps the next played note by 8 pulses
       step = _sequencer[track].step_location;
       next_step = step;
-      step_length = _sequencer[track].data.step_length + 1;
-      for ( uint8_t i = 1; i < step_length; i++  ) {
+      step_length = _sequencer[track].data.step_length;
+      for ( uint8_t i = 1; i <= step_length; i++  ) {
         next_step = ++next_step % step_length;
-        if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
-          length = NOTE_LENGTH_303 + 20;
-          break;
-        } else if (_sequencer[track].data.step[next_step].tie == 1 && _sequencer[track].data.step[next_step].rest == 1) {
+        if (_sequencer[track].data.step[next_step].tie == 1 && _sequencer[track].data.step[next_step].rest == 1) {
           length = NOTE_LENGTH_303 + (i * 24);
-        } else if ( _sequencer[track].data.step[next_step].rest == 0 || _sequencer[track].data.step[next_step].tie == 0) {
-          break;
+          continue;
         }
+        if (_sequencer[track].data.step[step].slide == 1 && _sequencer[track].data.step[next_step].rest == 0) {
+          length = NOTE_LENGTH_303 + 20 + ((i-1) * 24);
+        }
+        break;
       }
 
       // apply shuffle length?
@@ -379,19 +381,28 @@ void Engine303::onStepCall(uint32_t tick, int8_t shuffle_length_ctrl)
         length = length_shuffe <= 0 ? 1 : length_shuffe;
       }
       
+      if ( _sequencer[track].data.tune > 0 ) {
+        note = Harmonizer.harmonizer(_sequencer[track].data.step[_sequencer[track].step_location].note) + (_sequencer[track].data.tune-1);
+      } else {
+        note = _sequencer[track].data.step[_sequencer[track].step_location].note;
+      }
+      note += _sequencer[track].data.transpose;
+      // in case transpose push note away from the lower or higher midi note range barrier do not play it
+      if ( note < 0 || note > 127 ) {
+        continue;
+      }
+
+      // slide into the same pitch is a single gate, as on tb303: drop the
+      // still sounding note without a note off, the new step owns the release
+      for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
+        if ( _sequencer[track].stack[i].length > 0 && _sequencer[track].stack[i].note == note ) {
+          _sequencer[track].stack[i].length = -1;
+        }
+      }
+
       // find a free note stack to fit in
       for ( uint8_t i = 0; i < NOTE_STACK_SIZE_303; i++ ) {
         if ( _sequencer[track].stack[i].length == -1 ) {
-          if ( _sequencer[track].data.tune > 0 ) {
-            note = Harmonizer.harmonizer(_sequencer[track].data.step[_sequencer[track].step_location].note) + (_sequencer[track].data.tune-1);
-          } else {
-            note = _sequencer[track].data.step[_sequencer[track].step_location].note;
-          }
-          note += _sequencer[track].data.transpose;
-          // in case transpose push note away from the lower or higher midi note range barrier do not play it
-          if ( note < 0 || note > 127 ) {
-            break;
-          }
           _sequencer[track].stack[i].note = note;
           _sequencer[track].stack[i].length = length;
           // send note on

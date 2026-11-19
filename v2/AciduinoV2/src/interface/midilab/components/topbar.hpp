@@ -25,7 +25,7 @@ struct TopBar : PageComponent {
       uCtrl.oled->print("T", 1, 1); 
       uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), 1, 2); 
       uCtrl.oled->display->drawBox(0, 0, 10, 8);
-      uCtrl.oled->print(aciduino.seq.is303(aciduino.getSelectedTrack()) ? "303" : "808", 1, 4); 
+      uCtrl.oled->print(trackTypeLabel(aciduino.getSelectedTrack()), 1, 4);
 /*
       uCtrl.oled->display->drawBox(0, 0, 15, 8);
       //uCtrl.oled->drawBox();

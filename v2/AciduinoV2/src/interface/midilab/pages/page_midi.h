@@ -39,9 +39,10 @@ void midi_page_init()
   //uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, midi_page_analog_input, 2);   
   uCtrl.page->set("midi", midi_page_create, midi_page_destroy, midi_page_refresh, midi_page_digital_input, nullptr, 1);       
 
-  // register midi controller options per track
-  if (TRACK_NUMBER_303 > 0) {
-    // max 16 controls!
+  // register midi controller options per track type
+  // always register all maps: tracks can be created dynamically at runtime
+  {
+    // 303 controls, max 16 controls!
     midiControllerComponent.set303Control("filter", 74);
     midiControllerComponent.set303Control("reso.", 71);
     midiControllerComponent.set303Control("env mod", 12);
@@ -60,8 +61,8 @@ void midi_page_init()
     midiControllerComponent.set303Control("efx 4", 108);
     midiControllerComponent.set303Control("efx 5", 109);
   }
-  if (TRACK_NUMBER_808 > 0) {
-    // max 16 controls!
+  {
+    // 808 controls, max 16 controls!
     midiControllerComponent.set808Control("bd decay", 23);
     midiControllerComponent.set808Control("bd tone", 21);
     midiControllerComponent.set808Control("sd snap", 26);
@@ -80,4 +81,14 @@ void midi_page_init()
     midiControllerComponent.set808Control("ht level", 54);
     midiControllerComponent.set808Control("rs level", 57);
   }  
+  {
+    // generic poly controls: rename/remap per device later
+    static const char * poly_ctrl_names[16] = {
+      "ctrl1", "ctrl2", "ctrl3", "ctrl4", "ctrl5", "ctrl6", "ctrl7", "ctrl8",
+      "ctrl9", "ctrl10", "ctrl11", "ctrl12", "ctrl13", "ctrl14", "ctrl15", "ctrl16"
+    };
+    for (uint8_t i=0; i < 16; i++) {
+      midiControllerComponent.setPolyControl(poly_ctrl_names[i], i+1);
+    }
+  }
 }

@@ -92,8 +92,20 @@ typedef struct
   uint16_t map_parts[SEQ_MAX_TRACKS] = {0xFFFF}; // 808 part level mute bits
 } MUTE_PATTERN;
 
+// session track layout: track count/types and the full per track setup.
+// The session is the source of truth; stored patterns are sanitized to it.
+#define TRACK_LAYOUT_MAGIC   0xA5C3
+#define TRACK_LAYOUT_VERSION 1
+
+typedef struct
+{
+  uint16_t magic;
+  uint8_t  version;
+  SEQ_TRACK tracks[SEQ_MAX_TRACKS];
+} TRACK_LAYOUT;
+
 // sdcard session sidecar data: state that lives with the session but
-// is not part of the epprom compatible image(epprom layout must not change)
+// is not part of the epprom compatible pattern image
 typedef struct
 {
   float tempo = 126.0f;
@@ -101,6 +113,7 @@ typedef struct
   uint8_t shuffle_sig = 0;
   int8_t shuffle_template[2] = {0, 0};
   uint8_t pattern_grid[SEQ_MAX_TRACKS] = {0};
+  TRACK_LAYOUT track_layout;
 } SESSION_EXTRAS;
 
 
@@ -211,8 +224,14 @@ private:
   void eppromInit();
   void storageInit();
   void applySessionExtras();
+  void fixSelectedTrack();
+  void captureTrackLayout();
+  void writeTrackLayout();
+  bool layoutChanged();
+  bool layoutRecordValid();
+  void sanitizePatterns();
   void loadDefaultPattern(int8_t track = -1);
-  uint32_t getPatternEppromAddress(uint8_t pattern, int8_t track = -1);
+  uint32_t getPatternEppromAddress(uint8_t pattern);
   bool checkEppromDataLayoutChange();
 #if defined(USE_SDCARD_MODULE) && defined(USE_PAGE_MODULE) && (defined(USE_DIN_MODULE) || defined(USE_TOUCH_MODULE))
   bool formatSdCardDialog();
@@ -227,6 +246,8 @@ private:
   uint8_t _pattern_grid[SEQ_MAX_TRACKS];
   // scratch blob for single track save/load(covers the biggest possible track slice)
   uint8_t _track_image_buf[3 + sizeof(SEQ_TRACK) + SEQ_MAX_NOTES * sizeof(SEQ_EVENT)];
+  // scratch whole pattern image for per track read/modify/write
+  SEQ_IMAGE _pattern_scratch;
   // sdcard session extras(tempo/shuffle/pattern grid live here and travel with the session)
   SESSION_EXTRAS _session_extras;
   uint8_t _shuffle_sig = 0;
@@ -267,6 +288,10 @@ private:
   uint16_t _epprom_check_data_address;
   uint16_t _epprom_session_address;
   uint16_t _epprom_session_size;
+  // session track layout record, stored in the epprom tail free space
+  uint16_t _epprom_track_layout_address;
+  bool _layout_valid = false;
+  bool _layout_dirty = false;
   //
   // common pattern data definitions
   //

@@ -88,9 +88,16 @@ class AcidSequencerClass
       //
       void * getPatternImage();
       uint16_t getPatternImageSize();
-      uint32_t getTrackImageOffset(uint8_t track);
       bool saveTrackImage(uint8_t track, void *buf);
       bool loadTrackImage(uint8_t track, const void *buf);
+      bool saveTrackImageFrom(const SEQ_IMAGE *img, uint8_t track, void *buf);
+      bool loadTrackImageTo(SEQ_IMAGE *img, uint8_t track, const void *buf);
+      void copyTrackConfigs(SEQ_TRACK *out);
+      void applyTrackLayout(const SEQ_TRACK *layout);
+      void applyTrackSetup(uint8_t track, const SEQ_TRACK &setup);
+      void applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout);
+      void resetImage(SEQ_IMAGE *img);
+      bool exportTrackImage(uint8_t track, SEQ_IMAGE *img);
       void initPatternData(int8_t track = -1);
 
       //

@@ -6,12 +6,12 @@ struct PatternControl : PageComponent {
     // 4x16 grid style:
     uint8_t current_pattern = 0;
     uint8_t selected_pattern = 0;
-    uint8_t selected_track = 0;
-    uint8_t selected_track_ref = 0;
-    const uint8_t max_elements = TRACK_NUMBER_303 + TRACK_NUMBER_808;
-    const uint8_t max_elements_per_grid = max_elements < 11 ? max_elements : 11;
-    const uint8_t block_size = ceil(86.00 / max_elements_per_grid);
-    uint8_t track_index = 0;
+    uint8_t selected_track = 0;     // index inside the active track list
+    // active slots in slot order: the UI never assumes a track type layout
+    uint8_t slots[SEQ_MAX_TRACKS];
+    uint8_t slot_count = 0;
+    uint8_t max_elements_per_grid = 0;
+    uint8_t block_size = 0;
     uint8_t pattern_index = 0;
     bool copy_state = false;
     bool select_all = false;
@@ -27,11 +27,41 @@ struct PatternControl : PageComponent {
       update_selector = true;
     }
 
+    // rebuild the live track list(dynamic create/delete leaves holes in slots)
+    void buildSlots()
+    {
+      slot_count = 0;
+      for (uint8_t t=0; t < SEQ_MAX_TRACKS; t++) {
+        if (aciduino.seq.trackType(t) != SEQ_TRACK_NONE) {
+          slots[slot_count++] = t;
+        }
+      }
+      max_elements_per_grid = slot_count < 11 ? slot_count : 11;
+      block_size = max_elements_per_grid > 0 ? (uint8_t)ceil(86.00 / max_elements_per_grid) : 0;
+      if (selected_track >= slot_count) {
+        selected_track = slot_count > 0 ? slot_count - 1 : 0;
+      }
+    }
+
+    // first visible element, keeps the selection inside the 11 cell window
+    uint8_t windowStart()
+    {
+      return (max_elements_per_grid > 0 && selected_track >= max_elements_per_grid) ? selected_track - (max_elements_per_grid - 1) : 0;
+    }
+
     void view() {
-      // update selected mute block based on selected track(fast nav using track change)
-      selected_track = aciduino.getSelectedTrack();
+      buildSlots();
+      // map the selected slot to the live track list
+      uint8_t selected_slot = aciduino.getSelectedTrack();
+      for (uint8_t i=0; i < slot_count; i++) {
+        if (slots[i] == selected_slot) {
+          selected_track = i;
+          break;
+        }
+      }
       selected_pattern = selected_line-2+pattern_index;
       uint8_t line_count = 1;
+      uint8_t start = windowStart();
       uint16_t saved_patterns = aciduino.getNumOfPatterns();
       // last selectable pattern: the pending empty slot on sdcard, last saved pattern on epprom
       uint16_t last_pattern = aciduino.hasPendingPatternSlot() ? saved_patterns : (saved_patterns ? saved_patterns - 1 : 0);
@@ -53,11 +83,17 @@ struct PatternControl : PageComponent {
         
         // pattern grid
         for (uint8_t j=0; j < max_elements_per_grid; j++) {
+          uint8_t idx = start + j;
+          if (idx >= slot_count) {
+            continue;
+          }
+          uint8_t slot = slots[idx];
+          bool selected = (line_count+1 == selected_line && idx == selected_track) || (select_all == true && line_count+1 == selected_line);
           // default block base
-          uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
-          if (aciduino.getPatternGrid(j+track_index) != i) {
+          uCtrl.oled->drawBox(y+(line_count*8), x+(j*block_size), 6, block_size-2, selected);
+          if (aciduino.getPatternGrid(slot) != i) {
             // playing pattern box
-            uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, (line_count+1 == selected_line && j == selected_track) || (select_all == true && line_count+1 == selected_line) ? true : false);
+            uCtrl.oled->drawBox(y+(line_count*8)+1, x+(j*block_size)+1, 4, block_size-4, selected);
           }
         }
 
@@ -93,35 +129,24 @@ struct PatternControl : PageComponent {
     }
 
     void nav(uint8_t dir) {
+      buildSlots();
 
       switch (dir) {
         case LEFT:
-            if (selected_track == 0) {
-              if (track_index != 0) {
-                --track_index;
-              } else {
-                //selected_track = aciduino.seq.is303(selected_track) ? 0 : VOICE_MAX_SIZE_808-1;
-              }
-            } else {
+            if (selected_track > 0) {
               --selected_track;
-            }      
-            
-            aciduino.setSelectedTrack(selected_track + track_index);
-            selected_track_ref = aciduino.getSelectedTrack();
+            }
+            if (slot_count > 0) {
+              aciduino.setSelectedTrack(slots[selected_track]);
+            }
           break;
         case RIGHT:
-            if (selected_track < max_elements-1) {
+            if (selected_track + 1 < slot_count) {
               ++selected_track;
             }
-            /*
-            if (max_elements_per_grid + track_index < max_elements) {
-              ++track_index;
-            } else {
-              ++selected_track;
-            }*/
-
-            aciduino.setSelectedTrack(selected_track + track_index);
-            selected_track_ref = aciduino.getSelectedTrack();
+            if (slot_count > 0) {
+              aciduino.setSelectedTrack(slots[selected_track]);
+            }
           break;
         case UP:
             if (selected_line == 1) {
@@ -153,14 +178,18 @@ struct PatternControl : PageComponent {
       // INCREMENT_SECONDARY -3 // changes selected track
       // DECREMENT_SECONDARY -4 // changes selected track
       // POT // last used midi control
+      buildSlots();
       if (data == INCREMENT) {
         changePattern(selected_pattern);
       } else if (data == DECREMENT) {
-        changePattern(selected_pattern, selected_track);
+        if (slot_count > 0) {
+          changePattern(selected_pattern, slots[selected_track]);
+        }
       }
     }
     
     void function1() {
+      buildSlots();
       if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         save_as_state = true;
       } else {
@@ -175,7 +204,9 @@ struct PatternControl : PageComponent {
             aciduino.copyPattern(selected_pattern);
           } else {
             // copy track
-            aciduino.copyPattern(selected_pattern, selected_track);
+            if (slot_count > 0) {
+              aciduino.copyPattern(selected_pattern, slots[selected_track]);
+            }
           }
           copy_state = true;
         }
@@ -183,11 +214,12 @@ struct PatternControl : PageComponent {
     }
 
     void function2() {
+      buildSlots();
       // save: memory and pattern selected per track as it is on grid
       if (uCtrl.page->isShiftPressed() && !(copy_state || save_as_state)) {
         // save the grid as it is selected per track
-        for (uint8_t i=0; i < max_elements; i++) {
-          aciduino.savePattern(aciduino.getPatternGrid(i), i);
+        for (uint8_t i=0; i < slot_count; i++) {
+          aciduino.savePattern(aciduino.getPatternGrid(slots[i]), slots[i]);
         }
         // save _mute_grid for current_pattern only
         aciduino.saveMuteGrid(current_pattern);
@@ -201,7 +233,7 @@ struct PatternControl : PageComponent {
             }
           // paste track
           } else {
-            if (aciduino.pastePattern(selected_pattern, selected_track)) {
+            if (slot_count > 0 && aciduino.pastePattern(selected_pattern, slots[selected_track])) {
               
             }
           }
@@ -227,8 +259,10 @@ struct PatternControl : PageComponent {
       if (track == -1) {
         // load all tracks pattern
         aciduino.loadPattern(pattern);
-        for (uint8_t i=0; i < max_elements; i++) {
-          aciduino.setPatternGrid(i, pattern);
+        // the loaded image can bring a different track layout
+        buildSlots();
+        for (uint8_t i=0; i < slot_count; i++) {
+          aciduino.setPatternGrid(slots[i], pattern);
         }
       } else {
         // loads only a track pattern

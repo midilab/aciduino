@@ -28,12 +28,7 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // sequence variation A/B
     //uCtrl.page->component(variationComponent, 4, 1);
     
-    if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-      // randomizer type: classic, bjulrk
-      uCtrl.page->component(tuneComponent, 4, 1);
-      uCtrl.page->component(transposeComponent, 4, 2);
-    } else {
-      // 808
+    if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
       // voice init point.
       // voice config note for midi, port for cv
       // note(selected voice)/port(eurorack)
@@ -41,6 +36,10 @@ void step_sequencer_page_refresh(uint8_t subpage)
       //uCtrl.page->component(voiceSelectComponent, 4, 1);
       uCtrl.page->component(voiceConfigComponent, 4, 1);
       uCtrl.page->component(rollTypeComponent, 4, 2);
+    } else {
+      // 303 + poly: tune is stored on poly but inert until noteHook covers it
+      uCtrl.page->component(tuneComponent, 4, 1);
+      uCtrl.page->component(transposeComponent, 4, 2);
     }
     
     // step edit

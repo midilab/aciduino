@@ -41,11 +41,16 @@ void NoteSequencer::factoryReset()
 void NoteSequencer::init()
 {
   factoryReset();
-  // legacy friendly slot order: 303s first, then 808, then poly
-  createTrack(SEQ_TRACK_303);
-  createTrack(SEQ_TRACK_303);
-  createTrack(SEQ_TRACK_808);
-  createTrack(SEQ_TRACK_POLY);
+  // default layout: 303s, then poly, then 808
+  for (uint8_t i = 0; i < TRACK_NUMBER_303; i++) {
+    createTrack(SEQ_TRACK_303);
+  }
+  for (uint8_t i = 0; i < TRACK_NUMBER_POLY; i++) {
+    createTrack(SEQ_TRACK_POLY);
+  }
+  for (uint8_t i = 0; i < TRACK_NUMBER_808; i++) {
+    createTrack(SEQ_TRACK_808);
+  }
 }
 
 //
@@ -974,15 +979,6 @@ uint16_t NoteSequencer::imageSize()
   return (uint16_t)sizeof(SEQ_IMAGE);
 }
 
-uint32_t NoteSequencer::trackImageOffset(uint8_t track)
-{
-  if (track >= SEQ_MAX_TRACKS) {
-    return 0;
-  }
-  // byte offset of the track slice inside the whole image
-  return (uint32_t)offsetof(SEQ_IMAGE, pool) + (uint32_t)_img.tracks[track].start * sizeof(SEQ_EVENT);
-}
-
 bool NoteSequencer::saveTrackImage(uint8_t track, void *buf)
 {
   if (track >= SEQ_MAX_TRACKS || buf == nullptr) {
@@ -1052,6 +1048,344 @@ bool NoteSequencer::loadTrackImage(uint8_t track, const void *buf)
     rebuildMask(track);
   }
   ATOMIC(tr->mute = 0);
+  return true;
+}
+
+bool NoteSequencer::saveTrackImageFrom(const SEQ_IMAGE *img, uint8_t track, void *buf)
+{
+  if (img == nullptr || track >= SEQ_MAX_TRACKS || buf == nullptr) {
+    return false;
+  }
+
+  const SEQ_TRACK *tr = &img->tracks[track];
+  // stored pool is packed in slot order: derive the slice from the counts
+  uint16_t start = 0;
+  for (uint8_t t = 0; t < track; t++) {
+    start += img->tracks[t].count;
+  }
+  if ((uint32_t)start + tr->count > SEQ_MAX_NOTES) {
+    return false;
+  }
+
+  uint16_t size = (uint16_t)(2 + sizeof(SEQ_TRACK) + tr->count * sizeof(SEQ_EVENT));
+
+  uint16_t *hdr = (uint16_t *)buf;
+  *hdr = size;
+  memcpy((uint8_t *)buf + 2, tr, sizeof(SEQ_TRACK));
+  if (tr->count > 0) {
+    memcpy((uint8_t *)buf + 2 + sizeof(SEQ_TRACK), &img->pool[start], tr->count * sizeof(SEQ_EVENT));
+  }
+
+  return true;
+}
+
+bool NoteSequencer::loadTrackImageTo(SEQ_IMAGE *img, uint8_t track, const void *buf)
+{
+  if (img == nullptr || track >= SEQ_MAX_TRACKS || buf == nullptr) {
+    return false;
+  }
+
+  const uint8_t *raw = (const uint8_t *)buf;
+  uint16_t size = raw[0] | ((uint16_t)raw[1] << 8);
+  if (size < 2 + sizeof(SEQ_TRACK) || size > 2 + sizeof(SEQ_TRACK) + SEQ_MAX_NOTES * sizeof(SEQ_EVENT)) {
+    return false;
+  }
+  uint16_t count = (uint16_t)((size - 2 - sizeof(SEQ_TRACK)) / sizeof(SEQ_EVENT));
+
+  uint16_t img_total = 0;
+  uint16_t old_start = 0;
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    if (t < track) {
+      old_start += img->tracks[t].count;
+    }
+    img_total += img->tracks[t].count;
+  }
+
+  SEQ_TRACK *dst = &img->tracks[track];
+  uint16_t old_count = dst->count;
+  if (img_total > SEQ_MAX_NOTES) {
+    return false;
+  }
+  if ((uint32_t)old_start + old_count > img_total) {
+    return false;
+  }
+  if ((uint32_t)old_start + count > SEQ_MAX_NOTES) {
+    return false;
+  }
+
+  uint32_t tail = (uint32_t)(img_total - (old_start + old_count));
+  if (tail > 0 && count != old_count) {
+    memmove(&img->pool[old_start + count], &img->pool[old_start + old_count], tail * sizeof(SEQ_EVENT));
+  }
+  if (count > 0) {
+    memcpy(&img->pool[old_start], raw + 2 + sizeof(SEQ_TRACK), count * sizeof(SEQ_EVENT));
+  }
+
+  memcpy(dst, raw + 2, sizeof(SEQ_TRACK));
+  dst->start = old_start;
+  dst->count = count;
+  dst->cursor = 0;
+  dst->cur_step = 0;
+
+  uint16_t off = 0;
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    img->tracks[t].start = off;
+    off += img->tracks[t].count;
+  }
+
+  memset(img->mask[track], 0, 16);
+  if (dst->type == SEQ_TRACK_808) {
+    for (uint8_t p = 0; p < PARTS_808; p++) {
+      if (dst->parts[p].mute) {
+        SET_BIT(img->mask[track][dst->parts[p].note >> 3], dst->parts[p].note & 7);
+      }
+    }
+  }
+
+  return true;
+}
+
+//
+// session track layout
+//
+
+static void seqApplySetup(SEQ_TRACK &tr, const SEQ_TRACK &in)
+{
+  tr.length = (in.length < 2) ? 2 : in.length;
+  tr.shift = in.shift;
+  tr.transpose = in.transpose;
+  tr.gate = (in.gate == 0 || in.gate > 24) ? SEQ_DEFAULT_GATE : in.gate;
+  tr.note_vel = in.note_vel;
+  tr.accent_vel = in.accent_vel;
+  tr.tune = in.tune;
+  tr.roll_type = in.roll_type;
+  for (uint8_t p = 0; p < PARTS_808; p++) {
+    tr.parts[p].note = in.parts[p].note;
+    memcpy(tr.parts[p].name, in.parts[p].name, MAX_PART_NAME_CHARS);
+  }
+}
+
+// 808 events store the part note: follow a part remap coming from the session
+static void seqRemap808Events(SEQ_EVENT *ev, uint16_t count, const SEQ_PART *old_parts, const SEQ_PART *new_parts)
+{
+  for (uint16_t i = 0; i < count; i++) {
+    for (uint8_t p = 0; p < PARTS_808; p++) {
+      if (old_parts[p].note == ev[i].note) {
+        ev[i].note = new_parts[p].note;
+        break;
+      }
+    }
+  }
+}
+
+void NoteSequencer::copyTrackConfigs(SEQ_TRACK *out) const
+{
+  if (out == nullptr) {
+    return;
+  }
+
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    out[t] = _img.tracks[t];
+    // setup only: runtime and performance state is not session data
+    out[t].start = 0;
+    out[t].count = 0;
+    out[t].cursor = 0;
+    out[t].cur_step = 0;
+    out[t].mute = 0;
+    out[t].last_note = 36;
+    for (uint8_t p = 0; p < PARTS_808; p++) {
+      out[t].parts[p].mute = 0;
+    }
+  }
+}
+
+void NoteSequencer::applyTrackSetup(uint8_t track, const SEQ_TRACK &setup)
+{
+  if (track >= SEQ_MAX_TRACKS) {
+    return;
+  }
+
+  SEQ_TRACK *tr = &_img.tracks[track];
+  if (setup.type == SEQ_TRACK_NONE || setup.type != tr->type) {
+    return;
+  }
+
+  SEQ_PART old_parts[PARTS_808];
+  bool remap = (tr->type == SEQ_TRACK_808);
+  if (remap) {
+    memcpy(old_parts, tr->parts, sizeof(old_parts));
+  }
+  seqApplySetup(*tr, setup);
+  if (remap) {
+    seqRemap808Events(slice(track), tr->count, old_parts, tr->parts);
+  }
+  rebuildMask(track);
+}
+
+void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
+{
+  if (img == nullptr || layout == nullptr) {
+    return;
+  }
+
+  uint16_t off = 0;
+  uint16_t src_off = 0;
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    SEQ_TRACK *tr = &img->tracks[t];
+    uint8_t desired = layout[t].type;
+    bool valid = (desired > SEQ_TRACK_NONE && desired < SEQ_TRACK_COUNT);
+
+    // stored pool is packed in slot order: derive the slice from the counts
+    uint16_t src_count = tr->count;
+    if ((uint32_t)src_off + src_count > SEQ_MAX_NOTES) {
+      src_count = 0;
+    }
+    uint16_t keep = 0;
+
+    if (valid && tr->type == desired) {
+      // same track type: keep its notes and take the session setup
+      keep = src_count;
+      if (keep > 0) {
+        memmove(&img->pool[off], &img->pool[src_off], keep * sizeof(SEQ_EVENT));
+      }
+      SEQ_PART old_parts[PARTS_808];
+      bool remap = (tr->type == SEQ_TRACK_808);
+      if (remap) {
+        memcpy(old_parts, tr->parts, sizeof(old_parts));
+      }
+      seqApplySetup(*tr, layout[t]);
+      if (remap && keep > 0) {
+        seqRemap808Events(&img->pool[off], keep, old_parts, tr->parts);
+      }
+    } else {
+      // new or dropped track: reset the slot, no events
+      memset(tr, 0, sizeof(SEQ_TRACK));
+      if (valid) {
+        tr->type = desired;
+        tr->gate = SEQ_DEFAULT_GATE;
+        tr->note_vel = SEQ_DEFAULT_NOTE_VEL;
+        tr->accent_vel = SEQ_DEFAULT_ACCENT_VEL;
+        tr->last_note = 36;
+        const SeqTrackHandler *h = SEQ_HANDLER_TABLE[desired];
+        if (h != nullptr) {
+          h->resetTrack(*tr);
+        }
+        seqApplySetup(*tr, layout[t]);
+      }
+    }
+
+    tr->start = off;
+    tr->count = keep;
+    tr->cursor = 0;
+    tr->cur_step = 0;
+    // a same type track keeps its mute state; new/dropped slots were memset
+    src_off += src_count;
+    off += keep;
+
+    memset(img->mask[t], 0, 16);
+    if (tr->type == SEQ_TRACK_808) {
+      for (uint8_t p = 0; p < PARTS_808; p++) {
+        if (tr->parts[p].mute) {
+          SET_BIT(img->mask[t][tr->parts[p].note >> 3], tr->parts[p].note & 7);
+        }
+      }
+    }
+  }
+}
+
+void NoteSequencer::applyTrackLayout(const SEQ_TRACK *layout)
+{
+  if (layout == nullptr) {
+    return;
+  }
+
+  clearActiveNotes(-1);
+  applyLayoutToImage(&_img, layout);
+  rebuildStarts();
+}
+
+void NoteSequencer::resetImage(SEQ_IMAGE *img)
+{
+  if (img == nullptr) {
+    return;
+  }
+
+  memset(img, 0, sizeof(SEQ_IMAGE));
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    img->tracks[t] = _img.tracks[t];
+    img->tracks[t].start = 0;
+    img->tracks[t].count = 0;
+    img->tracks[t].cursor = 0;
+    img->tracks[t].cur_step = 0;
+    img->tracks[t].mute = 0;
+    for (uint8_t p = 0; p < PARTS_808; p++) {
+      img->tracks[t].parts[p].mute = 0;
+    }
+  }
+}
+
+bool NoteSequencer::exportTrackImage(uint8_t track, SEQ_IMAGE *img)
+{
+  if (track >= SEQ_MAX_TRACKS || img == nullptr) {
+    return false;
+  }
+
+  const SEQ_TRACK *live = &_img.tracks[track];
+  SEQ_TRACK *dst = &img->tracks[track];
+
+  uint16_t img_total = 0;
+  uint16_t old_start = 0;
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    if (t < track) {
+      old_start += img->tracks[t].count;
+    }
+    img_total += img->tracks[t].count;
+  }
+
+  uint16_t old_count = dst->count;
+  uint16_t new_count = live->count;
+
+  if (img_total > SEQ_MAX_NOTES) {
+    return false;
+  }
+  if ((uint32_t)old_start + old_count > img_total) {
+    return false;
+  }
+  if ((uint32_t)old_start + new_count > SEQ_MAX_NOTES) {
+    return false;
+  }
+
+  // shift the stored tail, write the live slice, then fix the image starts
+  uint32_t tail = (uint32_t)(img_total - (old_start + old_count));
+  if (tail > 0 && new_count != old_count) {
+    memmove(&img->pool[old_start + new_count], &img->pool[old_start + old_count], tail * sizeof(SEQ_EVENT));
+  }
+  if (new_count > 0) {
+    memcpy(&img->pool[old_start], &_img.pool[live->start], new_count * sizeof(SEQ_EVENT));
+  }
+
+  SEQ_TRACK saved = *live;
+  saved.start = old_start;
+  saved.count = new_count;
+  saved.cursor = 0;
+  saved.cur_step = 0;
+  *dst = saved;
+
+  uint16_t off = 0;
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    img->tracks[t].start = off;
+    off += img->tracks[t].count;
+  }
+
+  memset(img->mask[track], 0, 16);
+  if (dst->type == SEQ_TRACK_808) {
+    for (uint8_t p = 0; p < PARTS_808; p++) {
+      if (dst->parts[p].mute) {
+        SET_BIT(img->mask[track][dst->parts[p].note >> 3], dst->parts[p].note & 7);
+      }
+    }
+  }
+
   return true;
 }
 

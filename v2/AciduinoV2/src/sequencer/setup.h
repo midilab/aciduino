@@ -45,12 +45,13 @@
 #define STEP_DEFAULT_LENGTH_POLY  64
 
 //
-// Legacy macros, kept for UI compatibility.
-// The default layout is: slots 0..TRACK_NUMBER_303-1 = 303 tracks,
-// then the 808 track, then the poly track(see NoteSequencer::init).
+// Default layout counts(see NoteSequencer::init).
+// Tracks can be created/deleted at runtime in any slot order; the UI works
+// from the live track list, not from these positions.
 //
 #define TRACK_NUMBER_303        2
 #define TRACK_NUMBER_808        1
+#define TRACK_NUMBER_POLY       1
 #define VOICE_MAX_SIZE_808      PARTS_808
 #define STEP_MAX_SIZE_303       STEP_DEFAULT_LENGTH_303
 #define STEP_MAX_SIZE_808       STEP_DEFAULT_LENGTH_808

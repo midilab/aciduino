@@ -35,7 +35,7 @@ AcidSequencerClass::AcidSequencerClass()
   _self = this;
   _out = nullptr;
 
-  // default layout: 2x 303 tracks, 1x 808 track, 1x poly track
+  // default layout: 2x 303 tracks, 1x poly track, 1x 808 track
   _seq.init();
 
   // 303 harmonizer runs on note out, transparent for the other track types
@@ -187,11 +187,6 @@ uint16_t AcidSequencerClass::getPatternImageSize()
   return _seq.imageSize();
 }
 
-uint32_t AcidSequencerClass::getTrackImageOffset(uint8_t track)
-{
-  return _seq.trackImageOffset(track);
-}
-
 bool AcidSequencerClass::saveTrackImage(uint8_t track, void *buf)
 {
   return _seq.saveTrackImage(track, buf);
@@ -200,6 +195,46 @@ bool AcidSequencerClass::saveTrackImage(uint8_t track, void *buf)
 bool AcidSequencerClass::loadTrackImage(uint8_t track, const void *buf)
 {
   return _seq.loadTrackImage(track, buf);
+}
+
+bool AcidSequencerClass::saveTrackImageFrom(const SEQ_IMAGE *img, uint8_t track, void *buf)
+{
+  return _seq.saveTrackImageFrom(img, track, buf);
+}
+
+bool AcidSequencerClass::loadTrackImageTo(SEQ_IMAGE *img, uint8_t track, const void *buf)
+{
+  return _seq.loadTrackImageTo(img, track, buf);
+}
+
+void AcidSequencerClass::copyTrackConfigs(SEQ_TRACK *out)
+{
+  _seq.copyTrackConfigs(out);
+}
+
+void AcidSequencerClass::applyTrackLayout(const SEQ_TRACK *layout)
+{
+  _seq.applyTrackLayout(layout);
+}
+
+void AcidSequencerClass::applyTrackSetup(uint8_t track, const SEQ_TRACK &setup)
+{
+  _seq.applyTrackSetup(track, setup);
+}
+
+void AcidSequencerClass::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
+{
+  _seq.applyLayoutToImage(img, layout);
+}
+
+void AcidSequencerClass::resetImage(SEQ_IMAGE *img)
+{
+  _seq.resetImage(img);
+}
+
+bool AcidSequencerClass::exportTrackImage(uint8_t track, SEQ_IMAGE *img)
+{
+  return _seq.exportTrackImage(track, img);
 }
 
 void AcidSequencerClass::initPatternData(int8_t track)

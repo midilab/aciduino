@@ -6,6 +6,15 @@
 // all Shared GUI components are programmed as PageComponent to be reused on different pages
 //
 
+// track type label used on the top bar and track info lines
+const char * trackTypeLabel(uint8_t track)
+{
+  if (aciduino.seq.is303(track)) return "303";
+  if (aciduino.seq.is808(track)) return "808";
+  if (aciduino.seq.isPoly(track)) return "POLY";
+  return "----";
+}
+
 // for a 1x grid 1x line size
 // large == true ? 2x grid size
 // used by a lot of simple components

@@ -14,8 +14,10 @@ struct MutePatternControl : PageComponent {
     uint8_t selected_pattern = 0;
     uint8_t selected_mute_chn = 0;
     uint8_t element_index = 0;
-    uint8_t selected_track_ref = 0;
-    const uint8_t max_elements = TRACK_NUMBER_303 + (TRACK_NUMBER_808 * VOICE_MAX_SIZE_808);
+    // live mute elements: one per non-808 track, one per 808 part
+    uint8_t element_track[SEQ_MAX_TRACKS * PARTS_808];
+    uint8_t element_voice[SEQ_MAX_TRACKS * PARTS_808];
+    uint8_t element_count = 0;
     const uint8_t max_elements_per_grid = 11;
     const uint8_t block_size = ceil(86.00 / max_elements_per_grid);
     
@@ -27,18 +29,83 @@ struct MutePatternControl : PageComponent {
       // enable more complex nav by updating selector pointer of page component
       update_selector = true;
     }
+
+    // rebuild the element list from the live track list, in slot order
+    void buildElements()
+    {
+      element_count = 0;
+      for (uint8_t t=0; t < SEQ_MAX_TRACKS; t++) {
+        if (aciduino.seq.trackType(t) == SEQ_TRACK_NONE) {
+          continue;
+        }
+        if (aciduino.seq.is808(t)) {
+          for (uint8_t v=0; v < PARTS_808; v++) {
+            element_track[element_count] = t;
+            element_voice[element_count] = v;
+            ++element_count;
+          }
+        } else {
+          element_track[element_count] = t;
+          element_voice[element_count] = 0;
+          ++element_count;
+        }
+      }
+      // keep the window valid after a track is deleted
+      if (element_count == 0) {
+        element_index = 0;
+        selected_mute_chn = 0;
+      } else if (element_index >= element_count) {
+        element_index = element_count > max_elements_per_grid ? element_count - max_elements_per_grid : 0;
+        selected_mute_chn = element_count - 1 - element_index;
+      }
+    }
+
+    void resolveElement(uint8_t idx, uint8_t &track, uint8_t &voice)
+    {
+      if (idx >= element_count) {
+        track = 0;
+        voice = 0;
+        return;
+      }
+      track = element_track[idx];
+      voice = element_voice[idx];
+    }
+
+    // keep the selected track/voice visible inside the 11 cell window
+    void focusElement(uint8_t idx)
+    {
+      if (idx >= max_elements_per_grid) {
+        element_index = idx - (max_elements_per_grid - 1);
+        selected_mute_chn = max_elements_per_grid - 1;
+      } else {
+        element_index = 0;
+        selected_mute_chn = idx;
+      }
+    }
+
+    void selectElement()
+    {
+      uint8_t idx = element_index + selected_mute_chn;
+      if (idx >= element_count) {
+        return;
+      }
+      uint8_t track = element_track[idx];
+      uint8_t voice = element_voice[idx];
+      aciduino.setSelectedTrack(track);
+      if (aciduino.seq.is808(track)) {
+        aciduino.seq.setTrackVoice(track, voice);
+      }
+    }
     
     void view() {
-      // update selected mute block based on selected track(fast nav using track change)
+      buildElements();
+      // follow the selected track(and 808 part), also after a track is deleted
       uint8_t selected_track = aciduino.getSelectedTrack();
-      if (selected_track < TRACK_NUMBER_303) {
-        selected_mute_chn = selected_track;
-        element_index = 0;
-      } else {
-        if (selected_track_ref != selected_track) {
-          selected_mute_chn = 0;
-          element_index = ((selected_track - TRACK_NUMBER_303) * VOICE_MAX_SIZE_808) + TRACK_NUMBER_303;
-          selected_track_ref = selected_track;
+      uint8_t selected_voice = aciduino.seq.is808(selected_track) ? aciduino.seq.getTrackVoice(selected_track) : 0;
+      for (uint8_t i=0; i < element_count; i++) {
+        if (element_track[i] == selected_track && element_voice[i] == selected_voice) {
+          focusElement(i);
+          break;
         }
       }
       
@@ -47,22 +114,16 @@ struct MutePatternControl : PageComponent {
         
         // mute grid
         for (uint8_t j=0; j < max_elements_per_grid; j++) {
+          uint8_t idx = j + element_index;
+          if (idx >= element_count) {
+            continue;
+          }
+          uint8_t track, voice;
+          resolveElement(idx, track, voice);
           // default block base
           uCtrl.oled->drawBox(y+(i*8), x+(j*block_size), 6, block_size-2, i+1 == selected_line && j == selected_mute_chn ? true : false);
-          
-          // 303
-          if (aciduino.seq.is303(j+element_index)) {
-            if (!aciduino.getMuteGridState(i, j+element_index)) {
-              uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
-            }
-          // 808
-          } else {
-            uint8_t map_ref = (j+element_index-TRACK_NUMBER_303);
-            uint8_t track = (map_ref/VOICE_MAX_SIZE_808)+TRACK_NUMBER_303;
-            uint8_t voice = map_ref%VOICE_MAX_SIZE_808;
-            if (!aciduino.getMuteGridState(i, track, voice)) {
-              uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
-            }
+          if (!aciduino.getMuteGridState(i, track, voice)) {
+            uCtrl.oled->drawBox(y+(i*8)+1, x+(j*block_size)+1, 4, block_size-4, i+1 == selected_line && j == selected_mute_chn ? true : false);
           }
         }
 
@@ -74,16 +135,10 @@ struct MutePatternControl : PageComponent {
       }
 
       // track info
-      //uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), line+4, 1);
-      if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-        //if (aciduino.seq.stepOn(aciduino.getSelectedTrack(), aciduino.seq.getCurrentStep(aciduino.getSelectedTrack())) && aciduino.isPlaying()) {
-        //  uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(aciduino.getSelectedTrack(), aciduino.seq.getCurrentStep(aciduino.getSelectedTrack()))), line+4, 1);
-        //}
-        //uCtrl.oled->print("303", line+4, 1);
-        //uCtrl.oled->print(String(aciduino.getSelectedTrack()+1), line+4, 7);
-      // 808
-      } else {
+      if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
         uCtrl.oled->print(aciduino.seq.getTrackVoiceName(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())), line+4, 1);
+      } else if (aciduino.seq.isPoly(aciduino.getSelectedTrack())) {
+        uCtrl.oled->print(trackTypeLabel(aciduino.getSelectedTrack()), line+4, 1);
       }
       
       setF1("<<");
@@ -91,50 +146,31 @@ struct MutePatternControl : PageComponent {
     }
 
     void nav(uint8_t dir) {
-      uint8_t map_ref;
+      buildElements();
+      if (element_count == 0) {
+        return;
+      }
+
       switch (dir) {
         case LEFT:
             if (selected_mute_chn == 0) {
               if (element_index != 0) {
                 --element_index;
-              } else {
-                //selected_mute_chn = aciduino.seq.is303(aciduino.getSelectedTrack()) ? 0 : VOICE_MAX_SIZE_808-1;
               }
             } else {
               --selected_mute_chn;
-            }      
-            
-            map_ref = selected_mute_chn + element_index;
-            if (map_ref < TRACK_NUMBER_303) {
-              aciduino.setSelectedTrack(map_ref);
-            } else {
-              aciduino.setSelectedTrack(((map_ref - TRACK_NUMBER_303) / VOICE_MAX_SIZE_808) + TRACK_NUMBER_303);
-              // selected_mute_channel_rel = map_ref%VOICE_MAX_SIZE_808;
-              aciduino.seq.setTrackVoice(aciduino.getSelectedTrack(), (map_ref-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
-              //aciduino.seq.setTrackVoice(aciduino.getSelectedTrack(), selected_mute_chn);
             }
-            selected_track_ref = aciduino.getSelectedTrack();
+            selectElement();
           break;
         case RIGHT:
-            if (selected_mute_chn == VOICE_MAX_SIZE_808-1) {
-              //selected_mute_chn = 0;
-              if (max_elements_per_grid + element_index < max_elements) {
+            if (selected_mute_chn == max_elements_per_grid-1) {
+              if (element_index + max_elements_per_grid < element_count) {
                 ++element_index;
               }
-            } else {
+            } else if (element_index + selected_mute_chn + 1 < element_count) {
               ++selected_mute_chn;
             }
-
-            map_ref = selected_mute_chn + element_index;
-            if (map_ref < TRACK_NUMBER_303) {
-              aciduino.setSelectedTrack(map_ref);
-            } else {
-              aciduino.setSelectedTrack(((map_ref - TRACK_NUMBER_303) / VOICE_MAX_SIZE_808) + TRACK_NUMBER_303);
-              // selected_mute_channel_rel = map_ref%VOICE_MAX_SIZE_808;
-              aciduino.seq.setTrackVoice(aciduino.getSelectedTrack(), (map_ref-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
-              //aciduino.seq.setTrackVoice(aciduino.getSelectedTrack(), selected_mute_chn);
-            }
-            selected_track_ref = aciduino.getSelectedTrack();
+            selectElement();
           break;
       }
       
@@ -145,22 +181,21 @@ struct MutePatternControl : PageComponent {
       // DECREMENT -2
       // INCREMENT_SECONDARY -3
       // DECREMENT_SECONDARY -4
+      buildElements();
+      uint8_t idx = selected_mute_chn + element_index;
+      if (idx >= element_count) {
+        return;
+      }
       uint8_t pattern = selected_line-1;
+      uint8_t track, voice;
+      resolveElement(idx, track, voice);
       if (data == INCREMENT) {
-        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-          aciduino.setMuteGridState(pattern, 1, aciduino.getSelectedTrack());
-        } else {
-          aciduino.setMuteGridState(pattern, 1, aciduino.getSelectedTrack(), (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
-        }
+        aciduino.setMuteGridState(pattern, 1, track, voice);
         // selected is same as current? update tracks mute state
         if (pattern == current_pattern)
           changePattern(current_pattern);
       } else if (data == DECREMENT) {
-        if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-          aciduino.setMuteGridState(pattern, 0, aciduino.getSelectedTrack());
-        } else {
-          aciduino.setMuteGridState(pattern, 0, aciduino.getSelectedTrack(), (selected_mute_chn+element_index-TRACK_NUMBER_303)%VOICE_MAX_SIZE_808);
-        }
+        aciduino.setMuteGridState(pattern, 0, track, voice);
         if (pattern == current_pattern)
           changePattern(current_pattern);
       // secondary inc/dec or pot nav action
@@ -181,35 +216,35 @@ struct MutePatternControl : PageComponent {
     }
 
     void changePattern(uint8_t pattern) {
-      // apply mute schema to 303s
-      for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
-        aciduino.seq.setMute(i, !aciduino.getMuteGridState(pattern, i));
-      }
-
-      // apply mute schema to 808s
-      for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
-        for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
-          aciduino.seq.setMute(i+TRACK_NUMBER_303, j, !aciduino.getMuteGridState(pattern, i+TRACK_NUMBER_303, j));
+      // apply mute schema to every active track(dynamic layout can leave empty slots)
+      for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+        if (aciduino.seq.trackType(i) == SEQ_TRACK_NONE) {
+          continue;
+        }
+        if (aciduino.seq.is808(i)) {
+          for (uint8_t j=0; j < VOICE_MAX_SIZE_808; j++) {
+            aciduino.seq.setMute(i, j, !aciduino.getMuteGridState(pattern, i, j));
+          }
+        } else {
+          aciduino.seq.setMute(i, !aciduino.getMuteGridState(pattern, i));
         }
       }
     }
 
     void updateCurrentMuteState(uint8_t track, uint8_t voice = 0)
     {
-      if (aciduino.seq.is303(track)) {
-        if (aciduino.seq.getMute(track)) {
-          aciduino.setMuteGridState(current_pattern, 0, track);
-        } else {
-          aciduino.setMuteGridState(current_pattern, 1, track);
-        }
-      } else {
+      if (aciduino.seq.is808(track)) {
         if (aciduino.seq.getMute(track, aciduino.seq.getTrackVoice(track))) {
           aciduino.setMuteGridState(current_pattern, 0, track, voice);
         } else {
           aciduino.setMuteGridState(current_pattern, 1, track, voice);
         }
-        // update to selected voice too
-        selected_mute_chn = voice;
+      } else {
+        if (aciduino.seq.getMute(track)) {
+          aciduino.setMuteGridState(current_pattern, 0, track);
+        } else {
+          aciduino.setMuteGridState(current_pattern, 1, track);
+        }
       }
     }
     

@@ -129,7 +129,7 @@ class NoteSequencer
     //
     // lifecycle
     //
-    void init();                  // default layout: 2x303, 1x808, 1xpoly
+    void init();                  // default layout: 2x303, 1xpoly, 1x808
     void factoryReset();          // all slots empty
 
     //
@@ -208,9 +208,20 @@ class NoteSequencer
     //
     void *    image();
     uint16_t  imageSize();
-    uint32_t  trackImageOffset(uint8_t track); // byte offset of the track slice inside the image
     bool      saveTrackImage(uint8_t track, void *buf);     // blob: [u16 size][SEQ_TRACK][events]
     bool      loadTrackImage(uint8_t track, const void *buf);
+    bool      saveTrackImageFrom(const SEQ_IMAGE *img, uint8_t track, void *buf);
+    bool      loadTrackImageTo(SEQ_IMAGE *img, uint8_t track, const void *buf);
+
+    //
+    // session track layout (configs, no events)
+    //
+    void      copyTrackConfigs(SEQ_TRACK *out) const;
+    void      applyTrackLayout(const SEQ_TRACK *layout);     // session wins, keeps matching notes
+    void      applyTrackSetup(uint8_t track, const SEQ_TRACK &setup);
+    void      applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout);
+    void      resetImage(SEQ_IMAGE *img);                    // live configs, no events
+    bool      exportTrackImage(uint8_t track, SEQ_IMAGE *img);
 
     //
     // generative engines(dispatched to the track type handler)

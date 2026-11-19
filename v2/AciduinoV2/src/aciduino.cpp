@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "aciduino.hpp"
 
 //
@@ -56,6 +58,12 @@ void Aciduino::initSequencer()
   if (!uCtrl.storage->isSdActive()) {
     loadPattern(0);
   }
+  // old session without a layout record: adopt the layout that came from the
+  // loaded patterns and persist it once
+  if (!_layout_valid) {
+    _layout_dirty = false;
+    saveSession();
+  }
 }
 
 // storage bring up: pick the backend, validate data layout and import/init as needed
@@ -77,7 +85,8 @@ void Aciduino::storageInit()
     if (checkEppromDataLayoutChange()) {
       if (uCtrl.storage->hasEppromData(_pattern_total_mem_size)) {
         // epprom data avaliable: migrate it into the sdcard session image
-        uCtrl.storage->importFromEpprom(_epprom_size);
+        // (stop before the layout tail: it is not pattern data)
+        uCtrl.storage->importFromEpprom(_epprom_track_layout_address);
       } else {
         // fresh card: factory session image from current defaults
         uint16_t pattern_size = _pattern_total_mem_size;
@@ -234,6 +243,18 @@ void Aciduino::storageSetup()
   _pattern_total_mem_size = (_pattern_image_size + sizeof(_mute_grid));
   _eprrom_pattern_address = (_epprom_session_address + _epprom_session_size);
   _eprrom_pattern_available = (_epprom_size-_epprom_session_size-_epprom_session_address) / (_pattern_total_mem_size);
+
+  // the session track layout record lives in the free tail after the last
+  // pattern: no pattern address moves, so existing patterns stay valid
+  if (_epprom_size > sizeof(TRACK_LAYOUT)) {
+    _epprom_track_layout_address = _epprom_size - sizeof(TRACK_LAYOUT);
+  } else {
+    _epprom_track_layout_address = 0;
+  }
+  while (_eprrom_pattern_available > 0 &&
+         ((uint32_t)_eprrom_pattern_address + (uint32_t)_eprrom_pattern_available * _pattern_total_mem_size) > _epprom_track_layout_address) {
+    _eprrom_pattern_available--;
+  }
 }
 
 uint16_t Aciduino::getNumOfPatterns() {
@@ -285,6 +306,8 @@ bool Aciduino::selectSession(uint16_t index) {
   if (checkEppromDataLayoutChange()) {
     return false;
   }
+  // switched sessions: unsaved edits are dropped, as before
+  _layout_dirty = false;
   loadSession();
   return true;
 }
@@ -357,19 +380,27 @@ void Aciduino::recToggle()
 
 void Aciduino::previousTrack()
 {
-  if (aciduino._selected_track == 0) {
-    aciduino._selected_track = aciduino.seq.getTrackNumber() - 1;
-  } else {
-    aciduino._selected_track -= 1;
+  // walk slots backwards and skip empty ones(dynamic layout leaves holes)
+  uint8_t t = aciduino._selected_track;
+  for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+    t = (t == 0) ? SEQ_MAX_TRACKS - 1 : t - 1;
+    if (aciduino.seq.trackType(t) != SEQ_TRACK_NONE) {
+      aciduino._selected_track = t;
+      return;
+    }
   }
 }
 
 void Aciduino::nextTrack()
 {
-  if (aciduino._selected_track == aciduino.seq.getTrackNumber() - 1) {
-    aciduino._selected_track = 0;
-  } else {
-    aciduino._selected_track += 1;
+  // walk slots forwards and skip empty ones(dynamic layout leaves holes)
+  uint8_t t = aciduino._selected_track;
+  for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+    t = (t == SEQ_MAX_TRACKS - 1) ? 0 : t + 1;
+    if (aciduino.seq.trackType(t) != SEQ_TRACK_NONE) {
+      aciduino._selected_track = t;
+      return;
+    }
   }
 }
 
@@ -677,19 +708,39 @@ void Aciduino::loadSession()
   uCtrl.storage->load((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->load((void*)_track_output_setup, sizeof(_track_output_setup));
 
-  // sdcard sessions carry extras: tempo, shuffle and the pattern grid
+  // sdcard sessions carry extras: tempo, shuffle, the pattern grid and the
+  // track layout
   if (uCtrl.storage->isSdActive()) {
     if (uCtrl.storage->loadSessionConfig((void*)&_session_extras, sizeof(_session_extras))) {
       applySessionExtras();
+    } else {
+      // older sidecar without the layout tail: keep its known prefix
+      memset((void*)&_session_extras.track_layout, 0, sizeof(TRACK_LAYOUT));
+      if (uCtrl.storage->loadSessionConfig((void*)&_session_extras, offsetof(SESSION_EXTRAS, track_layout))) {
+        applySessionExtras();
+      }
     }
-    // patterns travel with the session: restore each track pattern from the grid
+  } else {
+    // epprom: the layout record lives in the free tail after the patterns
+    uCtrl.storage->load((void*)&_session_extras.track_layout, sizeof(TRACK_LAYOUT), _epprom_track_layout_address);
+  }
+
+  _layout_valid = layoutRecordValid();
+  if (_layout_valid) {
+    aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks);
+  }
+
+  // patterns travel with the session: restore each track pattern from the grid
+  if (uCtrl.storage->isSdActive()) {
     loadPattern(_pattern_grid[0]);
     for (uint8_t i = 1; i < SEQ_MAX_TRACKS; i++) {
-      if (_pattern_grid[i] != _pattern_grid[0]) {
+      if (aciduino.seq.trackType(i) != SEQ_TRACK_NONE && _pattern_grid[i] != _pattern_grid[0]) {
         loadPattern(_pattern_grid[i], i);
       }
     }
   }
+
+  fixSelectedTrack();
 }
 
 void Aciduino::applySessionExtras()
@@ -700,45 +751,162 @@ void Aciduino::applySessionExtras()
   memcpy((void*)_pattern_grid, (void*)_session_extras.pattern_grid, sizeof(_pattern_grid));
 }
 
+// whole pattern load can bring a different track layout: never leave the UI
+// pointing at an empty slot
+void Aciduino::fixSelectedTrack()
+{
+  if (aciduino.seq.trackType(_selected_track) != SEQ_TRACK_NONE) {
+    return;
+  }
+  for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+    if (aciduino.seq.trackType(i) != SEQ_TRACK_NONE) {
+      _selected_track = i;
+      return;
+    }
+  }
+}
+
 void Aciduino::saveSession()
 {
+  // the layout is captured first: on sdcard it travels with the session extras,
+  // on epprom it goes to the tail record
+  writeTrackLayout();
+
   // save session data
   uCtrl.storage->save((void*)_generative_303, sizeof(_generative_303), _epprom_session_address);
   uCtrl.storage->save((void*)_generative_808, sizeof(_generative_808));
   uCtrl.storage->save((void*)_control_map_global, sizeof(_control_map_global));
   uCtrl.storage->save((void*)_track_output_setup, sizeof(_track_output_setup));
 
-  // sdcard sessions carry extras: tempo, shuffle and the pattern grid
+  // a changed layout is propagated to every stored pattern so session and
+  // pattern data never disagree
+  if (_layout_dirty) {
+    sanitizePatterns();
+    _layout_dirty = false;
+  }
+}
+
+// capture the live track layout and persist it(session record)
+void Aciduino::captureTrackLayout()
+{
+  aciduino.seq.copyTrackConfigs(_session_extras.track_layout.tracks);
+  _session_extras.track_layout.magic = TRACK_LAYOUT_MAGIC ^ (uint16_t)sizeof(TRACK_LAYOUT);
+  _session_extras.track_layout.version = TRACK_LAYOUT_VERSION;
+  _layout_valid = true;
+}
+
+bool Aciduino::layoutChanged()
+{
+  if (!_layout_valid) {
+    return false;
+  }
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    if (aciduino.seq.trackType(t) != _session_extras.track_layout.tracks[t].type) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void Aciduino::writeTrackLayout()
+{
+  // an add/delete/replace was done since the last save: mark it so the stored
+  // patterns get sanitized to the new session layout
+  if (layoutChanged()) {
+    _layout_dirty = true;
+  }
+
+  captureTrackLayout();
+
   if (uCtrl.storage->isSdActive()) {
+    // sdcard: the layout travels in the session sidecar
     _session_extras.tempo = uClock.getTempo();
     _session_extras.shuffle_on = uClock.isShuffled();
     _session_extras.shuffle_sig = _shuffle_sig;
     memcpy((void*)_session_extras.shuffle_template, (void*)_shuffle_template, sizeof(_shuffle_template));
     memcpy((void*)_session_extras.pattern_grid, (void*)_pattern_grid, sizeof(_pattern_grid));
     uCtrl.storage->saveSessionConfig((void*)&_session_extras, sizeof(_session_extras));
+    return;
+  }
+
+  // epprom: tail record, no pattern address moves
+  uCtrl.storage->save((void*)&_session_extras.track_layout, sizeof(TRACK_LAYOUT), _epprom_track_layout_address);
+}
+
+bool Aciduino::layoutRecordValid()
+{
+  const TRACK_LAYOUT &layout = _session_extras.track_layout;
+  if (layout.magic != (TRACK_LAYOUT_MAGIC ^ (uint16_t)sizeof(TRACK_LAYOUT))) {
+    return false;
+  }
+  if (layout.version != TRACK_LAYOUT_VERSION) {
+    return false;
+  }
+
+  for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+    uint8_t type = layout.tracks[t].type;
+    if (type != SEQ_TRACK_NONE && type >= SEQ_TRACK_COUNT) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// rewrite every stored pattern to the session layout: matching tracks keep
+// their notes, deleted/changed slots are dropped, new slots are empty
+void Aciduino::sanitizePatterns()
+{
+  uint16_t patterns = uCtrl.storage->isSdActive() ? getNumOfPatterns() : _eprrom_pattern_available;
+  uint16_t image_size = aciduino.seq.getPatternImageSize();
+
+  for (uint16_t p = 0; p < patterns; p++) {
+    uint32_t address = getPatternEppromAddress((uint8_t)p);
+    if (!uCtrl.storage->load((void*)&_pattern_scratch, image_size, address)) {
+      continue;
+    }
+
+    bool changed[SEQ_MAX_TRACKS];
+    bool same = true;
+    for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+      changed[t] = _pattern_scratch.tracks[t].type != _session_extras.track_layout.tracks[t].type;
+      if (changed[t]) {
+        same = false;
+      }
+    }
+    if (same) {
+      continue;
+    }
+
+    aciduino.seq.applyLayoutToImage(&_pattern_scratch, _session_extras.track_layout.tracks);
+    uCtrl.storage->save((void*)&_pattern_scratch, image_size, address);
+
+    // reset the mute grid entries of the slots whose track changed
+    MUTE_PATTERN mute[4];
+    uCtrl.storage->load((void*)mute, sizeof(mute), address + image_size);
+    for (uint8_t mp = 0; mp < 4; mp++) {
+      for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+        if (changed[t]) {
+          mute[mp].map |= (1 << t);
+          mute[mp].map_parts[t] = 0xFFFF;
+          _mute_grid[mp].map |= (1 << t);
+          _mute_grid[mp].map_parts[t] = 0xFFFF;
+        }
+      }
+    }
+    uCtrl.storage->save((void*)mute, sizeof(mute), address + image_size);
   }
 }
 
-uint32_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
+uint32_t Aciduino::getPatternEppromAddress(uint8_t pattern)
 {
-  uint32_t pattern_address = _eprrom_pattern_address + ((uint32_t)pattern * _pattern_total_mem_size);
-  if (track != -1) {
-    // single track blobs live at the track slice position of the pattern image
-    pattern_address += aciduino.seq.getTrackImageOffset(track);
-  }
-  return pattern_address;
-}
-
-static uint16_t trackImageBlobSize(uint8_t * buf)
-{
-  // single track blob header: [u16 total size][SEQ_TRACK][events]
-  return (uint16_t)(buf[0] | ((uint16_t)buf[1] << 8));
+  return _eprrom_pattern_address + ((uint32_t)pattern * _pattern_total_mem_size);
 }
 
 void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
 {
   uint32_t pattern_address = 0;
   uint16_t saved_patterns = getNumOfPatterns();
+  uint16_t image_size = aciduino.seq.getPatternImageSize();
 
   // storage bounds: sdcard allows the pending empty slot right past the last saved pattern,
   // epprom pattern space is fixed
@@ -753,14 +921,18 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
   }
 
   if (track != -1) {
-    // load only a track pattern
-    pattern_address = getPatternEppromAddress(pattern, track);
+    // load only a track pattern: read the stored image and take its slice
+    pattern_address = getPatternEppromAddress(pattern);
+    uint8_t src_track = (uint8_t)track;
 
     // to_track request?
     if (to_track != -1)
       track = to_track;
 
-    if (!uCtrl.storage->load((void*)aciduino._track_image_buf, sizeof(aciduino._track_image_buf), pattern_address)) {
+    if (!uCtrl.storage->load((void*)&_pattern_scratch, image_size, pattern_address)) {
+      return;
+    }
+    if (!aciduino.seq.saveTrackImageFrom(&_pattern_scratch, src_track, aciduino._track_image_buf)) {
       return;
     }
 
@@ -771,6 +943,9 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
       aciduino.seq.initPatternData(track);
     }
     aciduino.seq.setMute(track, false);
+    if (_layout_valid) {
+      aciduino.seq.applyTrackSetup(track, _session_extras.track_layout.tracks[track]);
+    }
   } else {
     // load the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
@@ -787,10 +962,16 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     // then the mute grid
     uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address + aciduino.seq.getPatternImageSize());
 
+    // the session layout always wins over the stored pattern layout
+    if (_layout_valid) {
+      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks);
+    }
+
     // unmute all loaded fresh and new pattern
     for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
       aciduino.seq.setMute(i, false);
     }
+    fixSelectedTrack();
   }
 }
 
@@ -800,17 +981,24 @@ void Aciduino::loadDefaultPattern(int8_t track)
   if (track == -1) {
     // whole pattern: engine factory state + unmuted mute grid
     aciduino.seq.initPatternData();
+    if (_layout_valid) {
+      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks);
+    }
     for (uint8_t i=0; i < 4; i++) {
       _mute_grid[i].map = 0xFFFF;
       for (uint8_t j=0; j < SEQ_MAX_TRACKS; j++) {
         _mute_grid[i].map_parts[j] = 0xFFFF;
       }
     }
+    fixSelectedTrack();
   } else {
     // single track from the pending slot
     aciduino.seq.setMute(track, true);
     aciduino.seq.clearStackNote(track);
     aciduino.seq.initPatternData(track);
+    if (_layout_valid) {
+      aciduino.seq.applyTrackSetup(track, _session_extras.track_layout.tracks[track]);
+    }
     aciduino.seq.setMute(track, false);
   }
 }
@@ -819,10 +1007,19 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
 {
   uint32_t pattern_address = 0;
   uint16_t saved_patterns = getNumOfPatterns();
+  uint16_t image_size = aciduino.seq.getPatternImageSize();
 
   // storage bounds: sdcard grows at the pending slot, epprom pattern space is fixed
   if (uCtrl.storage->isSdActive() ? (pattern > saved_patterns) : (pattern >= saved_patterns)) {
     return;
+  }
+
+  // keep the session layout record in sync with the live track list, then
+  // propagate a changed layout to every stored pattern
+  writeTrackLayout();
+  if (_layout_dirty) {
+    sanitizePatterns();
+    _layout_dirty = false;
   }
 
   if (track != -1) {
@@ -831,12 +1028,22 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
     if (from_track != -1)
       track = from_track;
 
-    // build the single track blob and save it at the track slice position
-    aciduino.seq.saveTrackImage((uint8_t)track, aciduino._track_image_buf);
-    uCtrl.storage->save((void*)aciduino._track_image_buf, trackImageBlobSize(aciduino._track_image_buf), getPatternEppromAddress(pattern, track));
-
-    // save _mute_grid for a specific pattern
-    //...
+    // read/modify/write the whole pattern block: the stored track array and
+    // the pool stay consistent, so other tracks are never clobbered
+    pattern_address = getPatternEppromAddress(pattern);
+    bool fresh = !uCtrl.storage->load((void*)&_pattern_scratch, image_size, pattern_address);
+    if (fresh) {
+      // pending/empty slot: start from the session layout with no notes
+      aciduino.seq.resetImage(&_pattern_scratch);
+    }
+    if (!aciduino.seq.exportTrackImage((uint8_t)track, &_pattern_scratch)) {
+      return;
+    }
+    uCtrl.storage->save((void*)&_pattern_scratch, image_size, pattern_address);
+    if (fresh) {
+      // new block: initialize its mute grid too
+      uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), pattern_address + image_size);
+    }
   } else {
     // saves the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
@@ -867,8 +1074,11 @@ void Aciduino::copyPattern(uint8_t pattern, int8_t track)
 bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
 {
   if (track == -1 || _copy_track == - 1) {
-    // paste whole pattern track per track
-    for (uint8_t i=0; i < aciduino.seq.getTrackNumber(); i++) {
+    // paste whole pattern track per track(dynamic layout can leave empty slots)
+    for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+      if (aciduino.seq.trackType(i) == SEQ_TRACK_NONE) {
+        continue;
+      }
       // update _copy_track with current track
       _copy_track = i;
       if (!pastePattern(pattern, i)) {
@@ -886,6 +1096,8 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
     return false;
   }
 
+  uint16_t image_size = aciduino.seq.getPatternImageSize();
+
   // copy from memory or from storage?
   bool copy_memory = (_pattern_grid[_copy_track] == _copy_pattern);
   // paste to memory or to storage?
@@ -895,8 +1107,11 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
     // build the single track blob from current memory
     aciduino.seq.saveTrackImage(_copy_track, aciduino._track_image_buf);
   } else {
-    // build the single track blob from storage
-    if (!uCtrl.storage->load((void*)aciduino._track_image_buf, sizeof(aciduino._track_image_buf), getPatternEppromAddress(_copy_pattern, _copy_track))) {
+    // read the source pattern and build the blob from its stored slice
+    if (!uCtrl.storage->load((void*)&_pattern_scratch, image_size, getPatternEppromAddress(_copy_pattern))) {
+      return false;
+    }
+    if (!aciduino.seq.saveTrackImageFrom(&_pattern_scratch, _copy_track, aciduino._track_image_buf)) {
       return false;
     }
   }
@@ -911,11 +1126,25 @@ bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
       aciduino.seq.initPatternData(track);
     }
     aciduino.seq.setMute(track, false);
+    if (_layout_valid) {
+      aciduino.seq.applyTrackSetup(track, _session_extras.track_layout.tracks[track]);
+    }
     return ok;
   }
 
-  // we paste to storage data
-  uCtrl.storage->save((void*)aciduino._track_image_buf, trackImageBlobSize(aciduino._track_image_buf), getPatternEppromAddress(pattern, track));
+  // paste to storage: read/modify/write the target pattern block
+  uint32_t pattern_address = getPatternEppromAddress(pattern);
+  bool fresh = !uCtrl.storage->load((void*)&_pattern_scratch, image_size, pattern_address);
+  if (fresh) {
+    aciduino.seq.resetImage(&_pattern_scratch);
+  }
+  if (!aciduino.seq.loadTrackImageTo(&_pattern_scratch, track, aciduino._track_image_buf)) {
+    return false;
+  }
+  uCtrl.storage->save((void*)&_pattern_scratch, image_size, pattern_address);
+  if (fresh) {
+    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), pattern_address + image_size);
+  }
   return true;
 }
 

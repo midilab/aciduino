@@ -42,20 +42,22 @@ void generative_page_refresh(uint8_t subpage)
     // sequence variation A/B
     //uCtrl.page->component(variationComponent, 4, 1);
     
-    // for 808(fill): with common options. 4/4, tripplets...
-    uCtrl.page->component(fillComponent, 6, 1);
-      
-    if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-      // randomizer type: classic, bjulrk
-      uCtrl.page->component(tuneComponent, 4, 1);
-      uCtrl.page->component(transposeComponent, 4, 2);
-    } else {
-      // 808
+    if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
+      // for 808(fill): with common options. 4/4, tripplets...
+      uCtrl.page->component(fillComponent, 6, 1);
       // voice init point.
       // voice config note for midi, port for cv
       // note(selected voice)/port(eurorack)
       uCtrl.page->component(voiceSelectComponent, 4, 1);
       uCtrl.page->component(rollTypeComponent, 4, 2);
+    } else {
+      // 303 + poly: tune is stored on poly but inert until noteHook covers it
+      if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+        // for 303(fill): with common options. 4/4, tripplets...
+        uCtrl.page->component(fillComponent, 6, 1);
+      }
+      uCtrl.page->component(tuneComponent, 4, 1);
+      uCtrl.page->component(transposeComponent, 4, 2);
     }
   } else if (subpage == 1) {
     // generative
@@ -64,9 +66,8 @@ void generative_page_refresh(uint8_t subpage)
     // classical vs euclidian
     // 
 
-    uCtrl.page->component(accentAmountComponent, 3, 1, true);
-    
     if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
+      uCtrl.page->component(accentAmountComponent, 3, 1, true);
       uCtrl.page->component(slideAmountComponent, 3, 2);
       
       uCtrl.page->component(tieAmountComponent, 4, 1);
@@ -76,9 +77,11 @@ void generative_page_refresh(uint8_t subpage)
       uCtrl.page->component(rangeOctaveComponent, 5, 2);
       // for 303(scale)
       uCtrl.page->component(scaleComponent, 6, 1);
-    } else {
+    } else if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
+      uCtrl.page->component(accentAmountComponent, 3, 1, true);
       uCtrl.page->component(rollAmountComponent, 3, 2);
     }
+    // poly: no generator yet, leave the page empty
 
   }
 

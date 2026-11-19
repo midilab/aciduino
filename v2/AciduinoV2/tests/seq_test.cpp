@@ -76,23 +76,23 @@ static void test_default_layout()
   assert(seq.trackCount() == 4);
   assert(seq.trackType(0) == SEQ_TRACK_303);
   assert(seq.trackType(1) == SEQ_TRACK_303);
-  assert(seq.trackType(2) == SEQ_TRACK_808);
-  assert(seq.trackType(3) == SEQ_TRACK_POLY);
+  assert(seq.trackType(2) == SEQ_TRACK_POLY);
+  assert(seq.trackType(3) == SEQ_TRACK_808);
   assert(seq.trackType(4) == SEQ_TRACK_NONE);
 
   assert(seq.getLength(0) == STEP_DEFAULT_LENGTH_303);
-  assert(seq.getLength(2) == STEP_DEFAULT_LENGTH_808);
-  assert(seq.getLength(3) == STEP_DEFAULT_LENGTH_POLY);
+  assert(seq.getLength(2) == STEP_DEFAULT_LENGTH_POLY);
+  assert(seq.getLength(3) == STEP_DEFAULT_LENGTH_808);
 
   // 808 default parts
-  assert(seq.partNote(2, 0) == 36);
-  assert(strcmp(seq.partName(2, 0), "bd") == 0);
-  assert(seq.partByNote(2, 38) == 1);
-  assert(seq.partByNote(2, 100) == -1);
+  assert(seq.partNote(3, 0) == 36);
+  assert(strcmp(seq.partName(3, 0), "bd") == 0);
+  assert(seq.partByNote(3, 38) == 1);
+  assert(seq.partByNote(3, 100) == -1);
 
   // pool is packed in slot order
   seq.insertNote(0, 0, 60, 0);
-  seq.insertNote(2, 0, 36, 0);
+  seq.insertNote(3, 0, 36, 0);
   assert(seq.notesUsed() == 2);
 }
 
@@ -138,7 +138,7 @@ static void test_poly_chord()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t poly = 3;
+  uint8_t poly = 2;
   seq.setLength(poly, 8);
   seq.insertNote(poly, 1, 60, 0);
   seq.insertNote(poly, 1, 64, SEQ_EV_ACCENT);
@@ -165,7 +165,7 @@ static void test_808_part_mute_and_remap()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t dr = 2;
+  uint8_t dr = 3;
   seq.setLength(dr, 8);
   seq.insertNote(dr, 0, 36, 0); // bd
   seq.insertNote(dr, 2, 38, 0); // sd
@@ -199,7 +199,7 @@ static void test_808_roll()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t dr = 2;
+  uint8_t dr = 3;
   seq.setLength(dr, 8);
   seq.setRollType(dr, FLAM_3);
   seq.insertNote(dr, 0, 48, SEQ_EV_ROLL);
@@ -314,10 +314,10 @@ static void test_create_delete_tracks()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  // give the default tracks data
+  // give the default tracks data(slot 2 poly, slot 3 808)
   seq.insertNote(0, 0, 60, 0);
-  seq.insertNote(2, 0, 36, 0);
-  seq.insertNote(3, 0, 70, 0);
+  seq.insertNote(2, 0, 70, 0);
+  seq.insertNote(3, 0, 36, 0);
 
   // free a slot(empty track 1) and create a poly track in it
   assert(seq.deleteTrack(1));
@@ -334,8 +334,8 @@ static void test_create_delete_tracks()
   // the pool stays packed: every track keeps its own notes
   assert(seq.notesUsed() == 5);
   assert(seq.noteAtStep(0, 0, 0) == 60);
-  assert(seq.noteAtStep(2, 0, 0) == 36);
-  assert(seq.noteAtStep(3, 0, 0) == 70);
+  assert(seq.noteAtStep(2, 0, 0) == 70);
+  assert(seq.noteAtStep(3, 0, 0) == 36);
   assert(seq.noteAtStep(t, 3, 0) == 74);
 
   // delete a track that HAS notes: later slices must survive
@@ -343,15 +343,15 @@ static void test_create_delete_tracks()
   assert(seq.noteCount(t) == 0);
   assert(seq.notesUsed() == 3);
   assert(seq.noteAtStep(0, 0, 0) == 60);
-  assert(seq.noteAtStep(2, 0, 0) == 36);
-  assert(seq.noteAtStep(3, 0, 0) == 70);
+  assert(seq.noteAtStep(2, 0, 0) == 70);
+  assert(seq.noteAtStep(3, 0, 0) == 36);
 
   // playback: no ghost notes, each surviving track fires its own note
   g_cap.reset();
   simulate(seq, 8 * 24);
   assert(g_cap.countOf(NOTE_ON, 60, 0) == 1);
-  assert(g_cap.countOf(NOTE_ON, 36, 2) == 1);
-  assert(g_cap.countOf(NOTE_ON, 70, 3) == 1);
+  assert(g_cap.countOf(NOTE_ON, 70, 2) == 1);
+  assert(g_cap.countOf(NOTE_ON, 36, 3) == 1);
   assert(g_cap.countOf(NOTE_ON, 72, t) == 0);
   assert(g_cap.countOf(NOTE_ON, 74, t) == 0);
 
@@ -392,7 +392,7 @@ static void test_track_image_roundtrip()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t dr = 2;
+  uint8_t dr = 3;
   seq.setLength(dr, 12);
   seq.setShift(dr, 1);
   seq.setPartMute(dr, 3, 1);
@@ -419,6 +419,99 @@ static void test_track_image_roundtrip()
   uint8_t bad[3 + sizeof(SEQ_TRACK)];
   bad[0] = 0xFF; bad[1] = 0xFF; // way too big
   assert(!seq.loadTrackImage(dr, bad));
+}
+
+static void test_session_layout_merge()
+{
+  NoteSequencer seq;
+  seq.setOutputCallback(capCb);
+  seq.init();
+
+  seq.setLength(0, 8);
+  seq.insertNote(0, 0, 60, 0);
+  seq.insertNote(1, 0, 62, 0);
+  seq.insertNote(2, 0, 64, 0); // poly
+  seq.insertNote(3, 0, 36, 0); // 808
+
+  SEQ_TRACK layout[SEQ_MAX_TRACKS];
+  seq.copyTrackConfigs(layout);
+  assert(layout[0].type == SEQ_TRACK_303);
+  assert(layout[3].type == SEQ_TRACK_808);
+  assert(layout[0].count == 0); // runtime fields are not session data
+
+  // session 808 part remap follows into the stored note numbers
+  layout[3].parts[0].note = 40;
+  seq.applyTrackLayout(layout);
+  assert(seq.partNote(3, 0) == 40);
+  assert(seq.noteAtStep(3, 0, 0) == 40);
+
+  // session drops a track: its notes go, the others stay
+  layout[1].type = SEQ_TRACK_NONE;
+  layout[0].length = 16;
+  seq.applyTrackLayout(layout);
+  assert(seq.trackType(1) == SEQ_TRACK_NONE);
+  assert(seq.noteCount(1) == 0);
+  assert(seq.noteCount(0) == 1);
+  assert(seq.noteCount(2) == 1);
+  assert(seq.noteCount(3) == 1);
+  assert(seq.getLength(0) == 16);
+
+  // session adds a track back: it is empty, factory configured
+  uint8_t slot = seq.createTrack(SEQ_TRACK_808);
+  assert(slot == 1);
+  seq.insertNote(1, 0, 38, 0);
+  assert(seq.noteCount(1) == 1);
+
+  seq.copyTrackConfigs(layout);
+  layout[1].type = SEQ_TRACK_NONE;
+  seq.applyTrackLayout(layout);
+  assert(seq.trackType(1) == SEQ_TRACK_NONE);
+  assert(seq.noteCount(1) == 0);
+  assert(seq.noteCount(0) == 1);
+}
+
+static void test_track_image_merge()
+{
+  NoteSequencer seq;
+  seq.init();
+  seq.setLength(0, 8);
+  seq.insertNote(0, 0, 60, 0);
+  seq.insertNote(0, 2, 64, 0);
+  seq.insertNote(3, 0, 36, SEQ_EV_ROLL);
+
+  SEQ_IMAGE img;
+  seq.resetImage(&img);
+  assert(seq.exportTrackImage(0, &img));
+  assert(img.tracks[0].count == 2);
+  assert(img.tracks[3].count == 0);
+
+  assert(seq.exportTrackImage(3, &img));
+  assert(img.tracks[0].count == 2);
+  assert(img.tracks[3].count == 1);
+
+  // blob built from the image, loaded back into a live track
+  uint8_t buf[3 + sizeof(SEQ_TRACK) + SEQ_MAX_NOTES * sizeof(SEQ_EVENT)];
+  assert(seq.saveTrackImageFrom(&img, 0, buf));
+  seq.clearNotes(0);
+  assert(seq.noteCount(0) == 0);
+  assert(seq.loadTrackImage(0, buf));
+  assert(seq.noteCount(0) == 2);
+
+  // blob applied to another image slot
+  assert(seq.loadTrackImageTo(&img, 0, buf));
+  assert(img.tracks[0].count == 2);
+
+  uint8_t bad[3 + sizeof(SEQ_TRACK)] = {0xFF, 0xFF, 0};
+  assert(!seq.loadTrackImageTo(&img, 0, bad));
+
+  // session layout sanitizes an image, keeping matching notes
+  SEQ_TRACK layout[SEQ_MAX_TRACKS];
+  seq.copyTrackConfigs(layout);
+  layout[3].type = SEQ_TRACK_NONE;
+  seq.applyLayoutToImage(&img, layout);
+  assert(img.tracks[3].type == SEQ_TRACK_NONE);
+  assert(img.tracks[3].count == 0);
+  assert(img.tracks[0].count == 2);
 }
 
 static void test_shuffle_length()
@@ -505,7 +598,7 @@ static void test_generative_808()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t dr = 2;
+  uint8_t dr = 3;
   seq.setLength(dr, 16);
   // fill 100: 16 hits on the bd part
   uint8_t p808[3] = {100, 50, 0};
@@ -665,8 +758,8 @@ static void test_handler_dispatch()
 
   // poly has no generator: base default is a no-op, still a valid dispatch
   uint8_t params[7] = {100, 0, 0, 0, 0, 48, 12};
-  assert(seq.generate(3, 0, params));
-  assert(seq.noteCount(3) == 0);
+  assert(seq.generate(2, 0, params));
+  assert(seq.noteCount(2) == 0);
 
   // invalid targets are rejected
   assert(!seq.generate(SEQ_MAX_TRACKS, 0, params));
@@ -707,7 +800,7 @@ static void test_808_substep_roll()
   seq.setOutputCallback(capCb);
   seq.init();
 
-  uint8_t dr = 2;
+  uint8_t dr = 3;
   seq.setLength(dr, 8);
   seq.setRollType(dr, SUB_STEP_1);
   seq.insertNote(dr, 0, 48, SEQ_EV_ROLL);
@@ -740,6 +833,8 @@ int main()
   test_generate_303_keeps_808();
   test_pool_exhaustion();
   test_track_image_roundtrip();
+  test_session_layout_merge();
+  test_track_image_merge();
   test_shuffle_length();
   test_generative_303();
   test_generative_808();
@@ -747,6 +842,6 @@ int main()
   test_custom_handler();
   test_808_substep_roll();
 
-  printf("seq_test: all %d checks passed\n", 19);
+  printf("seq_test: all %d checks passed\n", 21);
   return 0;
 }

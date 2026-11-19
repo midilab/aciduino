@@ -4,7 +4,6 @@ typedef struct
 {
     const char * control_name;
     uint8_t control_cc = 0;
-    uint8_t control_data[TRACK_NUMBER_303];
     int8_t pot_map[SEQ_MAX_TRACKS] = {-1};
 } MIDI_CTRL_DATA_303;
 
@@ -12,9 +11,15 @@ typedef struct
 {
     const char * control_name;
     uint8_t control_cc = 0;
-    uint8_t control_data[TRACK_NUMBER_808];
     int8_t pot_map[SEQ_MAX_TRACKS] = {-1};
 } MIDI_CTRL_DATA_808;
+
+typedef struct
+{
+    const char * control_name;
+    uint8_t control_cc = 0;
+    int8_t pot_map[SEQ_MAX_TRACKS] = {-1};
+} MIDI_CTRL_DATA_POLY;
 
 struct MidiCCControl : PageComponent {
 
@@ -41,6 +46,12 @@ struct MidiCCControl : PageComponent {
 
     MIDI_CTRL_DATA_808 control_map_808[16];
     uint8_t ctrl_size_808 = 0;
+
+    MIDI_CTRL_DATA_POLY control_map_poly[16];
+    uint8_t ctrl_size_poly = 0;
+
+    // control value per absolute track slot: shared by the three type maps
+    uint8_t control_data[16][SEQ_MAX_TRACKS];
     
     MidiCCControl()
     {
@@ -54,12 +65,21 @@ struct MidiCCControl : PageComponent {
         for (uint8_t j=0; j < SEQ_MAX_TRACKS; j++) {
           control_map_303[i].pot_map[j] = -1;
           control_map_808[i].pot_map[j] = -1;
+          control_map_poly[i].pot_map[j] = -1;
+          control_data[i][j] = 0;
         }
       }
     }
 
+    // pot learn map of a track/control pair(absolute slot, dynamic layout)
+    int8_t & potMap(uint8_t track, uint8_t ctrl) {
+      if (aciduino.seq.is303(track)) return control_map_303[ctrl].pot_map[track];
+      if (aciduino.seq.is808(track)) return control_map_808[ctrl].pot_map[track];
+      return control_map_poly[ctrl].pot_map[track];
+    }
+
     void view() {
-      uint8_t data_idx = aciduino.seq.is303(aciduino.getSelectedTrack()) ? aciduino.getSelectedTrack() : aciduino.getSelectedTrack() - TRACK_NUMBER_303;
+      uint8_t data_idx = aciduino.getSelectedTrack();
       uint8_t ctrl_map_init = selected_map == 0 ? 0 : 8;
       uint8_t ctrl_counter = 0;
       ctrl_selected = selected_line-1 + (selected_grid == 2 ? 4 : 0);
@@ -78,9 +98,9 @@ struct MidiCCControl : PageComponent {
             }
             break;
           }
-          genericOptionView(control_map_303[i].control_name, String(control_map_303[i].control_data[data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+          genericOptionView(control_map_303[i].control_name, String(control_data[i][data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
         // process 808 controlelrs?
-        } else {
+        } else if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
           if (i >= ctrl_size_808) {
             // breaks with no selected element? fix it!
             if (ctrl_selected >= ctrl_size_808) {
@@ -89,7 +109,18 @@ struct MidiCCControl : PageComponent {
             }
             break;
           }
-          genericOptionView(control_map_808[i].control_name, String(control_map_808[i].control_data[data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+          genericOptionView(control_map_808[i].control_name, String(control_data[i][data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
+        // process poly controlelrs?
+        } else {
+          if (i >= ctrl_size_poly) {
+            // breaks with no selected element? fix it!
+            if (ctrl_selected >= ctrl_size_poly) {
+              selected_grid = floor((selected_map > 0 ? ctrl_size_poly-1-8 : ctrl_size_poly-1)/4)+1;
+              selected_line = ((selected_map > 0 ? ctrl_size_poly-1-8 : ctrl_size_poly-1)%4)+1;
+            }
+            break;
+          }
+          genericOptionView(control_map_poly[i].control_name, String(control_data[i][data_idx]), line+(i%4), ctrl_counter >= 4 ? 14 : 1, i==ctrl_selected);
         }
         ++ctrl_counter;
       }
@@ -97,7 +128,7 @@ struct MidiCCControl : PageComponent {
       // shift only if learn enabled
       if ((uCtrl.page->isShiftPressed() || learn == true) && learn_enabled == true) {
         updateControlMap();
-        int8_t pot_map = aciduino.seq.is303(aciduino.getSelectedTrack()) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
+        int8_t pot_map = potMap(aciduino.getSelectedTrack(), ctrl_selected);
         if (pot_map == -1) {
           setF2("learn", learn == true ? true : false);
         } else {
@@ -137,8 +168,7 @@ struct MidiCCControl : PageComponent {
         // learn!
         // lock all other pots
         // set waiting learn flag
-        uint8_t data_idx = aciduino.seq.is303(aciduino.getSelectedTrack()) ? aciduino.getSelectedTrack() : aciduino.getSelectedTrack() - TRACK_NUMBER_303;
-        int8_t pot_map = aciduino.seq.is303(aciduino.getSelectedTrack()) ? control_map_303[ctrl_selected].pot_map[data_idx] : control_map_808[ctrl_selected].pot_map[data_idx];
+        int8_t pot_map = potMap(aciduino.getSelectedTrack(), ctrl_selected);
         if (pot_map == -1) {
           learn = true;
         } else {
@@ -151,18 +181,24 @@ struct MidiCCControl : PageComponent {
     }
 
     void sendCCData(int16_t data, uint8_t ctrl, uint8_t track, uint8_t interrupted = 0) {
-      uint8_t data_idx = aciduino.seq.is303(track) ? track : track - TRACK_NUMBER_303;
       // process 303 controlelrs?
       if (aciduino.seq.is303(track)) {
-        data = parseData(data, 0, 127, control_map_303[ctrl].control_data[data_idx]);
-        control_map_303[ctrl].control_data[data_idx] = data;
+        data = parseData(data, 0, 127, control_data[ctrl][track]);
+        control_data[ctrl][track] = data;
         // send data
         aciduino.sendMidiCC(control_map_303[ctrl].control_cc, data, aciduino.getTrackOutputParam(TRACK_CHANNEL, track), aciduino.getTrackOutputParam(TRACK_PORT, track), interrupted);
-      } else {
-        data = parseData(data, 0, 127, control_map_808[ctrl].control_data[data_idx]);
-        control_map_808[ctrl].control_data[data_idx] = data;
+      // process 808 controlelrs?
+      } else if (aciduino.seq.is808(track)) {
+        data = parseData(data, 0, 127, control_data[ctrl][track]);
+        control_data[ctrl][track] = data;
         // send data
         aciduino.sendMidiCC(control_map_808[ctrl].control_cc, data, aciduino.getTrackOutputParam(TRACK_CHANNEL, track), aciduino.getTrackOutputParam(TRACK_PORT, track), interrupted);
+      // process poly controlelrs?
+      } else {
+        data = parseData(data, 0, 127, control_data[ctrl][track]);
+        control_data[ctrl][track] = data;
+        // send data
+        aciduino.sendMidiCC(control_map_poly[ctrl].control_cc, data, aciduino.getTrackOutputParam(TRACK_CHANNEL, track), aciduino.getTrackOutputParam(TRACK_PORT, track), interrupted);
       }
     }
 
@@ -175,8 +211,8 @@ struct MidiCCControl : PageComponent {
         return;
       control_map_303[ctrl_size_303].control_name = name;
       control_map_303[ctrl_size_303].control_cc = cc;
-      for (uint8_t i=0; i < TRACK_NUMBER_303; i++) {
-        control_map_303[ctrl_size_303].control_data[i] = initial_value;
+      for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+        control_data[ctrl_size_303][i] = initial_value;
       }
       ++ctrl_size_303;
     }
@@ -186,39 +222,39 @@ struct MidiCCControl : PageComponent {
         return;
       control_map_808[ctrl_size_808].control_name = name;
       control_map_808[ctrl_size_808].control_cc = cc;
-      for (uint8_t i=0; i < TRACK_NUMBER_808; i++) {
-        control_map_808[ctrl_size_808].control_data[i] = initial_value;
+      for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+        control_data[ctrl_size_808][i] = initial_value;
       }
       ++ctrl_size_808;
     }
 
+    void setPolyControl(const char * name, uint8_t cc, uint8_t initial_value = 0) {
+      if (ctrl_size_poly >= 16)
+        return;
+      control_map_poly[ctrl_size_poly].control_name = name;
+      control_map_poly[ctrl_size_poly].control_cc = cc;
+      for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
+        control_data[ctrl_size_poly][i] = initial_value;
+      }
+      ++ctrl_size_poly;
+    }
+
     void learnCtrl(uint8_t port)
     {
-      uint8_t data_idx = aciduino.seq.is303(aciduino.getSelectedTrack()) ? aciduino.getSelectedTrack() : aciduino.getSelectedTrack() - TRACK_NUMBER_303;
       if (learn == true) {
           aciduino.setMidiControlParam(MIDI_CTRL, ctrl_selected, port);
           aciduino.setMidiControlParam(MIDI_TRACK, aciduino.getSelectedTrack(), port);
-          if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-            control_map_303[ctrl_selected].pot_map[data_idx] = port;
-          } else {
-            control_map_808[ctrl_selected].pot_map[data_idx] = port;
-          }
+          potMap(aciduino.getSelectedTrack(), ctrl_selected) = port;
           learn = false;
       }
     }
 
     void clearCtrl(uint8_t port)
     {
-      uint8_t idx = 0;
-      if (aciduino.seq.is303(aciduino.getSelectedTrack())) {
-        idx = control_map_303[port].pot_map[aciduino.getSelectedTrack()];
-        aciduino.setMidiControlParam(MIDI_CTRL, -1, idx);
-        control_map_303[port].pot_map[aciduino.getSelectedTrack()] = -1;
-      } else {
-        idx = control_map_808[port].pot_map[aciduino.getSelectedTrack()];
-        aciduino.setMidiControlParam(MIDI_CTRL, -1, idx);
-        control_map_808[port].pot_map[aciduino.getSelectedTrack()-TRACK_NUMBER_303] = -1;
-      }
+      int8_t &map = potMap(aciduino.getSelectedTrack(), port);
+      int8_t idx = map;
+      aciduino.setMidiControlParam(MIDI_CTRL, -1, idx);
+      map = -1;
     }
 
     void updateControlMap() {
@@ -227,10 +263,8 @@ struct MidiCCControl : PageComponent {
         int8_t ctrl = aciduino.getMidiControlParam(MIDI_CTRL, i);
         if (ctrl != -1) {
           uint8_t track = aciduino.getMidiControlParam(MIDI_TRACK, i);
-          if (track < TRACK_NUMBER_303) {
-            control_map_303[ctrl].pot_map[track] = i;
-          } else {
-            control_map_808[ctrl].pot_map[track-TRACK_NUMBER_303] = i;
+          if (track < SEQ_MAX_TRACKS && aciduino.seq.trackType(track) != SEQ_TRACK_NONE) {
+            potMap(track, ctrl) = i;
           }
         }
       }

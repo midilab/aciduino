@@ -149,6 +149,10 @@ public:
   void saveMuteGrid(uint8_t pattern);
   void copyPattern(uint8_t pattern, int8_t track = -1);
   bool pastePattern(uint8_t pattern, int8_t track = -1);
+  // dynamic track list: these wrappers keep the session layout and the stored
+  // pattern data in sync(use them instead of seq.createTrack/deleteTrack)
+  uint8_t addTrack(uint8_t type);
+  bool deleteTrack(uint8_t track);
   // sdcard grows patterns on demand: one pending empty slot past the last saved pattern
   bool hasPendingPatternSlot();
 
@@ -227,7 +231,9 @@ private:
   void fixSelectedTrack();
   void captureTrackLayout();
   void writeTrackLayout();
-  bool layoutChanged();
+  uint16_t layoutChanged();
+  void syncTrackLayout();
+  void resetTrackSessionData(uint8_t track);
   bool layoutRecordValid();
   void sanitizePatterns();
   void loadDefaultPattern(int8_t track = -1);
@@ -291,7 +297,8 @@ private:
   // session track layout record, stored in the epprom tail free space
   uint16_t _epprom_track_layout_address;
   bool _layout_valid = false;
-  bool _layout_dirty = false;
+  // slots whose stored pattern data must be dropped at the next save
+  uint16_t _layout_reset_mask = 0;
   //
   // common pattern data definitions
   //

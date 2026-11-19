@@ -38,6 +38,9 @@ void system_page_refresh(uint8_t subpage)
     uCtrl.oled->print("track config", 3, 1);
     uCtrl.page->component(trackOutputSelectorComponent, 4, 1, true);
     uCtrl.page->component(midiChannelConfigComponent, 4, 2);
+
+    // dynamic track list: delete the selected track or create a new one
+    uCtrl.page->component(trackManagementComponent, 5, 1);
     
     uCtrl.oled->print("system resources", 6, 1);
     uCtrl.page->component(systemResourcesComponent, 7, 1);

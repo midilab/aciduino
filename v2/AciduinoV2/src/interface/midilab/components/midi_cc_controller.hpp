@@ -257,6 +257,19 @@ struct MidiCCControl : PageComponent {
       map = -1;
     }
 
+    // a slot that was created/deleted has no valid UI data or pot mapping
+    void resetTrack(uint8_t track) {
+      if (track >= SEQ_MAX_TRACKS) {
+        return;
+      }
+      for (uint8_t i=0; i < 16; i++) {
+        control_data[i][track] = 0;
+        control_map_303[i].pot_map[track] = -1;
+        control_map_808[i].pot_map[track] = -1;
+        control_map_poly[i].pot_map[track] = -1;
+      }
+    }
+
     void updateControlMap() {
       // update track control reference for pot map global
       for (uint8_t i=0; i < 16; i++) {

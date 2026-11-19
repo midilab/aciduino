@@ -36,6 +36,7 @@
 #include "components/system_shuffle.hpp"
 #include "components/system_midi_channel.hpp"
 #include "components/system_tempo_transport.hpp"
+#include "components/system_track_management.hpp"
 // pages
 #include "pages/page_generative.h"
 #include "pages/page_midi.h"

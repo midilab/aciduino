@@ -212,9 +212,9 @@ void AcidSequencerClass::copyTrackConfigs(SEQ_TRACK *out)
   _seq.copyTrackConfigs(out);
 }
 
-void AcidSequencerClass::applyTrackLayout(const SEQ_TRACK *layout)
+void AcidSequencerClass::applyTrackLayout(const SEQ_TRACK *layout, uint16_t reset_mask)
 {
-  _seq.applyTrackLayout(layout);
+  _seq.applyTrackLayout(layout, reset_mask);
 }
 
 void AcidSequencerClass::applyTrackSetup(uint8_t track, const SEQ_TRACK &setup)
@@ -222,9 +222,9 @@ void AcidSequencerClass::applyTrackSetup(uint8_t track, const SEQ_TRACK &setup)
   _seq.applyTrackSetup(track, setup);
 }
 
-void AcidSequencerClass::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
+void AcidSequencerClass::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout, uint16_t reset_mask)
 {
-  _seq.applyLayoutToImage(img, layout);
+  _seq.applyLayoutToImage(img, layout, reset_mask);
 }
 
 void AcidSequencerClass::resetImage(SEQ_IMAGE *img)

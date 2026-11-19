@@ -61,7 +61,7 @@ void Aciduino::initSequencer()
   // old session without a layout record: adopt the layout that came from the
   // loaded patterns and persist it once
   if (!_layout_valid) {
-    _layout_dirty = false;
+    _layout_reset_mask = 0;
     saveSession();
   }
 }
@@ -307,7 +307,7 @@ bool Aciduino::selectSession(uint16_t index) {
     return false;
   }
   // switched sessions: unsaved edits are dropped, as before
-  _layout_dirty = false;
+  _layout_reset_mask = 0;
   loadSession();
   return true;
 }
@@ -780,9 +780,9 @@ void Aciduino::saveSession()
 
   // a changed layout is propagated to every stored pattern so session and
   // pattern data never disagree
-  if (_layout_dirty) {
+  if (_layout_reset_mask) {
     sanitizePatterns();
-    _layout_dirty = false;
+    _layout_reset_mask = 0;
   }
 }
 
@@ -795,26 +795,117 @@ void Aciduino::captureTrackLayout()
   _layout_valid = true;
 }
 
-bool Aciduino::layoutChanged()
+// slots whose live type differs from the last captured session layout
+uint16_t Aciduino::layoutChanged()
 {
+  uint16_t mask = 0;
   if (!_layout_valid) {
-    return false;
+    return mask;
   }
   for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
     if (aciduino.seq.trackType(t) != _session_extras.track_layout.tracks[t].type) {
-      return true;
+      mask |= (1u << t);
     }
   }
-  return false;
+  return mask;
+}
+
+// keep the in-memory session layout current before a load/save uses it. This
+// also catches a raw seq.createTrack/deleteTrack call that skipped the wrappers.
+void Aciduino::syncTrackLayout()
+{
+  uint16_t changed = layoutChanged();
+  if (changed) {
+    _layout_reset_mask |= changed;
+    captureTrackLayout();
+  }
+}
+
+// a slot that was just created or deleted starts from clean session data
+void Aciduino::resetTrackSessionData(uint8_t track)
+{
+  if (track >= SEQ_MAX_TRACKS) {
+    return;
+  }
+
+  _generative_303[track] = GENERATIVE_303_DATA();
+  _generative_808[track] = GENERATIVE_808_DATA();
+  _track_output_setup[track].output = MIDI_OUTPUT;
+  _track_output_setup[track].channel = track;
+  _track_output_setup[track].port = 0;
+  _pattern_grid[track] = 0;
+  // new/deleted slots are muted on every pattern mute grid
+  for (uint8_t mp = 0; mp < 4; mp++) {
+    _mute_grid[mp].map |= (1 << track);
+    _mute_grid[mp].map_parts[track] = 0xFFFF;
+  }
+  // global controls must not keep pointing at a slot that changed
+  for (uint8_t i = 0; i < 16; i++) {
+    if (_control_map_global[i].ctrl != -1 && _control_map_global[i].track == track) {
+      _control_map_global[i].ctrl = -1;
+    }
+  }
+}
+
+uint8_t Aciduino::addTrack(uint8_t type)
+{
+  uint8_t slot = aciduino.seq.createTrack(type);
+  if (slot == 0xFF) {
+    return 0xFF;
+  }
+
+  resetTrackSessionData(slot);
+  // the new list wins on every pattern load, even before a save
+  captureTrackLayout();
+  _layout_reset_mask |= (1u << slot);
+  fixSelectedTrack();
+  return slot;
+}
+
+bool Aciduino::deleteTrack(uint8_t track)
+{
+  if (!aciduino.seq.deleteTrack(track)) {
+    return false;
+  }
+
+  resetTrackSessionData(track);
+  // the new list wins on every pattern load, even before a save
+  captureTrackLayout();
+  _layout_reset_mask |= (1u << track);
+  if (_copy_track == track) {
+    _copy_track = -1;
+  }
+
+  if (track == _selected_track) {
+    // UI neighbor: previous active slot; the next one only when the deleted
+    // track was the first
+    uint8_t selected = track;
+    for (int8_t t = (int8_t)track - 1; t >= 0; t--) {
+      if (aciduino.seq.trackType((uint8_t)t) != SEQ_TRACK_NONE) {
+        selected = (uint8_t)t;
+        break;
+      }
+    }
+    if (selected == track) {
+      for (uint8_t t = track + 1; t < SEQ_MAX_TRACKS; t++) {
+        if (aciduino.seq.trackType(t) != SEQ_TRACK_NONE) {
+          selected = t;
+          break;
+        }
+      }
+    }
+    _selected_track = selected;
+  } else {
+    fixSelectedTrack();
+  }
+  return true;
 }
 
 void Aciduino::writeTrackLayout()
 {
-  // an add/delete/replace was done since the last save: mark it so the stored
-  // patterns get sanitized to the new session layout
-  if (layoutChanged()) {
-    _layout_dirty = true;
-  }
+  // an add/delete/replace was done since the last save: mark the slots so the
+  // stored patterns get sanitized to the new session layout
+  _layout_reset_mask |= layoutChanged();
 
   captureTrackLayout();
 
@@ -865,19 +956,18 @@ void Aciduino::sanitizePatterns()
       continue;
     }
 
-    bool changed[SEQ_MAX_TRACKS];
-    bool same = true;
+    // slots touched by add/delete plus any slot whose stored type disagrees
+    uint16_t changed = _layout_reset_mask;
     for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
-      changed[t] = _pattern_scratch.tracks[t].type != _session_extras.track_layout.tracks[t].type;
-      if (changed[t]) {
-        same = false;
+      if (_pattern_scratch.tracks[t].type != _session_extras.track_layout.tracks[t].type) {
+        changed |= (1u << t);
       }
     }
-    if (same) {
+    if (changed == 0) {
       continue;
     }
 
-    aciduino.seq.applyLayoutToImage(&_pattern_scratch, _session_extras.track_layout.tracks);
+    aciduino.seq.applyLayoutToImage(&_pattern_scratch, _session_extras.track_layout.tracks, changed);
     uCtrl.storage->save((void*)&_pattern_scratch, image_size, address);
 
     // reset the mute grid entries of the slots whose track changed
@@ -885,7 +975,7 @@ void Aciduino::sanitizePatterns()
     uCtrl.storage->load((void*)mute, sizeof(mute), address + image_size);
     for (uint8_t mp = 0; mp < 4; mp++) {
       for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
-        if (changed[t]) {
+        if (changed & (1u << t)) {
           mute[mp].map |= (1 << t);
           mute[mp].map_parts[t] = 0xFFFF;
           _mute_grid[mp].map |= (1 << t);
@@ -907,6 +997,9 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
   uint32_t pattern_address = 0;
   uint16_t saved_patterns = getNumOfPatterns();
   uint16_t image_size = aciduino.seq.getPatternImageSize();
+
+  // an unsaved add/delete must not be reverted by the pattern on storage
+  syncTrackLayout();
 
   // storage bounds: sdcard allows the pending empty slot right past the last saved pattern,
   // epprom pattern space is fixed
@@ -938,7 +1031,10 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
 
     aciduino.seq.setMute(track, true);
     aciduino.seq.clearStackNote(track);
-    if (!aciduino.seq.loadTrackImage(track, aciduino._track_image_buf)) {
+    if (_layout_reset_mask & (1u << track)) {
+      // unsaved add/delete on this slot: the stored data must not come back
+      aciduino.seq.initPatternData(track);
+    } else if (!aciduino.seq.loadTrackImage(track, aciduino._track_image_buf)) {
       // stale/corrupt blob: back to factory state for this track
       aciduino.seq.initPatternData(track);
     }
@@ -949,6 +1045,7 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
   } else {
     // load the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
+    SEQ_IMAGE *img = (SEQ_IMAGE *)aciduino.seq.getPatternImage();
 
     // mute all before load into memory(its volatile! here a mute is enongth)
     for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
@@ -958,13 +1055,30 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
     aciduino.seq.clearStackNote();
 
     // the whole sequencer image in one block
-    uCtrl.storage->load((void*)aciduino.seq.getPatternImage(), aciduino.seq.getPatternImageSize(), pattern_address);
+    uCtrl.storage->load((void*)img, image_size, pattern_address);
     // then the mute grid
-    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address + aciduino.seq.getPatternImageSize());
+    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address + image_size);
 
     // the session layout always wins over the stored pattern layout
     if (_layout_valid) {
-      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks);
+      // stored slots that disagree plus slots touched by an unsaved add/delete
+      uint16_t changed = _layout_reset_mask;
+      for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+        if (img->tracks[t].type != _session_extras.track_layout.tracks[t].type) {
+          changed |= (1u << t);
+        }
+      }
+      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks, changed);
+
+      // a slot whose track changed is muted on every mute pattern
+      for (uint8_t mp = 0; mp < 4; mp++) {
+        for (uint8_t t = 0; t < SEQ_MAX_TRACKS; t++) {
+          if (changed & (1u << t)) {
+            _mute_grid[mp].map |= (1 << t);
+            _mute_grid[mp].map_parts[t] = 0xFFFF;
+          }
+        }
+      }
     }
 
     // unmute all loaded fresh and new pattern
@@ -978,11 +1092,13 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
 // factory state for a not yet saved pattern slot(the pending empty pattern space)
 void Aciduino::loadDefaultPattern(int8_t track)
 {
+  syncTrackLayout();
+
   if (track == -1) {
     // whole pattern: engine factory state + unmuted mute grid
     aciduino.seq.initPatternData();
     if (_layout_valid) {
-      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks);
+      aciduino.seq.applyTrackLayout(_session_extras.track_layout.tracks, _layout_reset_mask);
     }
     for (uint8_t i=0; i < 4; i++) {
       _mute_grid[i].map = 0xFFFF;
@@ -1017,9 +1133,9 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
   // keep the session layout record in sync with the live track list, then
   // propagate a changed layout to every stored pattern
   writeTrackLayout();
-  if (_layout_dirty) {
+  if (_layout_reset_mask) {
     sanitizePatterns();
-    _layout_dirty = false;
+    _layout_reset_mask = 0;
   }
 
   if (track != -1) {
@@ -1073,6 +1189,9 @@ void Aciduino::copyPattern(uint8_t pattern, int8_t track)
 
 bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
 {
+  // an unsaved add/delete must be respected while resolving track types
+  syncTrackLayout();
+
   if (track == -1 || _copy_track == - 1) {
     // paste whole pattern track per track(dynamic layout can leave empty slots)
     for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {

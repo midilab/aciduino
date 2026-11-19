@@ -217,9 +217,9 @@ class NoteSequencer
     // session track layout (configs, no events)
     //
     void      copyTrackConfigs(SEQ_TRACK *out) const;
-    void      applyTrackLayout(const SEQ_TRACK *layout);     // session wins, keeps matching notes
+    void      applyTrackLayout(const SEQ_TRACK *layout, uint16_t reset_mask = 0); // session wins, keeps matching notes
     void      applyTrackSetup(uint8_t track, const SEQ_TRACK &setup);
-    void      applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout);
+    void      applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout, uint16_t reset_mask = 0);
     void      resetImage(SEQ_IMAGE *img);                    // live configs, no events
     bool      exportTrackImage(uint8_t track, SEQ_IMAGE *img);
 

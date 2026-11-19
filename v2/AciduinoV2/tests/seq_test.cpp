@@ -470,6 +470,43 @@ static void test_session_layout_merge()
   assert(seq.noteCount(0) == 1);
 }
 
+static void test_layout_reset_mask()
+{
+  NoteSequencer seq;
+  seq.setOutputCallback(capCb);
+  seq.init();
+
+  seq.setLength(0, 8);
+  seq.insertNote(0, 0, 60, 0);
+  seq.insertNote(1, 0, 62, 0);
+  seq.insertNote(2, 0, 64, 0);
+  seq.insertNote(3, 0, 36, 0);
+
+  SEQ_TRACK layout[SEQ_MAX_TRACKS];
+  seq.copyTrackConfigs(layout);
+
+  // a slot touched by add/delete starts empty even when the type matches again
+  layout[1].length = 16;
+  seq.applyTrackLayout(layout, (1u << 1));
+  assert(seq.trackType(1) == layout[1].type);
+  assert(seq.noteCount(1) == 0);
+  assert(seq.noteCount(0) == 1);
+  assert(seq.noteCount(2) == 1);
+  assert(seq.noteCount(3) == 1);
+  assert(seq.getLength(1) == 16);
+
+  // same rule on a stored image
+  SEQ_IMAGE img;
+  seq.resetImage(&img);
+  assert(seq.exportTrackImage(0, &img));
+  assert(seq.exportTrackImage(3, &img));
+  assert(img.tracks[3].count == 1);
+  seq.applyLayoutToImage(&img, layout, (1u << 3));
+  assert(img.tracks[3].type == layout[3].type);
+  assert(img.tracks[3].count == 0);
+  assert(img.tracks[0].count == 1);
+}
+
 static void test_track_image_merge()
 {
   NoteSequencer seq;
@@ -834,6 +871,7 @@ int main()
   test_pool_exhaustion();
   test_track_image_roundtrip();
   test_session_layout_merge();
+  test_layout_reset_mask();
   test_track_image_merge();
   test_shuffle_length();
   test_generative_303();
@@ -842,6 +880,6 @@ int main()
   test_custom_handler();
   test_808_substep_roll();
 
-  printf("seq_test: all %d checks passed\n", 21);
+  printf("seq_test: all %d checks passed\n", 22);
   return 0;
 }

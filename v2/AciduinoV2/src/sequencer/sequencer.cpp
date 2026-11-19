@@ -1222,7 +1222,7 @@ void NoteSequencer::applyTrackSetup(uint8_t track, const SEQ_TRACK &setup)
   rebuildMask(track);
 }
 
-void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
+void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout, uint16_t reset_mask)
 {
   if (img == nullptr || layout == nullptr) {
     return;
@@ -1234,6 +1234,9 @@ void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
     SEQ_TRACK *tr = &img->tracks[t];
     uint8_t desired = layout[t].type;
     bool valid = (desired > SEQ_TRACK_NONE && desired < SEQ_TRACK_COUNT);
+    // a slot touched by add/delete drops its stored events even when the type
+    // matches again(delete + re-add the same type starts empty)
+    bool force = (reset_mask & (1u << t)) != 0;
 
     // stored pool is packed in slot order: derive the slice from the counts
     uint16_t src_count = tr->count;
@@ -1242,7 +1245,7 @@ void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
     }
     uint16_t keep = 0;
 
-    if (valid && tr->type == desired) {
+    if (valid && tr->type == desired && !force) {
       // same track type: keep its notes and take the session setup
       keep = src_count;
       if (keep > 0) {
@@ -1293,14 +1296,14 @@ void NoteSequencer::applyLayoutToImage(SEQ_IMAGE *img, const SEQ_TRACK *layout)
   }
 }
 
-void NoteSequencer::applyTrackLayout(const SEQ_TRACK *layout)
+void NoteSequencer::applyTrackLayout(const SEQ_TRACK *layout, uint16_t reset_mask)
 {
   if (layout == nullptr) {
     return;
   }
 
   clearActiveNotes(-1);
-  applyLayoutToImage(&_img, layout);
+  applyLayoutToImage(&_img, layout, reset_mask);
   rebuildStarts();
 }
 

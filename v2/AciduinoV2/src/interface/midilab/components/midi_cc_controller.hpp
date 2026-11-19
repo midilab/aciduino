@@ -1,10 +1,11 @@
 // generic controler for 303 and 808 devices
+// pot_map is indexed by absolute track slot(dynamic layout)
 typedef struct
 {
     const char * control_name;
     uint8_t control_cc = 0;
     uint8_t control_data[TRACK_NUMBER_303];
-    int8_t pot_map[TRACK_NUMBER_303] = {-1};
+    int8_t pot_map[SEQ_MAX_TRACKS] = {-1};
 } MIDI_CTRL_DATA_303;
 
 typedef struct
@@ -12,7 +13,7 @@ typedef struct
     const char * control_name;
     uint8_t control_cc = 0;
     uint8_t control_data[TRACK_NUMBER_808];
-    int8_t pot_map[TRACK_NUMBER_808] = {-1};
+    int8_t pot_map[SEQ_MAX_TRACKS] = {-1};
 } MIDI_CTRL_DATA_808;
 
 struct MidiCCControl : PageComponent {
@@ -50,10 +51,8 @@ struct MidiCCControl : PageComponent {
       update_selector_view = true;
       // initing pot_map for learn refrence
       for (uint8_t i=0; i < 16; i++) {
-        for (uint8_t j=0; j < TRACK_NUMBER_303; j++) {
+        for (uint8_t j=0; j < SEQ_MAX_TRACKS; j++) {
           control_map_303[i].pot_map[j] = -1;
-        }
-        for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
           control_map_808[i].pot_map[j] = -1;
         }
       }

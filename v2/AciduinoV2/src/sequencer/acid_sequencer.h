@@ -1,8 +1,8 @@
 /*!
  *  @file       acid_sequencer.h
  *  Project     Acid Sequencer
- *  @brief      Step Sequencer that emulates roland TX series sequencers
- *  @version    0.8.0
+ *  @brief      Acid step sequencer facade over the note based sequencer engine
+ *  @version    1.0.0
  *  @author     Romulo Silva
  *  @date       22/09/2022
  *  @license    MIT - (c) 2022 - Romulo Silva - contact@midilab.co
@@ -23,7 +23,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE. 
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef __ACID_SEQUENCER_H__
@@ -31,22 +31,12 @@
 
 #include <Arduino.h>
 #include "setup.h"
+#include "sequencer.h"
+#include "harmonizer.h"
 
-// acid sequencers modules
-#include "engine.h"
-#include "engine_303.h"
-#include "engine_808.h"
-
-// Acid StepSequencer, 
-// a modular roland classic machines sequencer engine clone
-// TB303, TR808
-// each module can be setup output(MIDI, CV/GATE) a page to config will be nice!
-// author: midilab contact@midilab.co
-// under MIT license
-
-// idea for 808 roll 
-// use a flag or value for note_off to get into loop inside 96ppqn call with 
-// note on and off controlled until it finished the step
+// acid step sequencer, a modular roland classic machines sequencer clone
+// TB303, TR808 and generic polyphonic tracks on a single shared note pool
+// track types: 303(mono acid), 808(drum parts), poly(multi note chords)
 
 typedef enum {
   REALTIME,
@@ -57,81 +47,106 @@ class AcidSequencerClass
 {
     private:
 
-      Engine303 _engine303;
-      Engine808 _engine808;
-      uint32_t _tick = 0;
+      NoteSequencer _seq;
+      uint8_t _voice = 0;
+      uint8_t _rec_mode = REALTIME;
+      volatile bool _rec_status = false;
+      volatile uint32_t _tick = 0;
 
-      REC_MODE _rec_mode = REALTIME;
-      bool _rec_status = false;
-      int16_t _rec_realtime_ctrl = -1;
-      uint8_t _rec_realtime_note = 0;
-
-      uint8_t _selected_pattern = 0;
+      void (*_out)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
 
       const char * _note_string_table[12] = {"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
-		
-      void (*_onEventCallback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track);
+
+      // 303 harmonizer applied on the fly at note out(tune per track)
+      static uint8_t noteHook(uint8_t note, uint8_t track);
+      static AcidSequencerClass *_self;
 
     public:
 
       AcidSequencerClass();
 
-      // The callback function wich will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
-      void onStep(uint32_t step, int8_t shuffle_lenght_ctrl);
+      //
+      // transport
+      //
+      // The callback function which will be called by uClock each Pulse of 16PPQN clock resolution. Each call represents exactly one step.
+      void onStep(uint32_t step, int8_t shuffle_length_ctrl);
+      // The callback function which will be called by uClock each Pulse of 96PPQN clock resolution.
       void on96PPQN(uint32_t tick);
-      // The callback function wich will be called when clock starts by using Clock.start() method.
-      void onClockStart();
-      // The callback function wich will be called when clock stops by using Clock.stop() method.
-      void onClockStop();
       void clearStackNote(int8_t track = -1);
 
+      //
       // realtime rec and step rec modes support
+      //
       void input(uint8_t track, uint8_t msg, uint8_t data1, uint8_t data2, uint8_t interrupted = 0);
       void setRecStatus(bool record);
       bool getRecStatus();
       void setRecMode(REC_MODE rec_mode);
+      REC_MODE getRecMode();
 
-      // general interface for UI/Sequencer for 303 and 808 generic access
+      //
+      // pattern storage
+      //
+      void * getPatternImage();
+      uint16_t getPatternImageSize();
+      uint32_t getTrackImageOffset(uint8_t track);
+      bool saveTrackImage(uint8_t track, void *buf);
+      bool loadTrackImage(uint8_t track, const void *buf);
       void initPatternData(int8_t track = -1);
-      void * getPatternData(uint8_t track);
-      uint16_t get303PatternMemorySize();
-      uint16_t get303PatternTrackSize();
-      uint16_t get808PatternMemorySize();
-      uint16_t get808PatternTrackSize();
+
+      //
+      // track management
+      //
+      uint8_t createTrack(uint8_t type);
+      bool deleteTrack(uint8_t track);
+      uint8_t trackType(uint8_t track);
+      uint8_t getTrackNumber();
+      bool is303(uint8_t track);
+      bool is808(uint8_t track);
+      bool isPoly(uint8_t track);
+      uint16_t getNotesUsed();
+      uint16_t getNotesFree();
+
+      //
+      // generic step grid access(303/poly whole step, 808 selected part)
+      //
       void rest(uint8_t track, uint8_t step, bool state);
       bool stepOn(uint8_t track, uint8_t step);
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
       uint8_t getStepData(uint8_t track, uint8_t step);
       bool accentOn(uint8_t track, uint8_t step);
       void setAccent(uint8_t track, uint8_t step, bool state);
-      void setShiftPos(uint8_t track, int8_t shift);
-      int8_t getShiftPos(uint8_t track);
       uint8_t getCurrentStep(uint8_t track);
-      uint8_t getTrackNumber();
       uint16_t getTrackMaxLength(uint8_t track);
       uint16_t getTrackLength(uint8_t track);
       void setTrackLength(uint8_t track, uint16_t length);
+      void setShiftPos(uint8_t track, int8_t shift);
+      int8_t getShiftPos(uint8_t track);
       void clearTrack(uint8_t track);
       void acidRandomize(uint8_t track, uint8_t fill, uint8_t param_1 = 0, uint8_t param_2 = 0, uint8_t param_3 = 0, uint8_t param_4 = 0, uint8_t param_5 = 0, uint8_t param_6 = 0);
-      bool is303(uint8_t track);
+      void setMute(uint8_t track, uint8_t mute);
+      uint8_t getMute(uint8_t track);
 
-      // 303 specific
-      uint8_t getTune(uint8_t track);
-      void setTune(uint8_t track, uint8_t tune);
-      int8_t getTranspose(uint8_t track);
-      void setTranspose(uint8_t track, int8_t transpose);
+      //
+      // 303/poly specific
+      //
       void setSlide(uint8_t track, uint8_t step, bool state);
       void setTie(uint8_t track, uint8_t step, bool state);
       bool slideOn(uint8_t track, uint8_t step);
       bool tieOn(uint8_t track, uint8_t step);
-      void setMute(uint8_t track, uint8_t mute);
-      uint8_t getMute(uint8_t track);
+      uint8_t getTune(uint8_t track);
+      void setTune(uint8_t track, uint8_t tune);
+      int8_t getTranspose(uint8_t track);
+      void setTranspose(uint8_t track, int8_t transpose);
+      uint8_t getGate(uint8_t track);
+      void setGate(uint8_t track, uint8_t gate);
       const char * getTemperamentName(uint8_t temperament_id);
       void setTemperament(uint8_t temperament_id);
       uint8_t getTemperamentId();
       const char * getNoteString(uint8_t note);
 
-      // 808 specific
+      //
+      // 808 specific(parts/voices)
+      //
       void setRoll(uint8_t track, uint8_t step, bool state);
       void setRollType(uint8_t track, uint8_t type);
       uint8_t getRollType(uint8_t track);
@@ -140,14 +155,16 @@ class AcidSequencerClass
       uint8_t getTrackVoice(uint8_t track);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
+      int8_t getTrackVoiceByNote(uint8_t track, uint8_t note);
+      const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
+      void setTrackVoiceName(uint8_t track, uint8_t voice, const char *name);
       void setMute(uint8_t track, uint8_t voice, uint8_t mute);
       uint8_t getMute(uint8_t track, uint8_t voice);
-      const char * getTrackVoiceName(uint8_t track = 0, uint8_t voice = 0);
-      
+
+      //
       // main callback output data
+      //
       void setOutputCallback(void (*callback)(uint8_t msg_type, uint8_t note, uint8_t velocity, uint8_t track));
 };
-
-//extern AcidSequencerClass AcidSequencer;
 
 #endif

@@ -11,8 +11,9 @@ void Aciduino::init() {
 
   // force initializatiron of mute pattern data
   for (uint8_t i=0; i < 4; i++) {
-    for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
-      _mute_grid[i].map_808[j] = 0xFFFF;
+    _mute_grid[i].map = 0xFFFF;
+    for (uint8_t j=0; j < SEQ_MAX_TRACKS; j++) {
+      _mute_grid[i].map_parts[j] = 0xFFFF;
     }
   }
 }
@@ -31,7 +32,7 @@ void Aciduino::initSequencer()
   storageSetup();
 
   // init default track output data
-  for(uint8_t track=0; track < TRACK_NUMBER_303+TRACK_NUMBER_808; track++) {
+  for(uint8_t track=0; track < SEQ_MAX_TRACKS; track++) {
     _track_output_setup[track].output = MIDI_OUTPUT;
     _track_output_setup[track].channel = track;
     _track_output_setup[track].port = 0;
@@ -228,11 +229,9 @@ void Aciduino::storageSetup()
   //
   // common pattern data definitions
   //
-  _pattern_303_track_size = aciduino.seq.get303PatternTrackSize();
-  _pattern_808_track_size = aciduino.seq.get808PatternTrackSize();
-  _pattern_303_mem_size = aciduino.seq.get303PatternMemorySize();
-  _pattern_808_mem_size = aciduino.seq.get808PatternMemorySize();
-  _pattern_total_mem_size = (_pattern_303_mem_size + _pattern_808_mem_size + sizeof(_mute_grid));
+  // one pattern = the whole sequencer image + the mute grid
+  _pattern_image_size = aciduino.seq.getPatternImageSize();
+  _pattern_total_mem_size = (_pattern_image_size + sizeof(_mute_grid));
   _eprrom_pattern_address = (_epprom_session_address + _epprom_session_size);
   _eprrom_pattern_available = (_epprom_size-_epprom_session_size-_epprom_session_address) / (_pattern_total_mem_size);
 }
@@ -300,7 +299,7 @@ bool Aciduino::newSession() {
   uint16_t pattern_size = _pattern_total_mem_size;
   uCtrl.storage->save((void*)&pattern_size, sizeof(pattern_size), _epprom_check_data_address);
   // reset pattern grid: no patterns saved on a new session yet
-  for (uint8_t i = 0; i < TRACK_NUMBER_303+TRACK_NUMBER_808; i++) {
+  for (uint8_t i = 0; i < SEQ_MAX_TRACKS; i++) {
     _pattern_grid[i] = 0;
   }
   // fork session settings from current state
@@ -380,28 +379,33 @@ void Aciduino::nextTrack()
 // MUTE GRID
 uint8_t Aciduino::getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice)
 {
-  // 303
-  if (aciduino.seq.is303(track)) {
-    return GET_BIT(_mute_grid[mute_pattern].map_303, track);
-  // 808
-  } else {
-    return GET_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+  if (track >= SEQ_MAX_TRACKS) {
+    return 1;
   }
+  // track level(303/poly)
+  if (!aciduino.seq.is808(track)) {
+    return GET_BIT(_mute_grid[mute_pattern].map, track);
+  }
+  // part level(808)
+  return GET_BIT(_mute_grid[mute_pattern].map_parts[track], voice);
 }
 
 void Aciduino::setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice)
 {
+  if (track >= SEQ_MAX_TRACKS) {
+    return;
+  }
   if (state == 0) {
-    if (seq.is303(track)) {
-      CLR_BIT(_mute_grid[mute_pattern].map_303, track);
+    if (!aciduino.seq.is808(track)) {
+      CLR_BIT(_mute_grid[mute_pattern].map, track);
     } else {
-      CLR_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+      CLR_BIT(_mute_grid[mute_pattern].map_parts[track], voice);
     }
   } else if (state == 1) {
-    if (seq.is303(track)) {
-      SET_BIT(_mute_grid[mute_pattern].map_303, track);
+    if (!aciduino.seq.is808(track)) {
+      SET_BIT(_mute_grid[mute_pattern].map, track);
     } else {
-      SET_BIT(_mute_grid[mute_pattern].map_808[track-TRACK_NUMBER_303], voice);
+      SET_BIT(_mute_grid[mute_pattern].map_parts[track], voice);
     }
   }
 }
@@ -425,10 +429,11 @@ void Aciduino::generatePattern(int8_t track)
   if (track == -1)
     track_gen = _selected_track;
 
-  if (seq.is303(track_gen))
+  uint8_t type = aciduino.seq.trackType(track_gen);
+  if (type == SEQ_TRACK_303)
     aciduino.seq.acidRandomize(track_gen, _generative_303[track_gen].generative_fill, _generative_303[track_gen].accent_probability, _generative_303[track_gen].slide_probability, _generative_303[track_gen].tie_probability, _generative_303[track_gen].number_of_tones, _generative_303[track_gen].lower_octave*12, _generative_303[track_gen].range_octave*12);
-  else
-    aciduino.seq.acidRandomize(track_gen, _generative_808[track_gen-TRACK_NUMBER_303].generative_fill, _generative_808[track_gen-TRACK_NUMBER_303].accent_probability, _generative_808[track_gen-TRACK_NUMBER_303].roll_probability);
+  else if (type == SEQ_TRACK_808)
+    aciduino.seq.acidRandomize(track_gen, _generative_808[track_gen].generative_fill, _generative_808[track_gen].accent_probability, _generative_808[track_gen].roll_probability);
 }
 
 uint8_t Aciduino::getGenerativeParam(uint8_t param, int8_t track)
@@ -438,37 +443,46 @@ uint8_t Aciduino::getGenerativeParam(uint8_t param, int8_t track)
   if (track == -1)
     track_change = _selected_track;
 
-  // TODO: make it array idx safe access between 303 and 808 state access
+  if (track_change >= SEQ_MAX_TRACKS) {
+    return 0;
+  }
+  uint8_t type = seq.trackType(track_change);
   switch (param) {
     case GENERATIVE_FILL:
-      if (seq.is303(track_change))
+      if (type == SEQ_TRACK_303)
         value = _generative_303[track_change].generative_fill;
-      else
-        value = _generative_808[track_change-TRACK_NUMBER_303].generative_fill;
+      else if (type == SEQ_TRACK_808)
+        value = _generative_808[track_change].generative_fill;
       break;
     case GENERATIVE_ACCENT:
-      if (seq.is303(track_change))
+      if (type == SEQ_TRACK_303)
         value = _generative_303[track_change].accent_probability;
-      else
-        value = _generative_808[track_change-TRACK_NUMBER_303].accent_probability;
+      else if (type == SEQ_TRACK_808)
+        value = _generative_808[track_change].accent_probability;
       break;
     case GENERATIVE_SLIDE:
-      value = _generative_303[track_change].slide_probability;
+      if (type == SEQ_TRACK_303)
+        value = _generative_303[track_change].slide_probability;
       break;
     case GENERATIVE_TIE:
-      value = _generative_303[track_change].tie_probability;
+      if (type == SEQ_TRACK_303)
+        value = _generative_303[track_change].tie_probability;
       break;
     case GENERATIVE_LOWER_OCTAVE:
-      value = _generative_303[track_change].lower_octave;
+      if (type == SEQ_TRACK_303)
+        value = _generative_303[track_change].lower_octave;
       break;
     case GENERATIVE_RANGE_OCTAVE:
-      value = _generative_303[track_change].range_octave;
+      if (type == SEQ_TRACK_303)
+        value = _generative_303[track_change].range_octave;
       break;
     case GENERATIVE_NUM_TONES:
-      value = _generative_303[track_change].number_of_tones;
+      if (type == SEQ_TRACK_303)
+        value = _generative_303[track_change].number_of_tones;
       break;
     case GENERATIVE_ROLL:
-      value = _generative_808[track_change-TRACK_NUMBER_303].roll_probability;
+      if (type == SEQ_TRACK_808)
+        value = _generative_808[track_change].roll_probability;
       break;
     default:
       break;
@@ -483,36 +497,46 @@ void Aciduino::setGenerativeParam(uint8_t param, uint8_t data, int8_t track)
   if (track == -1)
     track_change = _selected_track;
 
+  if (track_change >= SEQ_MAX_TRACKS) {
+    return;
+  }
+  uint8_t type = seq.trackType(track_change);
   switch (param) {
     case GENERATIVE_FILL:
-      if (seq.is303(track_change))
+      if (type == SEQ_TRACK_303)
         _generative_303[track_change].generative_fill = data;
-      else
-        _generative_808[track_change-TRACK_NUMBER_303].generative_fill = data;
+      else if (type == SEQ_TRACK_808)
+        _generative_808[track_change].generative_fill = data;
       break;
     case GENERATIVE_ACCENT:
-      if (seq.is303(track_change))
+      if (type == SEQ_TRACK_303)
         _generative_303[track_change].accent_probability = data;
-      else
-        _generative_808[track_change-TRACK_NUMBER_303].accent_probability = data;
+      else if (type == SEQ_TRACK_808)
+        _generative_808[track_change].accent_probability = data;
       break;
     case GENERATIVE_SLIDE:
-      _generative_303[track_change].slide_probability = data;
+      if (type == SEQ_TRACK_303)
+        _generative_303[track_change].slide_probability = data;
       break;
     case GENERATIVE_TIE:
-      _generative_303[track_change].tie_probability = data;
+      if (type == SEQ_TRACK_303)
+        _generative_303[track_change].tie_probability = data;
       break;
     case GENERATIVE_LOWER_OCTAVE:
-      _generative_303[track_change].lower_octave = data;
+      if (type == SEQ_TRACK_303)
+        _generative_303[track_change].lower_octave = data;
       break;
     case GENERATIVE_RANGE_OCTAVE:
-      _generative_303[track_change].range_octave = data;
+      if (type == SEQ_TRACK_303)
+        _generative_303[track_change].range_octave = data;
       break;
     case GENERATIVE_NUM_TONES:
-      _generative_303[track_change].number_of_tones = data;
+      if (type == SEQ_TRACK_303)
+        _generative_303[track_change].number_of_tones = data;
       break;
     case GENERATIVE_ROLL:
-        _generative_808[track_change-TRACK_NUMBER_303].roll_probability = data;
+      if (type == SEQ_TRACK_808)
+        _generative_808[track_change].roll_probability = data;
       break;
     default:
       break;
@@ -660,7 +684,7 @@ void Aciduino::loadSession()
     }
     // patterns travel with the session: restore each track pattern from the grid
     loadPattern(_pattern_grid[0]);
-    for (uint8_t i = 1; i < TRACK_NUMBER_303+TRACK_NUMBER_808; i++) {
+    for (uint8_t i = 1; i < SEQ_MAX_TRACKS; i++) {
       if (_pattern_grid[i] != _pattern_grid[0]) {
         loadPattern(_pattern_grid[i], i);
       }
@@ -699,9 +723,16 @@ uint32_t Aciduino::getPatternEppromAddress(uint8_t pattern, int8_t track)
 {
   uint32_t pattern_address = _eprrom_pattern_address + ((uint32_t)pattern * _pattern_total_mem_size);
   if (track != -1) {
-    pattern_address += aciduino.seq.is303(track) ? _pattern_303_track_size * track : _pattern_303_mem_size + (_pattern_808_track_size * (track-TRACK_NUMBER_303));
+    // single track blobs live at the track slice position of the pattern image
+    pattern_address += aciduino.seq.getTrackImageOffset(track);
   }
   return pattern_address;
+}
+
+static uint16_t trackImageBlobSize(uint8_t * buf)
+{
+  // single track blob header: [u16 total size][SEQ_TRACK][events]
+  return (uint16_t)(buf[0] | ((uint16_t)buf[1] << 8));
 }
 
 void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
@@ -722,41 +753,42 @@ void Aciduino::loadPattern(uint8_t pattern, int8_t track, int8_t to_track)
   }
 
   if (track != -1) {
-    // load only a track patttern
+    // load only a track pattern
     pattern_address = getPatternEppromAddress(pattern, track);
 
     // to_track request?
     if (to_track != -1)
       track = to_track;
 
+    if (!uCtrl.storage->load((void*)aciduino._track_image_buf, sizeof(aciduino._track_image_buf), pattern_address)) {
+      return;
+    }
+
     aciduino.seq.setMute(track, true);
     aciduino.seq.clearStackNote(track);
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size), pattern_address);
+    if (!aciduino.seq.loadTrackImage(track, aciduino._track_image_buf)) {
+      // stale/corrupt blob: back to factory state for this track
+      aciduino.seq.initPatternData(track);
+    }
     aciduino.seq.setMute(track, false);
-
-    // load _mute_grid only for track?
-    //...
   } else {
     // load the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
 
     // mute all before load into memory(its volatile! here a mute is enongth)
-    for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
+    for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
       aciduino.seq.setMute(i, true);
     }
     // clear all floating notes around
     aciduino.seq.clearStackNote();
 
-    // get 303 whole pattern data first
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(0), _pattern_303_mem_size, pattern_address);
-    // then 808 whole pattern data last
-    uCtrl.storage->load((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), _pattern_808_mem_size, pattern_address+_pattern_303_mem_size);
-
-    // load _mute_grid
-    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address+_pattern_303_mem_size+_pattern_808_mem_size);
+    // the whole sequencer image in one block
+    uCtrl.storage->load((void*)aciduino.seq.getPatternImage(), aciduino.seq.getPatternImageSize(), pattern_address);
+    // then the mute grid
+    uCtrl.storage->load((void*)_mute_grid, sizeof(_mute_grid), pattern_address + aciduino.seq.getPatternImageSize());
 
     // unmute all loaded fresh and new pattern
-    for (uint8_t i=0; i < (TRACK_NUMBER_303+TRACK_NUMBER_808); i++) {
+    for (uint8_t i=0; i < SEQ_MAX_TRACKS; i++) {
       aciduino.seq.setMute(i, false);
     }
   }
@@ -769,9 +801,9 @@ void Aciduino::loadDefaultPattern(int8_t track)
     // whole pattern: engine factory state + unmuted mute grid
     aciduino.seq.initPatternData();
     for (uint8_t i=0; i < 4; i++) {
-      _mute_grid[i].map_303 = 0xFFFF;
-      for (uint8_t j=0; j < TRACK_NUMBER_808; j++) {
-        _mute_grid[i].map_808[j] = 0xFFFF;
+      _mute_grid[i].map = 0xFFFF;
+      for (uint8_t j=0; j < SEQ_MAX_TRACKS; j++) {
+        _mute_grid[i].map_parts[j] = 0xFFFF;
       }
     }
   } else {
@@ -794,26 +826,24 @@ void Aciduino::savePattern(uint8_t pattern, int8_t track, int8_t from_track)
   }
 
   if (track != -1) {
-    // save only a track patttern
-    pattern_address = getPatternEppromAddress(pattern, track);
-
+    // save only a track pattern
     // to_track request?
     if (from_track != -1)
       track = from_track;
 
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size), pattern_address);
+    // build the single track blob and save it at the track slice position
+    aciduino.seq.saveTrackImage((uint8_t)track, aciduino._track_image_buf);
+    uCtrl.storage->save((void*)aciduino._track_image_buf, trackImageBlobSize(aciduino._track_image_buf), getPatternEppromAddress(pattern, track));
 
-    // save _mute_grid for a specific patern
+    // save _mute_grid for a specific pattern
     //...
   } else {
     // saves the whole pattern for all tracks
     pattern_address = getPatternEppromAddress(pattern);
-    // save 303 whole pattern data first
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(0), _pattern_303_mem_size, pattern_address);
-    // then 808 whole pattern data last
-    uCtrl.storage->save((void*)aciduino.seq.getPatternData(TRACK_NUMBER_303), _pattern_808_mem_size, pattern_address+_pattern_303_mem_size);
+    // the whole sequencer image in one block
+    uCtrl.storage->save((void*)aciduino.seq.getPatternImage(), aciduino.seq.getPatternImageSize(), pattern_address);
     // _mute_grid data
-    uCtrl.storage->save((void *)_mute_grid, sizeof(_mute_grid), pattern_address+_pattern_303_mem_size+_pattern_808_mem_size);
+    uCtrl.storage->save((void *)_mute_grid, sizeof(_mute_grid), pattern_address + aciduino.seq.getPatternImageSize());
   }
 }
 
@@ -824,7 +854,7 @@ void Aciduino::saveMuteGrid(uint8_t pattern)
     return;
   }
   // _mute_grid data
-  uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+_pattern_303_mem_size+_pattern_808_mem_size);
+  uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern) + aciduino.seq.getPatternImageSize());
 }
 
 // copy current track data into same or another track pattern memory
@@ -836,70 +866,58 @@ void Aciduino::copyPattern(uint8_t pattern, int8_t track)
 
 bool Aciduino::pastePattern(uint8_t pattern, int8_t track)
 {
-  bool copy_memory = true;
-
   if (track == -1 || _copy_track == - 1) {
     // paste whole pattern track per track
     for (uint8_t i=0; i < aciduino.seq.getTrackNumber(); i++) {
       // update _copy_track with current track
       _copy_track = i;
-      pastePattern(pattern, i);
+      if (!pastePattern(pattern, i)) {
+        return false;
+      }
     }
     // paste _mute_grid too!
-    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern)+_pattern_303_mem_size+_pattern_808_mem_size);
+    uCtrl.storage->save((void*)_mute_grid, sizeof(_mute_grid), getPatternEppromAddress(pattern) + aciduino.seq.getPatternImageSize());
     return true;
   }
 
   // check if track types are different
-  if (aciduino.seq.is303(_copy_track) != aciduino.seq.is303(track)) {
+  if (aciduino.seq.trackType(_copy_track) != aciduino.seq.trackType(track)) {
     // cant copy.. handle UI
     return false;
   }
 
   // copy from memory or from storage?
-  if (_pattern_grid[_copy_track] == _copy_pattern) {
-    // we copy from current memory data
-    copy_memory = true;
+  bool copy_memory = (_pattern_grid[_copy_track] == _copy_pattern);
+  // paste to memory or to storage?
+  bool paste_memory = (_pattern_grid[track] == pattern);
+
+  if (copy_memory) {
+    // build the single track blob from current memory
+    aciduino.seq.saveTrackImage(_copy_track, aciduino._track_image_buf);
   } else {
-    // we copy from storage data
-    copy_memory = false;
+    // build the single track blob from storage
+    if (!uCtrl.storage->load((void*)aciduino._track_image_buf, sizeof(aciduino._track_image_buf), getPatternEppromAddress(_copy_pattern, _copy_track))) {
+      return false;
+    }
   }
 
-  // paste to memory or to storage?
-  if (_pattern_grid[track] == pattern) {
+  if (paste_memory) {
     // TODO: should we save stuffs copied to memory?
     // we paste to current memory
-    if (copy_memory) {
-      // if paste is from memory to memory
-      aciduino.seq.setMute(track, true);
-      aciduino.seq.clearStackNote(track);
-      memcpy(aciduino.seq.getPatternData(track), aciduino.seq.getPatternData(_copy_track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size));
-      aciduino.seq.setMute(track, false);
-    } else {
-      // if paste is from storage to memory
-      loadPattern(_copy_pattern, _copy_track, track);
+    aciduino.seq.setMute(track, true);
+    aciduino.seq.clearStackNote(track);
+    bool ok = aciduino.seq.loadTrackImage(track, aciduino._track_image_buf);
+    if (!ok) {
+      aciduino.seq.initPatternData(track);
     }
-  } else {
-    // we paste to storage data
-    if (copy_memory) {
-      // if paste is from memory to storage
-      savePattern(pattern, track, _copy_track);
-    } else {
-      // if paste is from storage to storage
-      uCtrl.storage->copy(getPatternEppromAddress(_copy_pattern, _copy_track), getPatternEppromAddress(pattern, track), (aciduino.seq.is303(track) ? _pattern_303_track_size : _pattern_808_track_size));
-    }
+    aciduino.seq.setMute(track, false);
+    return ok;
   }
 
+  // we paste to storage data
+  uCtrl.storage->save((void*)aciduino._track_image_buf, trackImageBlobSize(aciduino._track_image_buf), getPatternEppromAddress(pattern, track));
   return true;
 }
-
-/*
-void Engine808::setBufferTrack(uint8_t track)
-{
-  // copy track into buffer
-  memcpy(_track_helper_buffer, _sequencer[track], sizeof(_track_helper_buffer));
-}
- */
 
 bool Aciduino::checkEppromDataLayoutChange()
 {

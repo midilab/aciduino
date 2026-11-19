@@ -22,7 +22,7 @@
 //
 // memory data structures for user data
 //
-// generative engine ui data
+// generative engine ui data(indexed by track slot)
 typedef struct
 {
   uint8_t generative_fill = 80;
@@ -88,8 +88,8 @@ typedef enum {
 // pattern and mute automation grid
 typedef struct
 {
-  uint16_t map_303 = 0xFFFF;
-  uint16_t map_808[TRACK_NUMBER_808] = {0xFFFF};
+  uint16_t map = 0xFFFF;                     // track level mute bits(1 = unmuted)
+  uint16_t map_parts[SEQ_MAX_TRACKS] = {0xFFFF}; // 808 part level mute bits
 } MUTE_PATTERN;
 
 // sdcard session sidecar data: state that lives with the session but
@@ -100,7 +100,7 @@ typedef struct
   uint8_t shuffle_on = 0;
   uint8_t shuffle_sig = 0;
   int8_t shuffle_template[2] = {0, 0};
-  uint8_t pattern_grid[TRACK_NUMBER_303+TRACK_NUMBER_808] = {0};
+  uint8_t pattern_grid[SEQ_MAX_TRACKS] = {0};
 } SESSION_EXTRAS;
 
 
@@ -218,13 +218,15 @@ private:
   bool formatSdCardDialog();
 #endif
 
-  GENERATIVE_303_DATA _generative_303[TRACK_NUMBER_303];
-  GENERATIVE_808_DATA _generative_808[TRACK_NUMBER_808];
+  GENERATIVE_303_DATA _generative_303[SEQ_MAX_TRACKS];
+  GENERATIVE_808_DATA _generative_808[SEQ_MAX_TRACKS];
 
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
-  volatile TRACK_OUTPUT_DATA _track_output_setup[TRACK_NUMBER_303+TRACK_NUMBER_808];
+  volatile TRACK_OUTPUT_DATA _track_output_setup[SEQ_MAX_TRACKS];
   MUTE_PATTERN _mute_grid[4];
-  uint8_t _pattern_grid[TRACK_NUMBER_303 + TRACK_NUMBER_808];
+  uint8_t _pattern_grid[SEQ_MAX_TRACKS];
+  // scratch blob for single track save/load(covers the biggest possible track slice)
+  uint8_t _track_image_buf[3 + sizeof(SEQ_TRACK) + SEQ_MAX_NOTES * sizeof(SEQ_EVENT)];
   // sdcard session extras(tempo/shuffle/pattern grid live here and travel with the session)
   SESSION_EXTRAS _session_extras;
   uint8_t _shuffle_sig = 0;
@@ -268,10 +270,7 @@ private:
   //
   // common pattern data definitions
   //
-  uint16_t _pattern_303_track_size;
-  uint16_t _pattern_808_track_size;
-  uint16_t _pattern_303_mem_size;
-  uint16_t _pattern_808_mem_size;
+  uint16_t _pattern_image_size;
   uint16_t _pattern_total_mem_size;
   uint16_t _eprrom_pattern_address;
   uint16_t _eprrom_pattern_available;

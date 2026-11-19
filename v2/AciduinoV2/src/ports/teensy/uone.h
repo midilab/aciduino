@@ -187,6 +187,12 @@ void initPort() {
   // init uCtrl modules and memory
   uCtrl.init();
 
+#if defined(TOUCH_DEBUG_HANDLER)
+  // dump the calibrated touch noise floors for threshold/margin tuning
+  Serial.begin(115200);
+  uCtrl.touch->debugBaseline();
+#endif
+
   // get all leds off
   uCtrl.dout->writeAll(LOW);
 

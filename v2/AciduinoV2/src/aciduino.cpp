@@ -593,6 +593,7 @@ uint8_t Aciduino::getTrackOutputParam(uint8_t param, int8_t track)
     default:
       break;
   }
+  return 0;
 }
 
 void Aciduino::setTrackOutputParam(uint8_t param, uint8_t data, int8_t track)
@@ -629,6 +630,7 @@ int8_t Aciduino::getMidiControlParam(uint8_t param, uint8_t idx)
     default:
       break;
   }
+  return 0;
 }
 
 void Aciduino::setMidiControlParam(uint8_t param, int8_t data, uint8_t idx)

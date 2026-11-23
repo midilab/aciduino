@@ -502,6 +502,11 @@ void AcidSequencerClass::setTemperament(uint8_t temperament_id)
   Harmonizer.setTemperament(temperament_id);
 }
 
+bool AcidSequencerClass::noteOnAtStep(uint8_t track, uint8_t step, uint8_t note, uint8_t flags, bool poly)
+{
+  return _seq.upsertNoteOn(track, step, note, flags, poly);
+}
+
 uint8_t AcidSequencerClass::getTemperamentId()
 {
   return Harmonizer.getTemperamentId();
@@ -595,6 +600,11 @@ void AcidSequencerClass::setMute(uint8_t track, uint8_t voice, uint8_t mute)
 uint8_t AcidSequencerClass::getMute(uint8_t track, uint8_t voice)
 {
   return _seq.partMute(track, voice);
+}
+
+uint8_t AcidSequencerClass::getPartNote(uint8_t track, uint8_t part)
+{
+  return _seq.partNote(track, part);
 }
 
 //

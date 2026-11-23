@@ -85,10 +85,13 @@ void generative_page_refresh(uint8_t subpage)
 
   }
 
+  trackStripView();
 }
 
 void generative_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {  
+  if (trackStripInput(control_id, value)) return;
+
   // step array buttons handling?
 }
 

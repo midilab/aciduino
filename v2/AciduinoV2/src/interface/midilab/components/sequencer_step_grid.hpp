@@ -21,6 +21,17 @@ struct StepSequencer : PageComponent {
     // rec and preview function helpers
     uint8_t rec_track = 0;
     uint8_t rec_note = 36;
+    // pad keyboard mode: 16 notes(303/poly) or 11 parts(808)
+    bool keys_mode = false;
+    uint8_t keys_track = 0;
+    uint8_t keys_base = 36;
+    uint8_t keys_last = 0;
+    uint8_t keys_active[16] = {0};
+    uint8_t keys_note[16] = {0};
+    // shift+step audition
+    bool audition_active = false;
+    uint8_t audition_track = 0;
+    uint8_t audition_note = 0;
 
     StepSequencer() {
       // we want this component to be 2 lines for compact view(5 for full sized view) and 2 grids navigable object
@@ -46,6 +57,13 @@ struct StepSequencer : PageComponent {
       uint8_t line_idx = 0, step_on = 0;
       uint8_t max_steps_per_view = full_size_view ? 64 : 16;
 
+      uint8_t track = aciduino.getSelectedTrack();
+      if (keys_mode && keys_track != track) {
+        resetKeys();
+        keys_track = track;
+        keys_base = constrain(aciduino.seq.getStepData(track, selected_step), 0, 127);
+      }
+
       curr_step = aciduino.seq.getCurrentStep(aciduino.getSelectedTrack());
       step_size = aciduino.seq.getTrackLength(aciduino.getSelectedTrack());
       locator_current = curr_step == 0 ? 0 : curr_step / max_steps_per_view;
@@ -59,6 +77,7 @@ struct StepSequencer : PageComponent {
 #if defined(USE_LED_8) || defined(USE_LED_16) || defined(USE_LED_24)
       // locator leds
       uCtrl.dout->writeAll(LOW);
+#if !defined(USE_TRACK_STRIP)
       if (locator_current !=  selected_locator || !selected) {
         uCtrl.dout->write(locator_current+SELECTOR_LED_1, HIGH); 
       }
@@ -66,6 +85,7 @@ struct StepSequencer : PageComponent {
       if ((selected_line == 1 || selected_line == 2) && selected) {
         uCtrl.dout->write(selected_locator+SELECTOR_LED_1, uCtrl.dout->blink() ? LOW : HIGH);
       }
+#endif
 #endif
       
       // step locators
@@ -123,10 +143,25 @@ struct StepSequencer : PageComponent {
         uCtrl.oled->print(step_asset, steps_line, line_idx+1);
       }
 
+#if defined(USE_LED_16) || defined(USE_LED_24)
+      // pad keyboard replaces the step leds while active
+      if (keys_mode) {
+        drawKeysLeds();
+      }
+#endif
+
       // step info
       uint8_t info_line_idx = full_size_view ? 5 : 2;
+      if (keys_mode) {
+        if (aciduino.seq.is808(track)) {
+          uint8_t voice = keys_last < PARTS_808 ? keys_last : 0;
+          uCtrl.oled->print(aciduino.seq.getTrackVoiceName(track, voice), line+info_line_idx, 1);
+        } else {
+          uCtrl.oled->print("keys", line+info_line_idx, 1);
+          uCtrl.oled->print(aciduino.seq.getNoteString(keys_base), line+info_line_idx, 6);
+        }
       // 808
-      if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
+      } else if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
         uCtrl.oled->print(aciduino.seq.getTrackVoiceName(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())), line+info_line_idx, 1);
         //uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack())), line+info_line_idx, 1);
       // 303 + poly
@@ -161,12 +196,57 @@ struct StepSequencer : PageComponent {
         }
       }
 
+      if (keys_mode) {
+        setF1("keys", true);
+        setF2(aciduino.seq.is808(track) ? "parts" : aciduino.seq.getNoteString(keys_base));
+      }
+
       // debug
       //uCtrl.oled->print(selected_line, line+info_line_idx, 10);
       
     }
 
     void nav(uint8_t dir) {
+
+      if (keys_mode) {
+        switch (dir) {
+          case UP:
+            keys_base = constrain((int16_t)keys_base + 12, 0, 127);
+            break;
+          case DOWN:
+            keys_base = constrain((int16_t)keys_base - 12, 0, 127);
+            break;
+          case LEFT:
+            keys_base = constrain((int16_t)keys_base - 1, 0, 127);
+            break;
+          case RIGHT:
+            keys_base = constrain((int16_t)keys_base + 1, 0, 127);
+            break;
+        }
+        return;
+      }
+
+      // compact view: up/down move one 16 step bar
+      if (!full_size_view && (dir == UP || dir == DOWN)) {
+        uint16_t size = aciduino.seq.getTrackLength(aciduino.getSelectedTrack());
+        uint8_t bars = (size + 15) / 16;
+        if (bars == 0) {
+          return;
+        }
+        if (selected_locator >= bars) {
+          selected_locator = bars - 1;
+        }
+        if (dir == UP) {
+          selected_locator = selected_locator == 0 ? bars - 1 : selected_locator - 1;
+        } else {
+          selected_locator = (selected_locator + 1) % bars;
+        }
+        selected_step = (selected_step % 16) + selected_locator * 16;
+        if (selected_step >= size) {
+          selected_step = size - 1;
+        }
+        return;
+      }
 
       switch (dir) {
         case UP:
@@ -256,6 +336,20 @@ struct StepSequencer : PageComponent {
     }
     
     void change(int16_t data) {
+
+      if (keys_mode) {
+        int16_t base = keys_base;
+        int16_t step = uCtrl.page->isShiftPressed() ? 12 : 1;
+        if (data == INCREMENT || data == INCREMENT_SECONDARY) {
+          base += step;
+        } else if (data == DECREMENT || data == DECREMENT_SECONDARY) {
+          base -= step;
+        } else {
+          base = parseData(data, 0, 127, keys_base);
+        }
+        keys_base = constrain(base, 0, 127);
+        return;
+      }
       
       if (data == DECREMENT || data == INCREMENT) {
 
@@ -331,6 +425,14 @@ struct StepSequencer : PageComponent {
     }
     
     void function1() {
+#if defined(USE_TRACK_STRIP)
+      // shift+f1 toggles the pad keyboard; f1 leaves it
+      if (uCtrl.page->isShiftPressed() || keys_mode) {
+        toggleKeys();
+        return;
+      }
+#endif
+
       if (selected_line == 1) {
         // clear track
         aciduino.seq.clearTrack(aciduino.getSelectedTrack());
@@ -341,6 +443,12 @@ struct StepSequencer : PageComponent {
     }
 
     void function2() {
+#if defined(USE_TRACK_STRIP)
+      if (keys_mode) {
+        return;
+      }
+#endif
+
       if (selected_line == 1) {
         // mute track(voice for 808)
         if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
@@ -374,5 +482,181 @@ struct StepSequencer : PageComponent {
       uint8_t step = number + ((full_size_view && selected_line != 1 ? selected_line-2 : selected_locator) * 16);
       aciduino.seq.rest(aciduino.getSelectedTrack(), step, aciduino.seq.stepOn(aciduino.getSelectedTrack(), step));
     }
+
+    uint8_t stepFromPad(uint8_t number)
+    {
+      return number + ((full_size_view && selected_line != 1 ? selected_line-2 : selected_locator) * 16);
+    }
+
+    // one physical step pad press/release
+    void stepPad(uint8_t number, bool shift, bool pressed)
+    {
+      if (keys_mode) {
+        keyPad(number, shift, pressed);
+        return;
+      }
+      if (pressed && shift) {
+        auditionOn(number);
+        return;
+      }
+      if (!pressed) {
+        auditionOff();
+        return;
+      }
+
+      uint8_t track = aciduino.getSelectedTrack();
+      uint16_t size = aciduino.seq.getTrackLength(track);
+      uint8_t step = stepFromPad(number);
+      if (step >= size) {
+        return;
+      }
+      aciduino.seq.rest(track, step, aciduino.seq.stepOn(track, step));
+      selected_step = step;
+      selected_locator = step / (full_size_view ? 64 : 16);
+      selected_line = full_size_view ? ((step % 64) / 16) + 2 : 2;
+    }
+
+    void auditionOn(uint8_t number)
+    {
+      uint8_t track = aciduino.getSelectedTrack();
+      uint16_t size = aciduino.seq.getTrackLength(track);
+      uint8_t step = stepFromPad(number);
+      if (step >= size) {
+        return;
+      }
+      auditionOff();
+      audition_track = track;
+      audition_note = aciduino.seq.getStepData(track, step);
+      audition_active = true;
+      aciduino.seq.input(track, NOTE_ON, audition_note, aciduino.seq.is808(track) ? NOTE_VELOCITY_808 : NOTE_VELOCITY_303);
+
+      // realtime rec is handled by input(); step rec writes here
+      if (aciduino.seq.getRecStatus() && aciduino.seq.getRecMode() == STEP && !aciduino.isPlaying()) {
+        aciduino.seq.noteOnAtStep(track, step, audition_note, 0, aciduino.seq.is808(track) || aciduino.seq.isPoly(track));
+      }
+    }
+
+    void auditionOff()
+    {
+      if (!audition_active) {
+        return;
+      }
+      aciduino.seq.input(audition_track, NOTE_OFF, audition_note, 0);
+      audition_active = false;
+    }
+
+    // pad keyboard: 16 notes(303/poly) or the 11 drum parts(808)
+    void keyPad(uint8_t number, bool shift, bool pressed)
+    {
+      uint8_t track = aciduino.getSelectedTrack();
+      if (track != keys_track) {
+        resetKeys();
+        keys_track = track;
+        keys_base = constrain(aciduino.seq.getStepData(track, selected_step), 0, 127);
+      }
+
+      bool is_808 = aciduino.seq.is808(track);
+      if (is_808 && number >= PARTS_808) {
+        return;
+      }
+
+      if (!pressed) {
+        if (keys_active[number]) {
+          aciduino.seq.input(track, NOTE_OFF, keys_note[number], 0);
+          keys_active[number] = 0;
+        }
+        return;
+      }
+
+      if (keys_active[number]) {
+        return;
+      }
+      if (!is_808 && keys_base + number > 127) {
+        return;
+      }
+
+      uint8_t note = is_808 ? aciduino.seq.getPartNote(track, number) : keys_base + number;
+      keys_note[number] = note;
+      keys_active[number] = 1;
+      keys_last = number;
+
+      uint8_t velocity = shift ? (is_808 ? ACCENT_VELOCITY_808 : ACCENT_VELOCITY_303) : (is_808 ? NOTE_VELOCITY_808 : NOTE_VELOCITY_303);
+      aciduino.seq.input(track, NOTE_ON, note, velocity);
+
+      // step record: write to the selected step and advance
+      if (aciduino.seq.getRecStatus() && aciduino.seq.getRecMode() == STEP && !aciduino.isPlaying()) {
+        aciduino.seq.noteOnAtStep(track, selected_step, note, shift ? SEQ_EV_ACCENT : 0, is_808 || aciduino.seq.isPoly(track));
+        advanceStep();
+      }
+    }
+
+    void advanceStep()
+    {
+      uint8_t track = aciduino.getSelectedTrack();
+      uint16_t size = aciduino.seq.getTrackLength(track);
+      if (size == 0) {
+        return;
+      }
+      selected_step = (selected_step + 1) % size;
+      selected_locator = selected_step / (full_size_view ? 64 : 16);
+      selected_line = full_size_view ? ((selected_step % 64) / 16) + 2 : 2;
+    }
+
+    void resetKeys()
+    {
+      for (uint8_t i=0; i < 16; i++) {
+        if (keys_active[i]) {
+          aciduino.seq.input(keys_track, NOTE_OFF, keys_note[i], 0);
+          keys_active[i] = 0;
+        }
+      }
+    }
+
+    void toggleKeys()
+    {
+      if (keys_mode) {
+        exitKeys();
+        return;
+      }
+      keys_mode = true;
+      keys_track = aciduino.getSelectedTrack();
+      keys_base = constrain(aciduino.seq.getStepData(keys_track, selected_step), 0, 127);
+      keys_last = 0;
+      for (uint8_t i=0; i < 16; i++) {
+        keys_active[i] = 0;
+      }
+    }
+
+    void exitKeys()
+    {
+      if (!keys_mode) {
+        return;
+      }
+      resetKeys();
+      keys_mode = false;
+    }
+
+    // page destroy also releases anything still held
+    void releaseAll()
+    {
+      resetKeys();
+      auditionOff();
+      keys_mode = false;
+    }
+
+#if defined(USE_LED_16) || defined(USE_LED_24)
+    void drawKeysLeds()
+    {
+      uint8_t track = aciduino.getSelectedTrack();
+      bool is_808 = aciduino.seq.is808(track);
+      for (uint8_t i=0; i < 16; i++) {
+        bool on = is_808 ? (i < PARTS_808) : (keys_base + i <= 127);
+        if (i == keys_last && uCtrl.dout->blink()) {
+          on = !on;
+        }
+        uCtrl.dout->write(STEP_LED_1 + i, on ? HIGH : LOW);
+      }
+    }
+#endif
     
 } stepSequencerComponent;

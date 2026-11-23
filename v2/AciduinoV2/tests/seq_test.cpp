@@ -855,6 +855,38 @@ static void test_808_substep_roll()
   assert(g_cap.countOf(NOTE_OFF, 48, dr) == 1);
 }
 
+static void test_step_record_upsert()
+{
+  NoteSequencer seq;
+  seq.init();
+
+  uint8_t acid = 0, poly = 2, dr = 3;
+  seq.setLength(acid, 8);
+  seq.setLength(poly, 8);
+  seq.setLength(dr, 8);
+
+  // 303: a pad press writes the note and the step is gated
+  assert(seq.upsertNoteOn(acid, 2, 60, 0, false));
+  assert((seq.flagsAtStep(acid, 2, 60) & SEQ_EV_REST) == 0);
+  assert(seq.noteAtStep(acid, 2, 0) == 60);
+
+  // mono: the same step holds one note, accent follows the last press
+  assert(seq.upsertNoteOn(acid, 2, 64, SEQ_EV_ACCENT, false));
+  assert(seq.noteCount(acid) == 1);
+  assert(seq.noteAtStep(acid, 2, 0) == 64);
+  assert((seq.flagsAtStep(acid, 2, 64) & SEQ_EV_ACCENT) != 0);
+
+  // poly: the pad keyboard adds chord notes and dedupes the same note
+  assert(seq.upsertNoteOn(poly, 1, 60, 0, true));
+  assert(seq.upsertNoteOn(poly, 1, 67, 0, true));
+  assert(seq.upsertNoteOn(poly, 1, 67, SEQ_EV_ACCENT, true));
+  assert(seq.noteCount(poly) == 2);
+
+  // 808: the recorded part note is the one the pad grid shows
+  assert(seq.upsertNoteOn(dr, 3, seq.partNote(dr, 1), 0, true));
+  assert(seq.noteAtStep(dr, 3, 0) == seq.partNote(dr, 1));
+}
+
 int main()
 {
   test_default_layout();
@@ -879,7 +911,8 @@ int main()
   test_handler_dispatch();
   test_custom_handler();
   test_808_substep_roll();
+  test_step_record_upsert();
 
-  printf("seq_test: all %d checks passed\n", 22);
+  printf("seq_test: all %d checks passed\n", 23);
   return 0;
 }

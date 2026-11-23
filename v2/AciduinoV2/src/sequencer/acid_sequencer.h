@@ -120,6 +120,8 @@ class AcidSequencerClass
       bool stepOn(uint8_t track, uint8_t step);
       void setStepData(uint8_t track, uint8_t step, uint8_t data);
       uint8_t getStepData(uint8_t track, uint8_t step);
+      // write a note on and keep it gated(step record from the pad grid)
+      bool noteOnAtStep(uint8_t track, uint8_t step, uint8_t note, uint8_t flags = 0, bool poly = false);
       bool accentOn(uint8_t track, uint8_t step);
       void setAccent(uint8_t track, uint8_t step, bool state);
       uint8_t getCurrentStep(uint8_t track);
@@ -160,6 +162,7 @@ class AcidSequencerClass
       bool rollOn(uint8_t track, uint8_t step);
       void setTrackVoice(uint8_t track = 0, uint8_t voice = 0);
       uint8_t getTrackVoice(uint8_t track);
+      uint8_t getPartNote(uint8_t track, uint8_t part);
       void setTrackVoiceConfig(uint8_t track, uint8_t note);
       uint8_t getTrackVoiceConfig(uint8_t track);
       int8_t getTrackVoiceByNote(uint8_t track, uint8_t note);

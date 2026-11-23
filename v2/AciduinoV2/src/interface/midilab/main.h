@@ -18,6 +18,7 @@
 #include "components/midi_cc_controller.hpp"
 #include "components/pattern_grid.hpp"
 #include "components/pattern_mute_grid.hpp"
+#include "components/track_strip.hpp"
 #include "components/generative_accent_amount.hpp"
 #include "components/generative_slide_amount.hpp"
 #include "components/generative_tie_amount.hpp"

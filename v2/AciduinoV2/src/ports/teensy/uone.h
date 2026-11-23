@@ -1,5 +1,8 @@
 #include "../../uCtrl/uCtrl.h"
 
+// uONE has 8 selector pads: keep one track slot per pad
+#define SEQ_MAX_TRACKS 8
+
 #include "../../aciduino.hpp"
 
 //uONE!
@@ -12,6 +15,9 @@
 //============================================
 
 #define USE_CHANGER_ENCODER
+
+// uONE 24 pad grid: the 8 selector pads are a persistent track strip
+#define USE_TRACK_STRIP
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device

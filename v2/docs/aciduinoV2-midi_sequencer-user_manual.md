@@ -38,7 +38,7 @@ The interface presents you simple schema to navigate and interact with you acidu
 
 The GUI is divided into the following main sections:
 
-- **Header bar:** Contains the Track number (by default T1 to T5) and type (303 or 808), the Page name and selected subpage (1 or 2), the clock soucre and tempo value (40-180).
+- **Header bar:** Contains the Track number (by default T1 to T5) and type (303 or 808), the Page name and selected subpage (1 or 2), the clock soucre and tempo value (40-180). An `R` marks an armed recording.
 - **Subpage display:** where the actual tweaking occurs.
 - **Function buttons label:** Provides a clear feedback for the 2 function buttons
 
@@ -150,8 +150,13 @@ generic buttons= bugs the sequence*
  **Step Sequencer Pot, Shift + Pot**  
 808: [Pot] Changes notes [Shift + Pot] Changes Drum Voice  
 
+ **uONE pad grid:**  
+ The top 8 pads are a track strip on every page: tap selects a track, shift+tap mutes/unmutes it. The strip follows the selected track bank (1-8 then 9-16). LED off = empty slot, on = unmuted, blinking = muted.  
+ On the Sequencer page the 16 step pads toggle and select a step. Shift+pad auditions the step note and records it when rec is armed. Up/down change the 16 step bar.  
+ Shift+F1 toggles the pad keyboard (keys mode). On 303/poly tracks the 16 pads play 16 semitones from the base note, on 808 tracks they play drum parts 1-11. Shift+pad accents, up/down change octave, left/right the base semitone, the encoder sets the base note. With step rec on, a pad press writes a note at the selected step and advances it.  
 
----
+
+---  
 
 ### Generator page  
 
@@ -182,6 +187,7 @@ generic buttons= decrementer / incrementer*
 F1=copy / F2=all
 Shift+F1=save as / Shift+F2=save  
 generic buttons= play selected pattern / play selected scene*  
+uONE: step pads 1-16 load patterns 1-16 on the selected track, shift+pad loads the pattern on all tracks. On the mute subpage, pads 1-11 toggle the parts of the selected 808 track (pad 1 for 303/poly) and pads 13-16 select mute pattern 1-4.  
 
 --- 
 

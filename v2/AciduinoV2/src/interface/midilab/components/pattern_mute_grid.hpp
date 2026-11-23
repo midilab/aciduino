@@ -247,5 +247,80 @@ struct MutePatternControl : PageComponent {
         }
       }
     }
-    
+
+    // a live track mute is also captured by the active mute pattern
+    void syncTrackMute(uint8_t track)
+    {
+      // 808 track mute is independent from the per part mute grid
+      if (aciduino.seq.is808(track)) {
+        return;
+      }
+      aciduino.setMuteGridState(current_pattern, !aciduino.seq.getMute(track), track);
+    }
+
+#if defined(USE_TRACK_STRIP)
+    // first element of a track in the live element list
+    uint8_t elementStart(uint8_t track)
+    {
+      for (uint8_t i=0; i < element_count; i++) {
+        if (element_track[i] == track) {
+          return i;
+        }
+      }
+      return 0xFF;
+    }
+
+    // step pads 1-11: parts of the selected 808 track (pad 1 for 303/poly)
+    // step pads 13-16: mute automation pattern 1-4
+    void pad(uint8_t number)
+    {
+      if (number >= 12) {
+        current_pattern = number - 12;
+        selected_line = current_pattern + 1;
+        changePattern(current_pattern);
+        return;
+      }
+
+      buildElements();
+      uint8_t track = aciduino.getSelectedTrack();
+      uint8_t start = elementStart(track);
+      uint8_t idx = start + number;
+      if (start == 0xFF || idx >= element_count || element_track[idx] != track) {
+        return;
+      }
+
+      focusElement(idx);
+      selectElement();
+      selected_line = current_pattern + 1;
+      uint8_t state = aciduino.getMuteGridState(current_pattern, track, element_voice[idx]);
+      aciduino.setMuteGridState(current_pattern, !state, track, element_voice[idx]);
+      changePattern(current_pattern);
+    }
+
+    void padView()
+    {
+#if defined(USE_LED_24)
+      buildElements();
+      uint8_t track = aciduino.getSelectedTrack();
+      uint8_t start = elementStart(track);
+
+      for (uint8_t i=0; i < 11; i++) {
+        uint8_t idx = (start == 0xFF) ? 0xFF : start + i;
+        uint8_t led = STEP_LED_1 + i;
+        if (idx >= element_count || element_track[idx] != track) {
+          uCtrl.dout->write(led, LOW);
+          continue;
+        }
+        bool unmuted = aciduino.getMuteGridState(current_pattern, track, element_voice[idx]);
+        uCtrl.dout->write(led, unmuted ? HIGH : (uCtrl.dout->blink() ? HIGH : LOW));
+      }
+
+      uCtrl.dout->write(STEP_LED_12, LOW);
+      for (uint8_t i=0; i < 4; i++) {
+        uCtrl.dout->write(STEP_LED_13 + i, current_pattern == i ? HIGH : LOW);
+      }
+#endif
+    }
+#endif
+
 } mutePatternComponent;

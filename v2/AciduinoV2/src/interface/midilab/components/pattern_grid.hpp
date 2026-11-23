@@ -49,6 +49,13 @@ struct PatternControl : PageComponent {
       return (max_elements_per_grid > 0 && selected_track >= max_elements_per_grid) ? selected_track - (max_elements_per_grid - 1) : 0;
     }
 
+    // last selectable pattern: the pending empty slot on sdcard, last saved on eeprom
+    uint16_t lastPattern()
+    {
+      uint16_t saved_patterns = aciduino.getNumOfPatterns();
+      return aciduino.hasPendingPatternSlot() ? saved_patterns : (saved_patterns ? saved_patterns - 1 : 0);
+    }
+
     void view() {
       buildSlots();
       // map the selected slot to the live track list
@@ -63,8 +70,7 @@ struct PatternControl : PageComponent {
       uint8_t line_count = 1;
       uint8_t start = windowStart();
       uint16_t saved_patterns = aciduino.getNumOfPatterns();
-      // last selectable pattern: the pending empty slot on sdcard, last saved pattern on epprom
-      uint16_t last_pattern = aciduino.hasPendingPatternSlot() ? saved_patterns : (saved_patterns ? saved_patterns - 1 : 0);
+      uint16_t last_pattern = lastPattern();
 
     
       if (selected_line == 1)
@@ -273,5 +279,51 @@ struct PatternControl : PageComponent {
       // update current pattern reference
       current_pattern = pattern;
     }
+
+#if defined(USE_TRACK_STRIP)
+    // step pads 1-16: patterns 1-16. tap loads on the selected track,
+    // shift loads the pattern on every track (scene).
+    void pad(uint8_t number, bool all)
+    {
+      buildSlots();
+      uint8_t pattern = number;
+      if (pattern > lastPattern()) {
+        return;
+      }
+
+      // keep the oled window on the tapped pattern
+      pattern_index = (pattern / 4) * 4;
+      selected_line = (pattern % 4) + 2;
+      selected_pattern = pattern;
+
+      for (uint8_t i=0; i < slot_count; i++) {
+        if (slots[i] == aciduino.getSelectedTrack()) {
+          selected_track = i;
+          break;
+        }
+      }
+
+      if (all) {
+        changePattern(pattern);
+      } else if (slot_count > 0) {
+        changePattern(pattern, slots[selected_track]);
+      }
+    }
+
+    void padView()
+    {
+#if defined(USE_LED_24)
+      uint8_t track = aciduino.getSelectedTrack();
+      if (aciduino.seq.trackType(track) == SEQ_TRACK_NONE) {
+        return;
+      }
+      uint8_t current = aciduino.getPatternGrid(track);
+      uint16_t last = lastPattern();
+      for (uint8_t i=0; i < 16; i++) {
+        uCtrl.dout->write(STEP_LED_1 + i, (i == current && i <= last) ? HIGH : LOW);
+      }
+#endif
+    }
+#endif
     
 } patternComponent;

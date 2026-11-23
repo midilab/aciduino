@@ -26,12 +26,35 @@ void pattern_page_refresh(uint8_t subpage)
   } else if (subpage == 1) {
     uCtrl.page->component(mutePatternComponent, 3, 1, true);
   }
-  
+
+#if defined(USE_TRACK_STRIP)
+  if (subpage == 0) {
+    patternComponent.padView();
+  } else if (subpage == 1) {
+    mutePatternComponent.padView();
+  }
+#endif
+  trackStripView();
 }
 
 void pattern_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 {  
-  // step array buttons handling?
+  if (trackStripInput(control_id, value)) return;
+
+#if defined(USE_TRACK_STRIP)
+  if (value == LOW) return;
+
+  if (control_id >= STEP_BUTTON_1 && control_id <= STEP_BUTTON_16) {
+    uint8_t number = control_id - STEP_BUTTON_1;
+    if (subpage == 0) {
+      // patterns: tap = selected track, shift = all tracks(scene)
+      patternComponent.pad(number, uCtrl.page->isShiftPressed());
+    } else if (subpage == 1) {
+      // parts of the selected 808 track + mute automation patterns
+      mutePatternComponent.pad(number);
+    }
+  }
+#endif
 }
 
 void pattern_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)

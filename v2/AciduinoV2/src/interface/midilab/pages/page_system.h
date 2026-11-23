@@ -46,10 +46,14 @@ void system_page_refresh(uint8_t subpage)
     uCtrl.page->component(systemResourcesComponent, 7, 1);
     
   }
+
+  trackStripView();
 }
 
 void system_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
 { 
+  if (trackStripInput(control_id, value)) return;
+
   // direct access to digital inputs(DIN and TOUCH)
   switch (control_id) {
     

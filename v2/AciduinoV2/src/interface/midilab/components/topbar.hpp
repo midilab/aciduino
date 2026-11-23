@@ -75,6 +75,9 @@ struct TopBar : PageComponent {
       } else {
         uCtrl.oled->print(uClock.getClockMode() == uClock.INTERNAL_CLOCK ? "i" : "e", 1, 19);  
       }
+      if (aciduino.seq.getRecStatus()) {
+        uCtrl.oled->print("R", 1, 18);
+      }
 
       // top bar big line 
       uCtrl.oled->display->drawBox(0, 9, 128, 1);

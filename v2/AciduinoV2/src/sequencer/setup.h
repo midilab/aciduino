@@ -5,7 +5,7 @@
 // User interface config
 //
 #define SEQUENCER_MIN_BPM       1
-#define SEQUENCER_MAX_BPM       200
+#define SEQUENCER_MAX_BPM       300
 
 //
 // Note based sequencer config (shared note pool, alloc once and forever)
@@ -18,7 +18,7 @@
 // Port headers may override before including setup.h to fit low RAM boards.
 //
 #ifndef SEQ_MAX_TRACKS
-#define SEQ_MAX_TRACKS          4 // 8
+#define SEQ_MAX_TRACKS          8
 #endif
 #ifndef SEQ_MAX_NOTES
 #define SEQ_MAX_NOTES           64 // 512
@@ -28,7 +28,7 @@
 #endif
 
 // pattern length per track is stored as a single step byte
-#define SEQ_MAX_STEP            255
+#define SEQ_MAX_STEP            64
 
 // 808 drum parts per 808 track
 #define PARTS_808               11
@@ -49,9 +49,9 @@
 // Tracks can be created/deleted at runtime in any slot order; the UI works
 // from the live track list, not from these positions.
 //
-#define TRACK_NUMBER_303        2
-#define TRACK_NUMBER_808        1
-#define TRACK_NUMBER_POLY       1
+#define TRACK_NUMBER_303        4
+#define TRACK_NUMBER_808        2
+#define TRACK_NUMBER_POLY       2
 #define VOICE_MAX_SIZE_808      PARTS_808
 #define STEP_MAX_SIZE_303       STEP_DEFAULT_LENGTH_303
 #define STEP_MAX_SIZE_808       STEP_DEFAULT_LENGTH_808

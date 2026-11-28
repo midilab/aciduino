@@ -31,7 +31,7 @@
 #define USE_TOUCH_32    // uses 2x 4067 multiplexer
 //#define TOUCH_TRESHOLD    90
 //#define TOUCH_TRESHOLD    100
-#define TOUCH_TRESHOLD    110
+#define TOUCH_TRESHOLD    120
 
 
 //============================================

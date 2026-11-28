@@ -150,10 +150,14 @@ generic buttons= bugs the sequence*
  **Step Sequencer Pot, Shift + Pot**  
 808: [Pot] Changes notes [Shift + Pot] Changes Drum Voice  
 
- **uONE pad grid:**  
- The top 8 pads are a track strip on every page: tap selects a track, shift+tap mutes/unmutes it. The strip follows the selected track bank (1-8 then 9-16). LED off = empty slot, on = unmuted, blinking = muted.  
- On the Sequencer page the 16 step pads toggle and select a step. Shift+pad auditions the step note and records it when rec is armed. Up/down change the 16 step bar.  
- Shift+F1 toggles the pad keyboard (keys mode). On 303/poly tracks the 16 pads play 16 semitones from the base note, on 808 tracks they play drum parts 1-11. Shift+pad accents, up/down change octave, left/right the base semitone, the encoder sets the base note. With step rec on, a pad press writes a note at the selected step and advances it.  
+ **uONE 16+8 pad grid:**  
+ The 8 selector pads sit above the 16 section pads and do the same on every page. Pads 1-4 pick the section: note, step, mute, pattern (the active one stays lit). Pads 5-6 are free, pad 7 toggles rec, pad 8 toggles play/stop.  
+ Hold shift and the 16 pads become the global track select: lit = track exists, blinking = the selected track; release shift and the active section comes back. The encoder is locked while shift is held.  
+ - **note:** 16 note pads. 303/poly: 16 semitones from the base note (C2 by default, encoder = octave). 808: the 11 drum parts, the last triggered part becomes the selected element (encoder = transpose it one semitone). With step rec on, a pad press writes at the shared step cursor and advances it.  
+ - **step:** the 16 pads toggle and select a step of the shown bar; the encoder moves the 16-step bar (it does not follow the playhead on its own).  
+ - **mute:** the 16 pads mute/unmute tracks (lit = unmuted, blinking = muted, dark = empty slot). On an 808 track the encoder swaps between track mute and part mute (pads 1-11).  
+ - **pattern:** the 16 pads load the visible patterns as a scene on every track (lit = saved, blinking = the selected track's current pattern). The encoder moves in 16-pattern steps.  
+ Full strip manual: [uONE 16+8 Track Strip](aciduinoV2-uone-track-strip-user_manual.md)
 
 
 ---  
@@ -187,7 +191,7 @@ generic buttons= decrementer / incrementer*
 F1=copy / F2=all
 Shift+F1=save as / Shift+F2=save  
 generic buttons= play selected pattern / play selected scene*  
-uONE: step pads 1-16 load patterns 1-16 on the selected track, shift+pad loads the pattern on all tracks. On the mute subpage, pads 1-11 toggle the parts of the selected 808 track (pad 1 for 303/poly) and pads 13-16 select mute pattern 1-4.  
+uONE: the pattern and mute sections of the 16+8 pad grid drive pattern/scene loading and live mutes; the OLED page only shows them.  
 
 --- 
 

@@ -1,6 +1,8 @@
 
 typedef enum {
-#if defined(USE_CHANGER_ENCODER)
+  // the encoder pair comes first in the din plug order, so the enum must
+  // reserve it for any port that plugs an encoder, not only the nav changer
+#if defined(USE_CHANGER_ENCODER) || defined(USE_TRACK_STRIP_ENCODER)
   ENCODER_DEC,
   ENCODER_INC,
 #endif

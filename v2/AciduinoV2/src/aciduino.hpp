@@ -172,6 +172,9 @@ public:
   // mute
   uint8_t getMuteGridState(uint8_t mute_pattern, uint8_t track, uint8_t voice = 0);
   void setMuteGridState(uint8_t mute_pattern, uint8_t state, uint8_t track, uint8_t voice = 0);
+  // mute automation pattern driven by the mute grid(page and track strip share it)
+  uint8_t getMutePattern() { return _mute_pattern; }
+  void setMutePattern(uint8_t pattern) { _mute_pattern = pattern; }
   // pattern
   uint8_t getPatternGrid(uint8_t track);
   void setPatternGrid(uint8_t track, uint8_t pattern);
@@ -249,6 +252,7 @@ private:
   volatile MIDI_CTRL_GLOBAL_MAP _control_map_global[16];
   volatile TRACK_OUTPUT_DATA _track_output_setup[SEQ_MAX_TRACKS];
   MUTE_PATTERN _mute_grid[4];
+  uint8_t _mute_pattern = 0;
   uint8_t _pattern_grid[SEQ_MAX_TRACKS];
   // scratch blob for single track save/load(covers the biggest possible track slice)
   uint8_t _track_image_buf[3 + sizeof(SEQ_TRACK) + SEQ_MAX_NOTES * sizeof(SEQ_EVENT)];

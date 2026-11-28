@@ -84,15 +84,11 @@ void generative_page_refresh(uint8_t subpage)
     // poly: no generator yet, leave the page empty
 
   }
-
-  trackStripView();
 }
 
 void generative_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
-{  
-  if (trackStripInput(control_id, value)) return;
-
-  // step array buttons handling?
+{
+  // the 16+8 pads belong to the track strip module
 }
 
 void generative_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)

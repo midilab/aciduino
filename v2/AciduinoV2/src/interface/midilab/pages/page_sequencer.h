@@ -13,6 +13,11 @@ void step_sequencer_page_destroy()
 // called each cycle interaction of interface object for UI refresh
 void step_sequencer_page_refresh(uint8_t subpage)
 {
+#if defined(USE_TRACK_STRIP)
+  // the strip owns the pads and the step cursor, the page only mirrors them
+  stepSequencerComponent.syncStripCursor();
+#endif
+
   uCtrl.page->component(topBarComponent, 1, 1);
 
   if (subpage == 0) {
@@ -52,35 +57,23 @@ void step_sequencer_page_refresh(uint8_t subpage)
     // step edit full view mode
     uCtrl.page->component(stepSequencerComponent, 2, 1, true);
   }
-
-  trackStripView();
 }
 
 void step_sequencer_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
-{  
-#if defined(USE_PUSH_24) || defined(USE_PUSH_32) || defined(USE_TOUCH_32)
-  // selector row: persistent track strip on uONE
-  if (trackStripInput(control_id, value)) return;
-
-#if !defined(USE_TRACK_STRIP)
+{
+#if (defined(USE_PUSH_24) || defined(USE_PUSH_32) || defined(USE_TOUCH_32)) && !defined(USE_TRACK_STRIP)
   // step array buttons handling
   if (value == LOW) return;
-  
+
   // step array buttons handling?
   if (control_id >= SELECTOR_BUTTON_1 && control_id <= SELECTOR_BUTTON_8) {
     // change selector
     stepSequencerComponent.selectorButton(control_id-SELECTOR_BUTTON_1);
   }
-#endif
 
   if (control_id >= STEP_BUTTON_1 && control_id <= STEP_BUTTON_16) {
-#if defined(USE_TRACK_STRIP)
-    // toggle/select step, audition with shift, or play the pad keyboard
-    stepSequencerComponent.stepPad(control_id-STEP_BUTTON_1, uCtrl.page->isShiftPressed(), value != LOW);
-#else
     // select step, on/off
     stepSequencerComponent.stepButton(control_id-STEP_BUTTON_1);
-#endif
   }
 #endif
 }

@@ -1,6 +1,8 @@
 #ifndef __MIDILAB_INTERFACE_H__
 #define __MIDILAB_INTERFACE_H__
 
+// the 16+8 pad surface lives in the core, pages only read its state
+#include "../../track_strip.hpp"
 // interface controls definitions
 #include "consts.h"
 // shared common gui functions used around
@@ -18,7 +20,6 @@
 #include "components/midi_cc_controller.hpp"
 #include "components/pattern_grid.hpp"
 #include "components/pattern_mute_grid.hpp"
-#include "components/track_strip.hpp"
 #include "components/generative_accent_amount.hpp"
 #include "components/generative_slide_amount.hpp"
 #include "components/generative_tie_amount.hpp"

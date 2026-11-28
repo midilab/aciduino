@@ -21,7 +21,13 @@
 #define SEQ_MAX_TRACKS          8
 #endif
 #ifndef SEQ_MAX_NOTES
-#define SEQ_MAX_NOTES           64 // 512
+// 8 track slots hold up to 8*64 events: a smaller pool silently drops every
+// new step/accent/slide once it is full(the insert path has no free slot)
+#if defined(__AVR__)
+#define SEQ_MAX_NOTES           128   // 8 KB RAM boards
+#else
+#define SEQ_MAX_NOTES           64
+#endif
 #endif
 #ifndef SEQ_MAX_ACTIVE
 #define SEQ_MAX_ACTIVE          24    // simultaneous sounding notes(all tracks)

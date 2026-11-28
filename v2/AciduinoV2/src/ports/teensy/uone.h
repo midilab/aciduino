@@ -14,10 +14,11 @@
 // Aciduino Features Setup
 //============================================
 
-#define USE_CHANGER_ENCODER
+//#define USE_CHANGER_ENCODER
 
-// uONE 24 pad grid: the 8 selector pads are a persistent track strip
+// uONE 16+8 pad grid: 8 pads above the 16 section pads are the strip controls
 #define USE_TRACK_STRIP
+#define USE_TRACK_STRIP_ENCODER
 
 // wich modules you need acidman?
 // PUSH and LED modules require booth PUSH_SPI and LED_SPI to point into some spi device
@@ -37,6 +38,8 @@
 //============================================
 // PINOUT Setup
 //============================================
+#define TRACK_STRIP_ENCODER_DEC_PIN       25
+#define TRACK_STRIP_ENCODER_INC_PIN       24
 
 // going to use changer encoder?
 #define NAV_ENCODER_DEC_PIN       25
@@ -109,15 +112,24 @@ void initPort() {
   // DIN Module
   //
   uCtrl.initDin();
+#if defined(USE_CHANGER_ENCODER)
   // dec
   uCtrl.din->plug(NAV_ENCODER_DEC_PIN);
   // inc
   uCtrl.din->plug(NAV_ENCODER_INC_PIN);
+#elif defined(USE_TRACK_STRIP_ENCODER)
+  // dec
+  uCtrl.din->plug(TRACK_STRIP_ENCODER_DEC_PIN);
+  // inc
+  uCtrl.din->plug(TRACK_STRIP_ENCODER_INC_PIN);
+#endif
   // shift button
   uCtrl.din->plug(NAV_SHIFT_PIN);
   // encoders setup
+#if defined(USE_CHANGER_ENCODER) || defined(USE_TRACK_STRIP_ENCODER)
   // in pair order always! and pairs starting with odd ids
   uCtrl.din->encoder(ENCODER_DEC, ENCODER_INC);
+#endif
 
   //
   // DOUT Module
@@ -181,7 +193,11 @@ void initPort() {
   pattern_page_init();
   midi_page_init();
   // component UI interface setup
+#if defined(USE_CHANGER_ENCODER)
   uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2, ENCODER_DEC, ENCODER_INC);
+#else
+  uCtrl.page->setNavComponentCtrl(SHIFT_BUTTON, UP_BUTTON, DOWN_BUTTON, PREVIOUS_BUTTON, NEXT_BUTTON, PAGE_BUTTON_1, PAGE_BUTTON_2, GENERIC_BUTTON_1, GENERIC_BUTTON_2);
+#endif
   // hook button callback setup
   // previous track
   uCtrl.page->setShiftCtrlAction(GENERIC_BUTTON_1, Aciduino::previousTrack);
@@ -208,4 +224,9 @@ void initPort() {
   // sequencer parameters could be initialized here?
   // how many 303 tracks? 808 tracks?
   aciduino.init();
+
+#if defined(USE_TRACK_STRIP)
+  // the 16+8 pad surface runs independently from the page/UI layer
+  trackStrip.init();
+#endif
 }

@@ -10,7 +10,6 @@ struct MutePatternControl : PageComponent {
     // f2 = >> (...)
     // this will be extended in the future to allow more patterns to be used, 4 for now!
 
-    uint8_t current_pattern = 0;
     uint8_t selected_pattern = 0;
     uint8_t selected_mute_chn = 0;
     uint8_t element_index = 0;
@@ -129,7 +128,7 @@ struct MutePatternControl : PageComponent {
 
         // pattern selector status
         uCtrl.oled->print(String(i+1), line+i, 22, i+1 == selected_line ? true : false);
-        if (current_pattern == i)
+        if (aciduino.getMutePattern() == i)
           uCtrl.oled->print("<", line+i, 25);
           
       }
@@ -192,12 +191,12 @@ struct MutePatternControl : PageComponent {
       if (data == INCREMENT) {
         aciduino.setMuteGridState(pattern, 1, track, voice);
         // selected is same as current? update tracks mute state
-        if (pattern == current_pattern)
-          changePattern(current_pattern);
+        if (pattern == aciduino.getMutePattern())
+          changePattern(aciduino.getMutePattern());
       } else if (data == DECREMENT) {
         aciduino.setMuteGridState(pattern, 0, track, voice);
-        if (pattern == current_pattern)
-          changePattern(current_pattern);
+        if (pattern == aciduino.getMutePattern())
+          changePattern(aciduino.getMutePattern());
       // secondary inc/dec or pot nav action
       } else {
         // redirect to the last used control on midi controller
@@ -206,13 +205,14 @@ struct MutePatternControl : PageComponent {
     }
     
     void function1() {
-      current_pattern = --current_pattern % 4;
-      changePattern(current_pattern);
+      // the active mute pattern lives in the core so the track strip shares it
+      aciduino.setMutePattern((aciduino.getMutePattern() + 3) % 4);
+      changePattern(aciduino.getMutePattern());
     }
 
     void function2() {
-      current_pattern = ++current_pattern % 4;
-      changePattern(current_pattern);
+      aciduino.setMutePattern((aciduino.getMutePattern() + 1) % 4);
+      changePattern(aciduino.getMutePattern());
     }
 
     void changePattern(uint8_t pattern) {
@@ -235,15 +235,15 @@ struct MutePatternControl : PageComponent {
     {
       if (aciduino.seq.is808(track)) {
         if (aciduino.seq.getMute(track, aciduino.seq.getTrackVoice(track))) {
-          aciduino.setMuteGridState(current_pattern, 0, track, voice);
+          aciduino.setMuteGridState(aciduino.getMutePattern(), 0, track, voice);
         } else {
-          aciduino.setMuteGridState(current_pattern, 1, track, voice);
+          aciduino.setMuteGridState(aciduino.getMutePattern(), 1, track, voice);
         }
       } else {
         if (aciduino.seq.getMute(track)) {
-          aciduino.setMuteGridState(current_pattern, 0, track);
+          aciduino.setMuteGridState(aciduino.getMutePattern(), 0, track);
         } else {
-          aciduino.setMuteGridState(current_pattern, 1, track);
+          aciduino.setMuteGridState(aciduino.getMutePattern(), 1, track);
         }
       }
     }
@@ -255,72 +255,7 @@ struct MutePatternControl : PageComponent {
       if (aciduino.seq.is808(track)) {
         return;
       }
-      aciduino.setMuteGridState(current_pattern, !aciduino.seq.getMute(track), track);
+      aciduino.setMuteGridState(aciduino.getMutePattern(), !aciduino.seq.getMute(track), track);
     }
-
-#if defined(USE_TRACK_STRIP)
-    // first element of a track in the live element list
-    uint8_t elementStart(uint8_t track)
-    {
-      for (uint8_t i=0; i < element_count; i++) {
-        if (element_track[i] == track) {
-          return i;
-        }
-      }
-      return 0xFF;
-    }
-
-    // step pads 1-11: parts of the selected 808 track (pad 1 for 303/poly)
-    // step pads 13-16: mute automation pattern 1-4
-    void pad(uint8_t number)
-    {
-      if (number >= 12) {
-        current_pattern = number - 12;
-        selected_line = current_pattern + 1;
-        changePattern(current_pattern);
-        return;
-      }
-
-      buildElements();
-      uint8_t track = aciduino.getSelectedTrack();
-      uint8_t start = elementStart(track);
-      uint8_t idx = start + number;
-      if (start == 0xFF || idx >= element_count || element_track[idx] != track) {
-        return;
-      }
-
-      focusElement(idx);
-      selectElement();
-      selected_line = current_pattern + 1;
-      uint8_t state = aciduino.getMuteGridState(current_pattern, track, element_voice[idx]);
-      aciduino.setMuteGridState(current_pattern, !state, track, element_voice[idx]);
-      changePattern(current_pattern);
-    }
-
-    void padView()
-    {
-#if defined(USE_LED_24)
-      buildElements();
-      uint8_t track = aciduino.getSelectedTrack();
-      uint8_t start = elementStart(track);
-
-      for (uint8_t i=0; i < 11; i++) {
-        uint8_t idx = (start == 0xFF) ? 0xFF : start + i;
-        uint8_t led = STEP_LED_1 + i;
-        if (idx >= element_count || element_track[idx] != track) {
-          uCtrl.dout->write(led, LOW);
-          continue;
-        }
-        bool unmuted = aciduino.getMuteGridState(current_pattern, track, element_voice[idx]);
-        uCtrl.dout->write(led, unmuted ? HIGH : (uCtrl.dout->blink() ? HIGH : LOW));
-      }
-
-      uCtrl.dout->write(STEP_LED_12, LOW);
-      for (uint8_t i=0; i < 4; i++) {
-        uCtrl.dout->write(STEP_LED_13 + i, current_pattern == i ? HIGH : LOW);
-      }
-#endif
-    }
-#endif
 
 } mutePatternComponent;

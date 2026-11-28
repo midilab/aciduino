@@ -21,6 +21,7 @@ struct StepSequencer : PageComponent {
     // rec and preview function helpers
     uint8_t rec_track = 0;
     uint8_t rec_note = 36;
+#if !defined(USE_TRACK_STRIP)
     // pad keyboard mode: 16 notes(303/poly) or 11 parts(808)
     bool keys_mode = false;
     uint8_t keys_track = 0;
@@ -32,6 +33,7 @@ struct StepSequencer : PageComponent {
     bool audition_active = false;
     uint8_t audition_track = 0;
     uint8_t audition_note = 0;
+#endif
 
     StepSequencer() {
       // we want this component to be 2 lines for compact view(5 for full sized view) and 2 grids navigable object
@@ -58,11 +60,13 @@ struct StepSequencer : PageComponent {
       uint8_t max_steps_per_view = full_size_view ? 64 : 16;
 
       uint8_t track = aciduino.getSelectedTrack();
+#if !defined(USE_TRACK_STRIP)
       if (keys_mode && keys_track != track) {
         resetKeys();
         keys_track = track;
         keys_base = constrain(aciduino.seq.getStepData(track, selected_step), 0, 127);
       }
+#endif
 
       curr_step = aciduino.seq.getCurrentStep(aciduino.getSelectedTrack());
       step_size = aciduino.seq.getTrackLength(aciduino.getSelectedTrack());
@@ -74,10 +78,9 @@ struct StepSequencer : PageComponent {
       // force it again in case track length change
       line_size = full_size_view ? (selected_locator == locator_length-1 ? ceil((step_size - (selected_locator * 64)) / 16) : 4) + 1 : 2;
 
-#if defined(USE_LED_8) || defined(USE_LED_16) || defined(USE_LED_24)
+#if (defined(USE_LED_8) || defined(USE_LED_16) || defined(USE_LED_24)) && !defined(USE_TRACK_STRIP)
       // locator leds
       uCtrl.dout->writeAll(LOW);
-#if !defined(USE_TRACK_STRIP)
       if (locator_current !=  selected_locator || !selected) {
         uCtrl.dout->write(locator_current+SELECTOR_LED_1, HIGH); 
       }
@@ -85,7 +88,6 @@ struct StepSequencer : PageComponent {
       if ((selected_line == 1 || selected_line == 2) && selected) {
         uCtrl.dout->write(selected_locator+SELECTOR_LED_1, uCtrl.dout->blink() ? LOW : HIGH);
       }
-#endif
 #endif
       
       // step locators
@@ -112,7 +114,7 @@ struct StepSequencer : PageComponent {
         // step on/off?
         if (step_on) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_ON);
-#if defined(USE_LED_16) || defined(USE_LED_24)
+#if (defined(USE_LED_16) || defined(USE_LED_24)) && !defined(USE_TRACK_STRIP)
           uCtrl.dout->write(line_idx+STEP_LED_1, HIGH);
 #endif
         } else {
@@ -127,7 +129,7 @@ struct StepSequencer : PageComponent {
         // step current?
         if (curr_step == step_idx && aciduino.isPlaying()) {
           uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED);
-#if defined(USE_LED_16) || defined(USE_LED_24)
+#if (defined(USE_LED_16) || defined(USE_LED_24)) && !defined(USE_TRACK_STRIP)
           uCtrl.dout->write(line_idx+STEP_LED_1, step_on ? LOW : HIGH);
 #endif
         }
@@ -135,7 +137,7 @@ struct StepSequencer : PageComponent {
         // step selected?
         if (selected_step == step_idx && selected && selected_line >= 2) {
            uCtrl.oled->mergeBitmap(step_asset, (uint8_t*)STEP_SELECTED, true);
-#if defined(USE_LED_16) || defined(USE_LED_24)
+#if (defined(USE_LED_16) || defined(USE_LED_24)) && !defined(USE_TRACK_STRIP)
            uCtrl.dout->write(line_idx+STEP_LED_1, uCtrl.dout->blink() ? LOW : HIGH);
 #endif
         }
@@ -143,7 +145,7 @@ struct StepSequencer : PageComponent {
         uCtrl.oled->print(step_asset, steps_line, line_idx+1);
       }
 
-#if defined(USE_LED_16) || defined(USE_LED_24)
+#if (defined(USE_LED_16) || defined(USE_LED_24)) && !defined(USE_TRACK_STRIP)
       // pad keyboard replaces the step leds while active
       if (keys_mode) {
         drawKeysLeds();
@@ -152,6 +154,7 @@ struct StepSequencer : PageComponent {
 
       // step info
       uint8_t info_line_idx = full_size_view ? 5 : 2;
+#if !defined(USE_TRACK_STRIP)
       if (keys_mode) {
         if (aciduino.seq.is808(track)) {
           uint8_t voice = keys_last < PARTS_808 ? keys_last : 0;
@@ -161,16 +164,18 @@ struct StepSequencer : PageComponent {
           uCtrl.oled->print(aciduino.seq.getNoteString(keys_base), line+info_line_idx, 6);
         }
       // 808
-      } else if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
-        uCtrl.oled->print(aciduino.seq.getTrackVoiceName(aciduino.getSelectedTrack(), aciduino.seq.getTrackVoice(aciduino.getSelectedTrack())), line+info_line_idx, 1);
+      } else
+#endif
+      if (aciduino.seq.is808(track)) {
+        uCtrl.oled->print(aciduino.seq.getTrackVoiceName(track, aciduino.seq.getTrackVoice(track)), line+info_line_idx, 1);
         //uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getTrackVoiceConfig(aciduino.getSelectedTrack())), line+info_line_idx, 1);
       // 303 + poly
       } else {
         if (selected_line >= 2) {
-          uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(aciduino.getSelectedTrack(), selected_step)), line+info_line_idx, 1);
+          uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(track, selected_step)), line+info_line_idx, 1);
         } else{
-          if (aciduino.seq.stepOn(aciduino.getSelectedTrack(), curr_step) && aciduino.isPlaying()) {
-            uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(aciduino.getSelectedTrack(), curr_step)), line+info_line_idx, 1);
+          if (aciduino.seq.stepOn(track, curr_step) && aciduino.isPlaying()) {
+            uCtrl.oled->print(aciduino.seq.getNoteString(aciduino.seq.getStepData(track, curr_step)), line+info_line_idx, 1);
           }
         }
       }
@@ -196,10 +201,12 @@ struct StepSequencer : PageComponent {
         }
       }
 
+#if !defined(USE_TRACK_STRIP)
       if (keys_mode) {
         setF1("keys", true);
         setF2(aciduino.seq.is808(track) ? "parts" : aciduino.seq.getNoteString(keys_base));
       }
+#endif
 
       // debug
       //uCtrl.oled->print(selected_line, line+info_line_idx, 10);
@@ -208,6 +215,7 @@ struct StepSequencer : PageComponent {
 
     void nav(uint8_t dir) {
 
+#if !defined(USE_TRACK_STRIP)
       if (keys_mode) {
         switch (dir) {
           case UP:
@@ -225,6 +233,7 @@ struct StepSequencer : PageComponent {
         }
         return;
       }
+#endif
 
       // compact view: up/down move one 16 step bar
       if (!full_size_view && (dir == UP || dir == DOWN)) {
@@ -337,6 +346,7 @@ struct StepSequencer : PageComponent {
     
     void change(int16_t data) {
 
+#if !defined(USE_TRACK_STRIP)
       if (keys_mode) {
         int16_t base = keys_base;
         int16_t step = uCtrl.page->isShiftPressed() ? 12 : 1;
@@ -350,6 +360,7 @@ struct StepSequencer : PageComponent {
         keys_base = constrain(base, 0, 127);
         return;
       }
+#endif
       
       if (data == DECREMENT || data == INCREMENT) {
 
@@ -404,10 +415,8 @@ struct StepSequencer : PageComponent {
             pot_last_note = data + (octave*12);
           }
           
-          if(selected_line >= 2) {
-            // select step note
-            aciduino.seq.setStepData(aciduino.getSelectedTrack(), selected_step, pot_last_note);
-          }
+          // the strip owns the step cursor: store like the 808 branch, no row gate
+          aciduino.seq.setStepData(aciduino.getSelectedTrack(), selected_step, pot_last_note);
 
         }
         
@@ -425,14 +434,6 @@ struct StepSequencer : PageComponent {
     }
     
     void function1() {
-#if defined(USE_TRACK_STRIP)
-      // shift+f1 toggles the pad keyboard; f1 leaves it
-      if (uCtrl.page->isShiftPressed() || keys_mode) {
-        toggleKeys();
-        return;
-      }
-#endif
-
       if (selected_line == 1) {
         // clear track
         aciduino.seq.clearTrack(aciduino.getSelectedTrack());
@@ -443,12 +444,6 @@ struct StepSequencer : PageComponent {
     }
 
     void function2() {
-#if defined(USE_TRACK_STRIP)
-      if (keys_mode) {
-        return;
-      }
-#endif
-
       if (selected_line == 1) {
         // mute track(voice for 808)
         if (aciduino.seq.is808(aciduino.getSelectedTrack())) {
@@ -483,6 +478,7 @@ struct StepSequencer : PageComponent {
       aciduino.seq.rest(aciduino.getSelectedTrack(), step, aciduino.seq.stepOn(aciduino.getSelectedTrack(), step));
     }
 
+#if !defined(USE_TRACK_STRIP)
     uint8_t stepFromPad(uint8_t number)
     {
       return number + ((full_size_view && selected_line != 1 ? selected_line-2 : selected_locator) * 16);
@@ -658,5 +654,28 @@ struct StepSequencer : PageComponent {
       }
     }
 #endif
+
+#else // USE_TRACK_STRIP
+
+    // the strip owns the pads and the step cursor: mirror it for the view
+    void syncStripCursor()
+    {
+      uint8_t track = aciduino.getSelectedTrack();
+      if (aciduino.seq.trackType(track) == SEQ_TRACK_NONE) {
+        return;
+      }
+      uint16_t size = aciduino.seq.getTrackLength(track);
+      selected_step = size == 0 ? 0 : (trackStrip.selected_step >= size ? size - 1 : trackStrip.selected_step);
+      if (!full_size_view) {
+        selected_locator = trackStrip.bar_window;
+      }
+    }
+
+    // page destroy hook: the strip keeps its own held notes
+    void releaseAll()
+    {
+    }
+
+#endif // USE_TRACK_STRIP
     
 } stepSequencerComponent;

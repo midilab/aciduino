@@ -22,15 +22,11 @@ void midi_page_refresh(uint8_t subpage)
   } else if (subpage == 1) {
     // midi efx subpage. LFOs and other goodies. soon...
   }
-
-  trackStripView();
 }
 
 void midi_page_digital_input(uint8_t control_id, uint16_t value, uint8_t subpage)
-{  
-  if (trackStripInput(control_id, value)) return;
-
-  // step array buttons handling?
+{
+  // the 16+8 pads belong to the track strip module
 }
 
 void midi_page_analog_input(uint8_t control_id, uint16_t value, uint8_t subpage)
